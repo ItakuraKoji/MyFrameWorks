@@ -22,9 +22,9 @@ void Particle::Run() {
 
 void Particle::GetParticleMatrix(Matrix4f &mat) {
 	mat = Matrix4f::Identity();
-	//mat(0) = 4.0f;
-	//mat(5) = 4.0f;
-	//mat(10) = 4.0f;
+	mat(0) = 4.0f;
+	mat(5) = 4.0f;
+	mat(10) = 4.0f;
 	mat(12) = this->parameter.position.x();
 	mat(13) = this->parameter.position.y();
 	mat(14) = this->parameter.position.z();

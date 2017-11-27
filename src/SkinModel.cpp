@@ -47,15 +47,17 @@ void SkinModel::Run() {
 
 //•`‰æ
 void SkinModel::Draw() {
-	this->shader->SetShaderParameter(this->world.data(), this->view.data(), this->projection.data());
+	Matrix4f mat = this->projection * this->view * this->world;
+	this->shader->SetMatrix(mat);
+	this->shader->SetWorldMatrix(this->world);
 
 	int time = this->animationDatas->GetCurrentAnimTime();
 	int numArray = this->vertexBuffers->GetNumBuffer();
 	for (int i = 0; i < numArray; ++i) {
 		this->boneDatas->SetClurrentBoneData(i, time);
 		this->boneDatas->SetMatrixTextureData(i, this->boneTexture);
-		this->shader->SetShaderTexture2(1, this->boneTexture->GetTextureID());
-		this->shader->SetShaderNumBone(this->boneDatas->GetNumBone(i));
+		this->shader->SetTexture("boneTex", 1, this->boneTexture->GetTextureID());
+		this->shader->SetValue("numBone", this->boneDatas->GetNumBone(i));
 
 		DrawBuffers(i);
 	}
@@ -92,7 +94,7 @@ void SkinModel::DrawBuffers(int arrayIndex) {
 	for (int k = 0; k < numMaterial; ++k) {
 
 		GLuint TextureID = this->materialDatas->GetTexture(arrayIndex, k)->GetTextureID();
-		this->shader->SetShaderTexture(0, TextureID);
+		this->shader->SetTexture("sampler", 0, TextureID);
 		GLuint IBO = this->vertexBuffers->GetIBO(arrayIndex, k);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 		glDrawElements(GL_TRIANGLES, this->materialDatas->GetNumFace(arrayIndex, k) * 3, GL_UNSIGNED_INT, 0);

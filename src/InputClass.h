@@ -3,14 +3,14 @@
 #include<windows.h>
 #include<math.h>
 #include<iostream>
+#include<Eigen\Core>
+using namespace Eigen;
 
 //スティック初期位置の遊び定数
 #define BUTTON_EPSILON 0.2f
 
 //ゲームパッドのアナログスティックの値の原点
 #define BUTTON_ANALOG_NEUTRAL 32768.f//家のXBoxコントローラー
-
-
 
 //接続したゲームパッドのボタンと軸
 #define PAD_BUTTON_0 1
@@ -79,20 +79,30 @@ struct JoyStickAxis {
 
 //横と縦の二軸を持つスティック
 struct JoyStickState {
-private:
-	JoyStickAxis *x;
-	JoyStickAxis *y;
 public:
-	float GetPosX() { return x->pos; }
-	float GetPosY() { return y->pos; }
-	void Normalize() {
-		if (x == 0 || y == 0) {
-			return;
-		}
-		float len = powf(x->pos, y->pos);
-		x->pos /= len;
-		y->pos /= len;
+	//軸をセット
+	void SetAxisX(JoyStickAxis* xAxis) {
+		this->x = xAxis;
 	}
+	void SetAxisY(JoyStickAxis* yAxis) {
+		this->y = yAxis;
+	}
+
+	//位置
+	Vector2f GetPosition() {
+		return Vector2f(x->pos, y->pos);
+	}
+	//角度
+	float GetRotation() {
+		return atan2(y->pos, x->pos);
+	}
+	//傾き
+	float GetPower() {
+		return sqrtf(powf(x->pos, 2) + powf(y->pos, 2));
+	}
+private:
+	JoyStickAxis* x;
+	JoyStickAxis* y;
 };
 
 
@@ -112,6 +122,10 @@ public:
 
 	//スティック軸を取得
 	float GetStickState(int axisID);
+	//スティック角度を取得
+	float GetStickRotation(int stickID);
+	//スティックの傾きを取得
+	float GetStickPower(int stickID);
 
 private:
 	float FixStickState(float state);

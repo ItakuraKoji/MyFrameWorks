@@ -1,6 +1,7 @@
 #include"MyApplication.h"
 
-float x = 0.0f, y = 10.6f, z = 0.0f;
+Vector3f pos(0.0f, 10.6f, 0.0f);
+float rotation = 0.0f;
 float v = 0.0f, g = 0.03f;
 float camerarotH, camerarotV;
 
@@ -48,6 +49,7 @@ MyApplication::~MyApplication()
 		delete this->light;
 		this->light = NULL;
 	}
+	delete this->buffer;
 }
 
 bool MyApplication::Initialize(int width, int height) {
@@ -68,13 +70,13 @@ bool MyApplication::Initialize(int width, int height) {
 
 	this->shader = new ShaderList;
 	this->shader->Initialize();
-	if (!this->shader->Add("static", "StaticShader.vs", "StaticShader.ps")) {
+	if (!this->shader->Add("static", "Shader/StaticShader.vs", "Shader/StaticShader.ps")) {
 		return false;
 	}
-	if (!this->shader->Add("skin", "SkinShader.vs", "SkinShader.ps")) {
+	if (!this->shader->Add("skin", "Shader/SkinShader.vs", "Shader/SkinShader.ps")) {
 		return false;
 	}
-	if (!this->shader->Add("simple", "SimpleShader.vs", "SimpleShader.ps")) {
+	if (!this->shader->Add("simple", "Shader/SimpleShader.vs", "Shader/SimpleShader.ps")) {
 		return false;
 	}
 
@@ -96,6 +98,8 @@ bool MyApplication::Initialize(int width, int height) {
 
 	bulletInitialize();
 
+
+	this->buffer = new Framebuffer;
 	return true;
 }
 
@@ -110,15 +114,31 @@ void MyApplication::bulletInitialize() {
 		btCollisionShape *characterShape = new btCapsuleShape(btScalar(0.3f), btScalar(0.8f));
 		btTransform trans;
 		trans.setIdentity();
-		trans.setOrigin(btVector3(x, y, z));
+		trans.setOrigin(btVector3(pos.x(), pos.y(), pos.z()));
 
-		btCollisionObject *obj = new btCollisionObject;
-		obj->setCollisionShape(characterShape);
-		obj->setWorldTransform(trans);
+		btScalar mass(0.0f);
+		btDefaultMotionState *state = new btDefaultMotionState(trans);
+		btRigidBody::btRigidBodyConstructionInfo info(mass, state, characterShape, btVector3(0.0f, 0.0f, 0.0f));
+		btRigidBody *rigid = new btRigidBody(info);
+		this->physics->AddRigidBody(rigid, BulletBitMask::BIT_MAP, BulletBitMask::BIT_CHARACTER);
+		this->characterCollision = rigid;
+		rigid->setAngularFactor(0);
+	}
+	for (int i = 0; i < 1; ++i)
+	{
+		btCollisionShape* shape = new btSphereShape(btScalar(3.0f));
+		btTransform trans;
+		trans.setIdentity();
+		trans.setOrigin(btVector3(4.0f * i, 20.0f, 0.0f));
 
+		btScalar mass(1.0f);
+		btVector3 inertia;
+		shape->calculateLocalInertia(mass, inertia);
+		btDefaultMotionState *state = new btDefaultMotionState(trans);
+		btRigidBody::btRigidBodyConstructionInfo info(mass, state, shape, inertia);
+		btRigidBody *rigid = new btRigidBody(info);
+		this->physics->AddRigidBody(rigid, BulletBitMask::BIT_MAP, BulletBitMask::BIT_CHARACTER);
 
-		this->physics->AddCollisionObject(obj);
-		this->characterCollision = obj;
 	}
 
 
@@ -132,54 +152,79 @@ void MyApplication::Run() {
 	this->input->Run();
 	//移動ベクトルと移動後座標ベクトル
 
-	Vector3f direction(0.0f, 0.0f, 0.0f);
 	Vector3f fixedPosition;
 
-	float au = this->input->GetStickState(VPAD_STICK_RX);
-	float av = this->input->GetStickState(VPAD_STICK_RY);
+	float srRotation = this->input->GetStickRotation(VPAD_STICK_R);
+	float srPower = this->input->GetStickPower(VPAD_STICK_R);
 
-	camerarotH += au * 2.0f;
-	camerarotV -= av * 2.0f;
+	camerarotH += 2.0f * srPower * cosf(srRotation);
+	camerarotV -= 2.0f * srPower * sinf(srRotation);
 
-	direction.x() += 0.5f * this->input->GetStickState(VPAD_STICK_LX);
-	direction.z() += 0.5f * this->input->GetStickState(VPAD_STICK_LY);
+	float slRotation = this->input->GetStickRotation(VPAD_STICK_L);
+	float slPower    = this->input->GetStickPower(VPAD_STICK_L);
+	if (slPower) {
+		rotation = slRotation + Noraml_Rad(90.0f) + Noraml_Rad(camerarotH);
+	}
+
+	Vector3f direction(0.0f, 0.0f, 0.0f);
+	direction.x() += 0.4f * slPower * cosf(slRotation);
+	direction.z() -= 0.4f * slPower * sinf(slRotation);
+
 	if (this->input->isPressButton(VPAD_BUTTON_A)) {
 		v = 1.0f;
 	}
 	v -= g;
+	if (v < -1.0f) {
+		v = -1.0f;
+	}
 	direction.y() += v;
 
+
+	//移動ベクトルをカメラの軸に合わせる
 	Vector3f xAxis = this->camera->GetAxisX();
 	Vector3f zAxis = this->camera->GetAxisZ();
-
 	xAxis.y() = 0.0f;
 	zAxis.y() = 0.0f;
 	Vector3f goVec = direction.x() * xAxis.normalized() + Vector3f(0, direction.y(), 0) + direction.z() * zAxis.normalized();
 
-	this->physics->Run();
-	if (this->physics->MoveCharacterObject(this->characterCollision, btVector3(0.0f, goVec.y(), 0.0f))) {
-		v = 0.0f;
-	}
+	////キャラクタの横移動と縦移動は分離
+	//btVector3 angle = this->physics->MoveCharacterObject(this->characterCollision, btVector3(0.0f, goVec.y(), 0.0f), 40.0f);
+	//btVector3 angleX(1.0f, 0.0f, 0.0f);
+	//btVector3 angleZ(0.0f, 0.0f, 1.0f);
+	//if (!angle.isZero()) {
+	//	//床の角度から横移動ベクトルを作成(着地判定時)
+	//	angleX = angle.cross(angleZ);
+	//	angleZ = -angle.cross(angleX);
+	//	v = 0.0f;
+	//}
+	////生成した横移動ベクトルに従って移動
+	//this->physics->MoveCharacterObject(this->characterCollision, goVec.x() * angleX + goVec.z() * angleZ, 0.0f);
 
-	this->physics->MoveCharacterObject(this->characterCollision, btVector3(goVec.x(), 0.0f, goVec.z()));
+	this->physics->MoveCharacterObject(this->characterCollision, btVector3(goVec.x(), goVec.y(), goVec.z()));
+	this->physics->Run();
 
 	btTransform trans = this->characterCollision->getWorldTransform();
-	x = trans.getOrigin().x();
-	y = trans.getOrigin().y() - 0.75f;
-	z = trans.getOrigin().z();
+	Vector3f prevPos = pos;
+	pos.x() = trans.getOrigin().x();
+	pos.y() = trans.getOrigin().y() - 0.75f;
+	pos.z() = trans.getOrigin().z();
+	btRigidBody::upcast(this->characterCollision)->activate(true);
 
-	float cx = -12.0f * sinf(camerarotH * (float)M_PI / 180.0f) + x;
-	float cy = -12.0f * sinf(camerarotV * (float)M_PI / 180.0f) + y;
-	float cz = -12.0f * cosf(camerarotH * (float)M_PI / 180.0f) * cosf(camerarotV * (float)M_PI / 180.0f) + z;
+	float cx = -12.0f * sinf(camerarotH * (float)M_PI / 180.0f) + pos.x();
+	float cy = -12.0f * sinf(camerarotV * (float)M_PI / 180.0f) + pos.y();
+	float cz = -12.0f * cosf(camerarotH * (float)M_PI / 180.0f) * cosf(camerarotV * (float)M_PI / 180.0f) + pos.z();
 	this->camera->SetPosition(cx, cy + 2.0f, cz);
-	this->camera->SetTarget(x, y + 2.0f, z);
+	this->camera->SetTarget(pos.x(), pos.y() + 2.0f, pos.z());
 
-	this->model->Run();
+	std::vector<btCollisionObject*> testArray;
+	this->physics->FindConfrictionObjects(testArray, this->characterCollision);
+
+	//this->model->Run();
 	this->skinModel->Run();
 }
 
 void MyApplication::Draw() {
-
+	//this->buffer->Bind();
 
 	Matrix4f view;
 	this->camera->Draw();
@@ -197,26 +242,27 @@ void MyApplication::Draw() {
 	scale = DiagonalMatrix<float, 3>(-1.0f, 1.0f, 1.0f);
 	rot = AngleAxisf(Noraml_Rad(0.0f), Vector3f::UnitX());
 	mat = trans * rot * scale;
-	shader = this->shader->GetShader("skin");
-	shader->SetShader();
+	shader = this->shader->UseShader("skin");
 	this->light->SetShader(shader);
-	shader->SetSkinningFunc(1);
+	shader->SetVertexShaderSubroutine("NotSkinning");
 	this->mapModel->SetShader(shader);
 	this->mapModel->SetMatrix(mat.matrix(), view, projectionMat);
 	this->mapModel->Draw();
 
-	world = Matrix4f::Identity();
-	trans = Translation<float, 3>(x, y, z);
-	scale = DiagonalMatrix<float, 3>(-1.0f, 1.0f, 1.0f);
-	rot = AngleAxisf(Noraml_Rad(-90.0f), Vector3f::UnitX());
-	mat = trans * rot * scale;
-	shader = this->shader->GetShader("skin");
-	shader->SetShader();
-	this->light->SetShader(shader);
-	shader->SetSkinningFunc(0);
-	this->skinModel->SetShader(shader);
-	this->skinModel->SetMatrix(mat.matrix(), view, projectionMat);
-	this->skinModel->Draw();
+	for (int i = 0; i < 1; ++i) {
+		world = Matrix4f::Identity();
+		trans = Translation<float, 3>(pos.x(), pos.y() + i * 0.1f, pos.z());
+		scale = DiagonalMatrix<float, 3>(-1.0f, 1.0f, 1.0f);
+		rot = AngleAxisf(Noraml_Rad(-90.0f), Vector3f::UnitX());
+		rot = AngleAxisf(rotation, Vector3f::UnitY()) * rot;
+		mat = trans * rot * scale;
+		shader = this->shader->UseShader("skin");
+		this->light->SetShader(shader);
+		shader->SetVertexShaderSubroutine("CalcBoneMat");
+		this->skinModel->SetShader(shader);
+		this->skinModel->SetMatrix(mat.matrix(), view, projectionMat);
+		//this->skinModel->Draw();
+	}
 
 
 	Matrix3f cameraInv = this->camera->GetViewMatrixInverse().block(0, 0, 3, 3);
@@ -225,24 +271,20 @@ void MyApplication::Draw() {
 	scale = DiagonalMatrix<float, 3>(1.0f, 1.0f, 1.0f);
 	rot = AngleAxisf(Noraml_Rad(0.0f), Vector3f::UnitX());
 	mat = trans * cameraInv * rot * scale;
-	shader = this->shader->GetShader("static");
+	shader = this->shader->UseShader("static");
 	this->model->SetShader(shader);
 	this->model->SetMatrix(mat.matrix(), view, projectionMat);
 	this->model->Draw();
 
-
+	//デバッグ用コリジョン描画
 	world = Matrix4f::Identity();
 	trans = Translation<float, 3>(0, 0, 0);
 	scale = DiagonalMatrix<float, 3>(1.0f, 1.0f, 1.0f);
 	rot = AngleAxisf(Noraml_Rad(0.0f), Vector3f::UnitX());
 	mat = trans * rot * scale;
-	shader = this->shader->GetShader("simple");
-	shader->SetShader();
-	shader->SetShaderParameter(mat.matrix().data(), view.data(), projectionMat.data());
-	this->physics->DebugDraw(mat.matrix().data(), view.data(), projectionMat.data());
-
-
-
+	//this->physics->DebugDraw(mat.matrix(), view, projectionMat);
+	
+	//this->buffer->UnBind();
 }
 
 Matrix4f MyApplication::MatrixPerspectiveLH(float screenWidth, float screenHeight, float fieldOfView, float screenNear, float screenFar) {

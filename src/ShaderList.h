@@ -10,7 +10,7 @@ public:
 	~ShaderList();
 	bool Initialize();
 
-	ShaderClass* GetShader(std::string shaderName);
+	ShaderClass* UseShader(std::string shaderName);
 	bool Add(std::string shaderName, std::string vertexShader, std::string pixelShader);
 	bool Add(std::string shaderName, ShaderClass* shader);
 

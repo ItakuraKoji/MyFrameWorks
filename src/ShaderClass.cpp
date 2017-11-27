@@ -1,7 +1,12 @@
 #include"ShaderClass.h"
 
+////////
+//public
+////
 ShaderClass::ShaderClass() {
-
+	this->fragmentShader = 0;
+	this->vertexShader = 0;
+	this->shaderProgram = 0;
 }
 ShaderClass::~ShaderClass() {
 	glDetachShader(shaderProgram, fragmentShader);
@@ -14,17 +19,16 @@ ShaderClass::~ShaderClass() {
 }
 
 
-bool ShaderClass::Initialize(const char* vsFilename, const char* fsFilename) {
-	GLint status;
+bool ShaderClass::Initialize(std::string vsFilename, std::string fsFilename) {
 	//一時的な文字列の格納先
 	const char *vsResource, *fsResource;
 
 	//頂点シェーダーとフラグメントシェーダー(ピクセルシェーダー)を読み込み
-	vsResource = LoadTxtResource(vsFilename);
+	vsResource = LoadTxtResource(vsFilename.data());
 	if (!vsResource) {
 		return false;
 	}
-	fsResource = LoadTxtResource(fsFilename);
+	fsResource = LoadTxtResource(fsFilename.data());
 	if (!fsResource) {
 		return false;
 	}
@@ -46,6 +50,7 @@ bool ShaderClass::Initialize(const char* vsFilename, const char* fsFilename) {
 	glCompileShader(fragmentShader);
 
 	//エラーチェック
+	GLint status;
 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &status);
 	if (status != GL_TRUE) {
 		std::cout << "VertexShader Compile is Failed " << vsFilename << std::endl;
@@ -68,13 +73,6 @@ bool ShaderClass::Initialize(const char* vsFilename, const char* fsFilename) {
 	glAttachShader(shaderProgram, vertexShader);
 	glAttachShader(shaderProgram, fragmentShader);
 
-	//シェーダー内の変数のロケーションを指定
-	glBindAttribLocation(shaderProgram, 0, "inputPos");
-	glBindAttribLocation(shaderProgram, 1, "inputTexCoord");
-	glBindAttribLocation(shaderProgram, 2, "inputNormal");
-	glBindAttribLocation(shaderProgram, 3, "inputWeight");
-	glBindAttribLocation(shaderProgram, 4, "inputIndex");
-
 
 	//プログラムをリンク
 	glLinkProgram(shaderProgram);
@@ -91,129 +89,95 @@ bool ShaderClass::Initialize(const char* vsFilename, const char* fsFilename) {
 	return true;
 }
 
-//シェーダーをセット
-void ShaderClass::SetShader() {
-	glUseProgram(shaderProgram);
-}
-bool ShaderClass::SetSkinningFunc(int in) {
-	GLuint index;
-	if (in) {
-		index = glGetSubroutineIndex(shaderProgram, GL_VERTEX_SHADER, "NotSkinning");
-	}
-	else {
-		index = glGetSubroutineIndex(shaderProgram, GL_VERTEX_SHADER, "CalcBoneMat");
-	}
-	glUniformSubroutinesuiv(GL_VERTEX_SHADER, 1, &index);
-	return true;
+//UseProgram
+void ShaderClass::UseShader() {
+	glUseProgram(this->shaderProgram);
 }
 
-//シェーダーのUniform変数に値を渡す
-bool ShaderClass::SetShaderParameter(float *world, float *view, float *projection) {
-	GLint location;
-	//ビュー
-	location = glGetUniformLocation(shaderProgram, "view");
-	if (location == -1) {
-		return false;
+//world * view * projection の合成行列を渡す
+void ShaderClass::SetMatrix(Matrix4f& mat) {
+	this->SetValue("matrixWVP", mat);
+}
+//ワールド変換行列だけを渡す
+void ShaderClass::SetWorldMatrix(Matrix4f& world) {
+	this->SetValue("worldMatrix", world);
+}
+//テクスチャリソースの番号を渡す
+void ShaderClass::SetTexture(const char* uniformName, GLuint textureLayer, GLuint textureNumber) {
+	GLuint location;
+	location = glGetUniformLocation(this->shaderProgram, uniformName);
+	if (location != -1) {
+		glActiveTexture(GL_TEXTURE0 + textureLayer);
+		glUniform1i(location, textureLayer);
+		glBindTexture(GL_TEXTURE_2D, textureNumber);
 	}
-	glUniformMatrix4fv(location, 1, GL_FALSE, view);
-
-	//投影
-	location = glGetUniformLocation(shaderProgram, "projection");
-	if (location == -1) {
-		return false;
-	}
-	glUniformMatrix4fv(location, 1, GL_FALSE, projection);
-
-	//ワールド
-	location = glGetUniformLocation(shaderProgram, "world");
-	if (location == -1) {
-		return false;
-	}
-	glUniformMatrix4fv(location, 1, GL_FALSE, world);
-
-	return true;
+}
+//ディレクショナルライト
+void ShaderClass::SetDirectionalLight(float power, Vector4f& color, Vector3f& direction) {
+	SetValue("lightPower", power);
+	SetValue("lightColor", color);
+	SetValue("lightDir", direction);
+}
+//環境光
+void ShaderClass::SetAmbientLight(float power, Vector4f& color) {
+	SetValue("ambientPower", power);
+	SetValue("ambientColor", color);
 }
 
-bool ShaderClass::SetShaderTexture(GLuint textureLayer, GLuint textureNumber) {
-	GLint location;
-	location = glGetUniformLocation(shaderProgram, "sampler");
-	if (location == -1) {
-		return false;
+//汎用受け渡し
+void ShaderClass::SetValue(const char* uniformName, int value) {
+	GLuint location;
+	location = glGetUniformLocation(this->shaderProgram, uniformName);
+	if (location != -1) {
+		glUniform1i(location, value);
 	}
-	glActiveTexture(GL_TEXTURE0 + textureLayer);
-
-	glUniform1i(location, textureLayer);
-	glBindTexture(GL_TEXTURE_2D, textureNumber);
-	return true;
 }
-bool ShaderClass::SetShaderTexture2(GLuint textureLayer, GLuint textureNumber) {
-	GLint location;
-	location = glGetUniformLocation(shaderProgram, "boneTex");
-	if (location == -1) {
-		return false;
+void ShaderClass::SetValue(const char* uniformName, float value) {
+	GLuint location;
+	location = glGetUniformLocation(this->shaderProgram, uniformName);
+	if (location != -1) {
+		glUniform1f(location, value);
 	}
-	glActiveTexture(GL_TEXTURE0 + textureLayer);
-
-	glUniform1i(location, textureLayer);
-	glBindTexture(GL_TEXTURE_2D, textureNumber);
-	return true;
 }
-
-bool ShaderClass::SetShaderNumBone(int num) {
-	GLint location = glGetUniformLocation(shaderProgram, "numBone");
-	if (location == -1) {
-		return false;
+void ShaderClass::SetValue(const char* uniformName, Matrix4f& value) {
+	GLuint location;
+	location = glGetUniformLocation(this->shaderProgram, uniformName);
+	if (location != -1) {
+		glUniformMatrix4fv(location, 1, GL_FALSE, value.data());
 	}
-	glUniform1i(location, num);
-	return true;
 }
-
-bool ShaderClass::SetShaderBoneMatrix(float* boneMat) {
-	GLint location = glGetUniformLocation(shaderProgram, "boneMat");
-	if (location == -1) {
-		return false;
+void ShaderClass::SetValue(const char* uniformName, Vector4f& value) {
+	GLuint location;
+	location = glGetUniformLocation(this->shaderProgram, uniformName);
+	if (location != -1) {
+		glUniform4fv(location, 1, value.data());
 	}
-	glUniformMatrix4fv(location, 70, GL_FALSE, boneMat);
-	return true;
+}
+void ShaderClass::SetValue(const char* uniformName, Vector3f& value) {
+	GLuint location;
+	location = glGetUniformLocation(this->shaderProgram, uniformName);
+	if (location != -1) {
+		glUniform3fv(location, 1, value.data());
+	}
 }
 
-bool ShaderClass::SetLightParameter(const Vector3f& direction, const Vector4f& color, const float power) {
-	GLint location;
-	location = glGetUniformLocation(shaderProgram, "lightDir");
-
-	if (location == -1) {
-		return false;
+//動的シェーダー設定
+void ShaderClass::SetVertexShaderSubroutine(const char* subroutineFunctionName) {
+	GLuint index = glGetSubroutineIndex(this->shaderProgram, GL_VERTEX_SHADER, subroutineFunctionName);
+	if (index != GL_INVALID_INDEX) {
+		glUniformSubroutinesuiv(GL_VERTEX_SHADER, 1, &index);
 	}
-	glUniform3f(location, direction.x(), direction.y(), direction.z());
-
-	location = glGetUniformLocation(shaderProgram, "lightColor");
-	if (location == -1) {
-		return false;
-	}
-	glUniform4f(location, color.x(), color.y(), color.z(), color.w());
-
-	location = glGetUniformLocation(shaderProgram, "lightPower");
-	if (location == -1) {
-		return false;
-	}
-	glUniform1f(location, power);
-	return true;
 }
-bool ShaderClass::SetAmbientParameter(const Vector4f& color, const float power) {
-	GLint location;
-	location = glGetUniformLocation(shaderProgram, "ambientColor");
-	if (location == -1) {
-		return false;
+void ShaderClass::SetFragmentShaderSubroutine(const char* subroutineFunctionName) {
+	GLuint index = glGetSubroutineIndex(this->shaderProgram, GL_FRAGMENT_SHADER, subroutineFunctionName);
+	if (index != GL_INVALID_INDEX) {
+		glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &index);
 	}
-	glUniform4f(location, color.x(), color.y(), color.z(), color.w());
-
-	location = glGetUniformLocation(shaderProgram, "ambientPower");
-	if (location == -1) {
-		return false;
-	}
-	glUniform1f(location, power);
-	return true;
 }
+
+////////
+//private
+////
 
 //シェーダーのテキストファイルを読み込んで文字列を格納したバッファの先頭ポインタを返す
 char* ShaderClass::LoadTxtResource(const char* filename) {

@@ -16,6 +16,7 @@
 #include"InputClass.h"
 #include"Emitter.h"
 #include"HitPrimitive.h"
+#include"FrameBuffer.h"
 
 #include"BulletPhysics.h"
 
@@ -51,6 +52,7 @@ private:
 	MapPolygon *map;
 
 	DirectionalLight *light;
+	Framebuffer* buffer;
 
 	//Ç∆ÇËÇ†Ç¶Ç∏ï®óùÉGÉìÉWÉì
 	BulletPhysics *physics;

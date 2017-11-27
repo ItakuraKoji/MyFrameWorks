@@ -20,7 +20,7 @@ bool Emitter::Initialize() {
 	this->numParticle = 0;
 	this->numMaxParticle = 60000;
 	this->parameter.emitInterval = 0;
-	this->parameter.emitQuantity = 100;
+	this->parameter.emitQuantity = 50;
 	this->parameter.firstLifeLimit = 100;
 	this->parameter.firstPosition << 0.0f, 0.0f, 0.0f;
 	this->parameter.firstPositionVelosity << 0.0f, -0.1f, 0.0f;
@@ -62,14 +62,14 @@ void Emitter::Draw() {
 	}
 
 	//すべてのパーティクルの変形行列を取得してシェーダーの入力に設定
-
-
 	int count = 0;
 	Matrix4f *mat = new Matrix4f[this->numParticle];
 	Vector4f *color = new Vector4f[this->numParticle];
 	for (auto i : this->particleList) {
 		i->GetParticleMatrix(mat[count]);
 		i->GetParticleColor(color[count]);
+
+		mat[count] = this->projection * this->view * mat[count] * this->world;
 		++count;
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, this->particleMatrixBuffer);
@@ -90,6 +90,9 @@ void Emitter::SetShader(ShaderClass *shader) {
 }
 
 void Emitter::SetMatrix(Matrix4f& world, Matrix4f& view, Matrix4f& projection) {
+	this->world = world;
+	this->view = view;
+	this->projection = projection;
 	this->billboard->SetMatrix(world, view, projection);
 }
 

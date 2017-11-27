@@ -33,7 +33,9 @@ void StaticModel::Run() {
 
 //•`‰æ
 void StaticModel::Draw() {
-	this->shader->SetShaderParameter(this->world.data(), this->view.data(), this->projection.data());
+	Matrix4f mat = this->projection * this->view * this->world;
+	this->shader->SetMatrix(mat);
+	this->shader->SetWorldMatrix(this->world);
 
 	int numArray = this->vertexBuffers->GetNumBuffer();
 	for (int i = 0; i < numArray; ++i) {
@@ -70,7 +72,7 @@ void StaticModel::DrawBuffers(int arrayIndex) {
 	for (int k = 0; k < numMaterial; ++k) {
 		if (this->materialDatas->GetTexture(arrayIndex, k)) {
 			GLuint TextureID = this->materialDatas->GetTexture(arrayIndex, k)->GetTextureID();
-			this->shader->SetShaderTexture(0, TextureID);
+			this->shader->SetTexture("sampler", 0, TextureID);
 		}
 		GLuint IBO = this->vertexBuffers->GetIBO(arrayIndex, k);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);

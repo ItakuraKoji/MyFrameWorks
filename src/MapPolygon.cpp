@@ -95,7 +95,8 @@ void MapPolygon::setCollisionWorld(BulletPhysics *physics) {
 		btDefaultMotionState *mt = new btDefaultMotionState(trans);
 		btRigidBody::btRigidBodyConstructionInfo info(mass, mt, collision, btVector3(0.0f, 0.0f, 0.0f));
 		btRigidBody *rigid = new btRigidBody(info);
-		physics->AddRigidBody(rigid);
+		rigid->setUserIndex(i);
+		physics->AddRigidBody(rigid, BulletBitMask::BIT_MAP, BulletBitMask::BIT_ZERO);
 	}
 }
 

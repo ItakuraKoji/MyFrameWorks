@@ -23,6 +23,7 @@
 #include<GLFW/glfw3.h>
 #include<iostream>
 #include"MyApplication.h"
+#include"InputClass.h"
 
 
 //アプリケーションの動作を管理
@@ -42,8 +43,8 @@ private:
 	int screenWidth, screenHeight;
 	float screenNeer, screenFar;
 	bool isFullScreen;
-	GLFWwindow *windowHandle;
-	MyApplication *application;
+	GLFWwindow* windowHandle;
+	MyApplication* application;
 
 	unsigned long cullentTime;
 	unsigned long startTime;

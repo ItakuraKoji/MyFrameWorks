@@ -14,6 +14,16 @@ bool ShaderList::Initialize() {
 }
 
 
+
+//リストからシェーダーを取得、そしてUseProgram()、キーが存在しないときはNULLを返す
+ShaderClass* ShaderList::UseShader(std::string name) {
+	if (this->shaderList.find(name) == shaderList.end()) {
+		return 0;
+	}
+	this->shaderList[name]->UseShader();
+	return this->shaderList[name];
+}
+
 //リストへのシェーダーの追加
 bool ShaderList::Add(std::string name, ShaderClass* shader) {
 	if (!shader) {
@@ -21,13 +31,6 @@ bool ShaderList::Add(std::string name, ShaderClass* shader) {
 	}
 	this->shaderList[name] = shader;
 	return true;
-}
-//リストからシェーダーを取得、キーが存在しないときはNULLを返す
-ShaderClass* ShaderList::GetShader(std::string name) {
-	if (this->shaderList.find(name) == shaderList.end()) {
-		return 0;
-	}
-	return this->shaderList[name];
 }
 //シェーダーの読み込みをした後にリストへ登録
 bool ShaderList::Add(std::string name, std::string vertex, std::string pixel) {

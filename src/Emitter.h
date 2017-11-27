@@ -6,6 +6,7 @@
 #include"Particle.h"
 #include<vector>
 #include<random>
+#include<Eigen\Core>
 
 //ビルボードのパーティクルの生成制御クラス
 class Emitter {
@@ -25,6 +26,10 @@ private:
 
 
 private:
+	Matrix4f world;
+	Matrix4f view;
+	Matrix4f projection;
+
 	int classCount;
 	SquareModel* billboard;
 	GLuint particleMatrixBuffer;

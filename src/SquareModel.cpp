@@ -32,9 +32,9 @@ void SquareModel::Draw(int numInstance) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
 
-	this->shader->SetShader();
-	this->shader->SetShaderParameter(this->world.data(), this->view.data(), this->projection.data());
-	this->shader->SetShaderTexture(0, this->materialDatas->GetTexture(0, 0)->GetTextureID());
+	Matrix4f mat = this->projection * this->view * this->world;
+	this->shader->SetMatrix(mat);
+	this->shader->SetTexture("sampler", 0, this->materialDatas->GetTexture(0, 0)->GetTextureID());
 
 	glBindVertexArray(this->vertexBuffers->GetVAO(0));
 	glDrawElementsInstanced(GL_TRIANGLES, this->vertexBuffers->GetNumFace(0) * 3, GL_UNSIGNED_INT, 0, numInstance);

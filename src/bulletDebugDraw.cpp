@@ -10,15 +10,21 @@ bulletDebugDraw::bulletDebugDraw() {
 	//VBO
 	glGenBuffers(1, &this->VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-	glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(btVector3), point, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 2 * (sizeof(btVector3) + sizeof(btVector4)), 0, GL_DYNAMIC_DRAW);
+	//pos
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer    (0, 3, GL_FLOAT, GL_FALSE, sizeof(btVector3), 0);
+	//color
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer    (1, 4, GL_FLOAT, GL_FALSE, sizeof(btVector4), (unsigned char*)NULL + (2 * sizeof(btVector3)));
 	//IBO
 	glGenBuffers(1, &this->IBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->IBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 2 * sizeof(unsigned int), index, GL_STATIC_DRAW);
 
 	glBindVertexArray(0);
+
+	glLineWidth(2.0f);
 
 }
 bulletDebugDraw::~bulletDebugDraw() {
@@ -30,24 +36,38 @@ bulletDebugDraw::~bulletDebugDraw() {
 	glDeleteBuffers(1, &this->IBO);
 }
 
+void bulletDebugDraw::SetShader(ShaderClass* shader) {
+	this->shader = shader;
+}
+
+
 void bulletDebugDraw::drawLine(const btVector3& from, const btVector3& to,
 	const btVector3& color) {
 	btVector3 lineVertex[] = { from, to };
+	btVector4 lineColor[] = { btVector4(color.x(), color.y(), color.z(), 1.0f), btVector4(color.x(), color.y(), color.z(), 1.0f) };
 
 	glBindVertexArray(this->VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-	glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(btVector3), NULL, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 2 * (sizeof(btVector3) + sizeof(btVector4)), 0, GL_DYNAMIC_DRAW);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, 2 * sizeof(btVector3), lineVertex);
+	glBufferSubData(GL_ARRAY_BUFFER, 2 * sizeof(btVector3), 2 * sizeof(btVector4), lineColor);
 	glDrawElements(GL_LINES, 6, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 }
 
+
 void bulletDebugDraw::drawLine(const btVector3& from, const btVector3& to,
 	const btVector3& fromColor, const btVector3& toColor) {
+	btVector3 lineVertex[] = { from, to };
+	btVector4 lineColor[] = { btVector4(fromColor.x(), fromColor.y(), fromColor.z(), 1.0f), btVector4(toColor.x(), toColor.y(), toColor.z(), 1.0f) };
 
-	/* fromからtoへ、線を描画
-	fromとtoで個別に色指定されてる版 */
-
+	glBindVertexArray(this->VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+	glBufferData(GL_ARRAY_BUFFER, 2 * (sizeof(btVector3) + sizeof(btVector4)), 0, GL_DYNAMIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, 2 * sizeof(btVector3), lineVertex);
+	glBufferSubData(GL_ARRAY_BUFFER, 2 * sizeof(btVector3), 2 * sizeof(btVector4), lineColor);
+	glDrawElements(GL_LINES, 6, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
 }
 
 void bulletDebugDraw::drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB,
@@ -55,7 +75,16 @@ void bulletDebugDraw::drawContactPoint(const btVector3& PointOnB, const btVector
 	const btVector3& color) {
 
 	/* PointOnBに、衝突点を描画 */
+	btVector3 lineVertex[] = { PointOnB, PointOnB + normalOnB };
+	btVector4 lineColor[] = { btVector4(color.x(), color.y(), color.z(), 1.0f), btVector4(color.x(), color.y(), color.z(), 1.0f) };
 
+	glBindVertexArray(this->VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+	glBufferData(GL_ARRAY_BUFFER, 2 * (sizeof(btVector3) + sizeof(btVector4)), 0, GL_DYNAMIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, 2 * sizeof(btVector3), lineVertex);
+	glBufferSubData(GL_ARRAY_BUFFER, 2 * sizeof(btVector3), 2 * sizeof(btVector4), lineColor);
+	glDrawElements(GL_LINES, 6, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
 }
 
 

@@ -1,0 +1,19 @@
+#version 400
+
+//input
+in vec2 tex;
+in vec4 color;
+
+//output
+out vec4 outputColor;
+
+//uniform
+uniform sampler2D sampler;
+
+//FragmentShader
+void main(void)
+{
+	outputColor = texture2D(sampler, tex);
+	outputColor *= color;
+	//outputColor = color;
+}

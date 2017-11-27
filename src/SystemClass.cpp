@@ -31,6 +31,7 @@ bool SystemClass::Initialize() {
 		return false;
 	}
 
+	startTime = timeGetTime();
 	framecount = 0;
 	return true;
 }
