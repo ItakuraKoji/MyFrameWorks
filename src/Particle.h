@@ -1,6 +1,5 @@
 #pragma once
 
-#include"SquareModel.h"
 #include"ParticleParameter.h"
 #include<Eigen\Geometry>
 #include<vector>
