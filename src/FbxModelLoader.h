@@ -3,13 +3,15 @@
 #include<Eigen\Core>
 #include<vector>
 #include<unordered_map>
+#include<string>
 
 #include"ModelData.h"
 
 using namespace Eigen;
 
 //FBXファイルから頂点、マテリアル、ボーン情報を読み取って保持し、ほかのクラスに渡す
-//渡さなかったクラスはこのクラスで開放する
+//読み込みができなかったデータはdeleteすることによって、無い物として扱える（NULL）
+//このクラスでは解放責任を負わない
 //ボーンは４つ以下のウェイトで決め打ちとする　(５つ以上では不具合が出る)　のでモデル側で気を付ける
 class FbxModelLoader {
 private:
@@ -32,7 +34,7 @@ private:
 public:
 	FbxModelLoader();
 	~FbxModelLoader();
-	bool Initialize(const char* fileName);
+	bool LoadFBX(const std::string& fileName, TextureList* list);
 
 	FbxData*       PassFbxData();
 	VertexData*    PassVertexBuffer();
@@ -42,7 +44,7 @@ public:
 
 
 private:
-	bool          InitializeFBX(const char* fileName);
+	bool          InitializeFBX(const std::string& fileName);
 	bool          RecursiveNode(FbxNode* node);
 	bool          LoadFbxMesh(FbxMesh* mesh);
 	void          LoadVertex(FbxMesh* mesh, Vertex* vertex);
@@ -52,9 +54,14 @@ private:
 
 
 private:
+	bool loaded;
+
 	FbxData       *fbxData;
 	VertexData    *bufferData;
 	MaterialData  *materialData;
 	AnimationData *animationData;
 	BoneData      *boneData;
+
+	//クラス内でアクセスするためのもの。deleteする責任はない
+	TextureList *textureList;
 };

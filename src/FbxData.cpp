@@ -4,12 +4,14 @@
 //public
 ////
 FbxData::FbxData() {
-	this->manager = NULL;
-	this->importer = NULL;
-	this->scene = NULL;
+	this->manager = 0;
+	this->importer = 0;
+	this->scene = 0;
 }
 FbxData::~FbxData() {
-	this->manager->Destroy();
+	if (this->manager) {
+		this->manager->Destroy();
+	}
 }
 
 bool FbxData::Initialize() {

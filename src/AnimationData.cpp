@@ -4,6 +4,7 @@
 //public
 ////
 AnimationData::AnimationData() {
+	this->speed = 1;
 	this->currentAnimID = 0;
 	this->currentAnimTime = 0;
 	this->isLoop = false;
@@ -18,8 +19,8 @@ bool AnimationData::Initialize() {
 	return true;
 }
 
-void AnimationData::Run() {
-	this->currentAnimTime += 2;
+void AnimationData::UpdateAnimation() {
+	this->currentAnimTime += this->speed * 2;
 	if (this->currentAnimTime > this->maxAnimTime) {
 		if (this->isLoop) {
 			this->currentAnimTime = 0;
@@ -31,8 +32,12 @@ void AnimationData::Add(AnimType &animData) {
 	this->animList[animData.animName] = animData;
 }
 
+void AnimationData::SetSpeed(int speed) {
+	this->speed = speed;
+}
+
 //アニメーションをセット
-void AnimationData::SetAnimation(std::string animName, FbxScene *fbxScene, bool playOnce, bool loop) {
+void AnimationData::SetAnimation(const std::string& animName, FbxScene *fbxScene, bool playOnce, bool loop) {
 	//キーが存在しないなら帰る
 	if (this->animList.find(animName) == this->animList.end()) {
 		return;

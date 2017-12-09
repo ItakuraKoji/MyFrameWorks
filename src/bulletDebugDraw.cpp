@@ -41,8 +41,7 @@ void bulletDebugDraw::SetShader(ShaderClass* shader) {
 }
 
 
-void bulletDebugDraw::drawLine(const btVector3& from, const btVector3& to,
-	const btVector3& color) {
+void bulletDebugDraw::drawLine(const btVector3& from, const btVector3& to, const btVector3& color) {
 	btVector3 lineVertex[] = { from, to };
 	btVector4 lineColor[] = { btVector4(color.x(), color.y(), color.z(), 1.0f), btVector4(color.x(), color.y(), color.z(), 1.0f) };
 
@@ -56,8 +55,7 @@ void bulletDebugDraw::drawLine(const btVector3& from, const btVector3& to,
 }
 
 
-void bulletDebugDraw::drawLine(const btVector3& from, const btVector3& to,
-	const btVector3& fromColor, const btVector3& toColor) {
+void bulletDebugDraw::drawLine(const btVector3& from, const btVector3& to, const btVector3& fromColor, const btVector3& toColor) {
 	btVector3 lineVertex[] = { from, to };
 	btVector4 lineColor[] = { btVector4(fromColor.x(), fromColor.y(), fromColor.z(), 1.0f), btVector4(toColor.x(), toColor.y(), toColor.z(), 1.0f) };
 
@@ -70,9 +68,7 @@ void bulletDebugDraw::drawLine(const btVector3& from, const btVector3& to,
 	glBindVertexArray(0);
 }
 
-void bulletDebugDraw::drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB,
-	btScalar distance, int lifeTime,
-	const btVector3& color) {
+void bulletDebugDraw::drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color) {
 
 	/* PointOnBÇ…ÅAè’ìÀì_Çï`âÊ */
 	btVector3 lineVertex[] = { PointOnB, PointOnB + normalOnB };

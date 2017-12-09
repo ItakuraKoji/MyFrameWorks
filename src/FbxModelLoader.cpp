@@ -4,6 +4,13 @@
 //public
 ////
 FbxModelLoader::FbxModelLoader() {
+	this->fbxData = 0;
+	this->bufferData = 0;
+	this->materialData = 0;
+	this->animationData = 0;
+	this->boneData = 0;
+
+	this->loaded = false;
 }
 FbxModelLoader::~FbxModelLoader() {
 	if (this->fbxData) {
@@ -24,50 +31,58 @@ FbxModelLoader::~FbxModelLoader() {
 
 }
 
-bool FbxModelLoader::Initialize(const char* fileName) {
+bool FbxModelLoader::LoadFBX(const std::string& fileName, TextureList* list) {
 	this->fbxData       = new FbxData;
 	this->bufferData    = new VertexData;
 	this->materialData  = new MaterialData;
 	this->animationData = new AnimationData;
 	this->boneData      = new BoneData;
 
-	if (!this->InitializeFBX(fileName)) {
+	this->textureList = list;
+
+	if (!InitializeFBX(fileName)) {
 		return false;
 	}
 
 	FbxNode *rootNode = this->fbxData->GetScene()->GetRootNode();
-	if (!this->RecursiveNode(rootNode)) {
+	if (!RecursiveNode(rootNode)) {
 		return false;
 	}
+	this->loaded = true;
 	return true;
 }
 
 //FBXポインタの譲渡
 FbxData* FbxModelLoader::PassFbxData() {
+	assert(this->loaded);
 	FbxData* returnData = this->fbxData;
 	this->fbxData = NULL;
 	return returnData;
 }
 //頂点バッファ情報の譲渡
 VertexData* FbxModelLoader::PassVertexBuffer() {
+	assert(this->loaded);
 	VertexData* returnData = this->bufferData;
 	this->bufferData = NULL;
 	return returnData;
 }
 //マテリアル情報の譲渡
 MaterialData* FbxModelLoader::PassMaterialData() {
+	assert(this->loaded);
 	MaterialData* returnData = this->materialData;
 	this->materialData = NULL;
 	return returnData;
 }
 //アニメーション情報の譲渡
 AnimationData* FbxModelLoader::PassAnimationData() {
+	assert(this->loaded);
 	AnimationData* returnData = this->animationData;
 	this->animationData = NULL;
 	return returnData;
 }
 //ボーン行列情報の譲渡
 BoneData* FbxModelLoader::PassBoneData() {
+	assert(this->loaded);
 	BoneData* returnData = this->boneData;
 	this->boneData = NULL;
 	return returnData;
@@ -82,7 +97,7 @@ bool FbxModelLoader::RecursiveNode(FbxNode* node) {
 
 	if (attr != NULL) {
 		if (attr->GetAttributeType() == FbxNodeAttribute::eMesh) {
-			if (!this->LoadFbxMesh(node->GetMesh())) {
+			if (!LoadFbxMesh(node->GetMesh())) {
 				return false;
 			}
 		}
@@ -90,7 +105,7 @@ bool FbxModelLoader::RecursiveNode(FbxNode* node) {
 	//再起
 	int numChild = node->GetChildCount();
 	for (int i = 0; i < numChild; ++i) {
-		if (!this->RecursiveNode(node->GetChild(i))) {
+		if (!RecursiveNode(node->GetChild(i))) {
 			return false;
 		}
 	}
@@ -110,8 +125,8 @@ bool FbxModelLoader::LoadFbxMesh(FbxMesh* mesh) {
 		vertex = new Vertex[numVertex];
 	}
 
+	//頂点
 	LoadVertex(mesh, vertex);
-
 	GLuint VAO;
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
@@ -125,10 +140,8 @@ bool FbxModelLoader::LoadFbxMesh(FbxMesh* mesh) {
 
 
 	//ボーン
-	PolygonTable *table = this->CreatePolygonTable(mesh, numVertex, numFace);
-	if (!this->LoadBones(mesh, vertex, table)) {
-
-	}
+	PolygonTable *table = CreatePolygonTable(mesh, numVertex, numFace);
+	this->LoadBones(mesh, vertex, table);
 
 	if (numUV > numVertex) {
 		numVertex = numUV;
@@ -307,8 +320,7 @@ void FbxModelLoader::LoadMaterial(FbxMesh* mesh, std::vector<Material>& material
 		//テクスチャ
 		FbxProperty lProperty = pMaterial->FindProperty(FbxSurfaceMaterial::sDiffuse, 0);
 		FbxFileTexture *pTexture = FbxCast<FbxFileTexture>(lProperty.GetSrcObject<FbxFileTexture>(0));
-		material[i].textureName[0] = 0;
-		material[i].texture = 0;
+		material[i].textureName = "";
 		if (!pTexture) {
 		}
 		else {
@@ -327,13 +339,12 @@ void FbxModelLoader::LoadMaterial(FbxMesh* mesh, std::vector<Material>& material
 
 
 			if (strcmp(ext, ".tga") == 0) {
-				material[i].texture = new Texture;
-				material[i].texture->Initialize();
-				if (!material[i].texture->LoadImage(fileName)) {
-					return;
-					material[i].textureName[0] = 0;
+				material[i].textureName = fileName;
+				
+				if (!this->textureList->LoadTexture(fileName, fileName)) {
+					material[i].textureName = "";
 				}
-				strcpy_s(material[i].textureName, name);
+
 			}
 		}
 		//インデックスバッファ
@@ -391,6 +402,11 @@ FbxModelLoader::PolygonTable* FbxModelLoader::CreatePolygonTable(FbxMesh *mesh, 
 bool FbxModelLoader::LoadBones(FbxMesh* mesh, Vertex* vertex, PolygonTable *table) {
 	FbxDeformer *deformer = mesh->GetDeformer(0);
 	if (!deformer) {
+		//ボーンが存在しなかったらアニメーション関連のデータに別れを告げる
+		delete this->animationData;
+		delete this->boneData;
+		this->animationData = 0;
+		this->boneData = 0;
 		return false;
 	}
 	FbxSkin *skin = static_cast<FbxSkin*>(deformer);
@@ -474,21 +490,28 @@ bool FbxModelLoader::LoadBones(FbxMesh* mesh, Vertex* vertex, PolygonTable *tabl
 
 
 
-bool FbxModelLoader::InitializeFBX(const char* fileName) {
+bool FbxModelLoader::InitializeFBX(const std::string& fileName) {
 
 	//マネージャーを生成しモデルデータをインポート
 	FbxManager  *manager;
 	FbxImporter *importer;
 	FbxScene    *scene;
 	manager  = FbxManager::Create();
+	if (!manager) {
+		return false;
+	}
+
 	importer = FbxImporter::Create(manager, "");
 	scene    = FbxScene::Create(manager, "");
-	if (!manager || !importer || !scene) {
+
+	this->fbxData->Add(manager, importer, scene);
+
+	if (!importer || !scene) {
 		return false;
 	}
 
 	//初期化とインポート
-	if (!importer->Initialize(fileName)) {
+	if (!importer->Initialize(fileName.data())) {
 		return false;
 	}
 	if (!importer->Import(scene)) {
@@ -516,7 +539,6 @@ bool FbxModelLoader::InitializeFBX(const char* fileName) {
 		//追加
 		this->animationData->Add(anim);
 	}
-	this->fbxData->Add(manager, importer, scene);
 
 	return true;
 }

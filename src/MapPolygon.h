@@ -7,8 +7,6 @@
 #include<vector>
 #include<iostream>
 
-#include"HitClass.h"
-#include"HitPrimitive.h"
 #include"BulletPhysics.h"
 
 //判定用モデルのポリゴン情報を持つクラス、描画は一切できない。行列による回転にも対応していない
@@ -38,7 +36,6 @@ public:
 	bool LoadModel(const char *filename);
 	void Finalize();
 	int GetNumFace();
-	bool isHitPolygon(int index, Hit::Segment segment, Vector3f &crossPoint);
 
 	void setCollisionWorld(BulletPhysics *physics);
 

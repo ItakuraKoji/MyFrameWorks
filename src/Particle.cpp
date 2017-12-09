@@ -1,7 +1,7 @@
 #include"Particle.h"
 
-Particle::Particle() {
-
+Particle::Particle(ParticleParameter& parameter) {
+	Initialize(parameter);
 }
 Particle::~Particle() {
 

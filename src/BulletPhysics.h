@@ -20,6 +20,7 @@ public:
 	BulletPhysics();
 	~BulletPhysics();
 	bool Initialize();
+	void Finalize();
 	void Run();
 	void DebugDraw(Matrix4f& world, Matrix4f& view, Matrix4f& projection);
 
@@ -35,14 +36,13 @@ public:
 	void RemoveCollisionObject(btCollisionObject* obj);
 
 	//MoveCharacterObject()
-	//・操作性を意識したコリジョンの移動、壁判定も行う（壁ずり生成を禁止することで単純な移動判定も可能）
+	//・操作性を意識したコリジョンの移動、壁判定も行う（主にプレイヤー用）
 	//戻り値
 	//・激突したオブジェクトの法線（衝突しなかった場合は長さ０を返す）
 	//引数
 	//・移動するワールドに登録されたオブジェクト
 	//・移動ベクトル
-	//・踏ん張りの利く（壁ずりを作らない）限界の角度　※１°程度の誤差あり
-	btVector3 MoveCharacterObject(btCollisionObject* obj, btVector3 &moveVector, float limitAngle);
+	//・(省略可)XYZ軸、マリギャラのようなギミックができたらいいなって
 	void MoveCharacterObject(btCollisionObject* obj, btVector3& moveVector, btVector3& xAxis = btVector3(1, 0, 0), btVector3& yAxis = btVector3(0, 1, 0), btVector3& zAxis = btVector3(0, 0, 1));
 
 

@@ -1,7 +1,8 @@
 #pragma once
 
-
-#include"SquareModel.h"
+#include"DrawParameters.h"
+#include"MeshModel.h"
+#include"ModelDataFactory.h"
 #include"ParticleParameter.h"
 #include"Particle.h"
 #include<vector>
@@ -13,11 +14,10 @@ class Emitter {
 public:
 	Emitter();
 	~Emitter();
-	bool Initialize();
+	bool Initialize(DrawParameters& param);
 	void Run();
-	void Draw();
+	void Draw(DrawParameters& param);
 	void SetMatrix(Matrix4f& world, Matrix4f& view, Matrix4f& projection);
-	void SetShader(ShaderClass* shader);
 
 private:
 	void EmitParticle();
@@ -31,7 +31,8 @@ private:
 	Matrix4f projection;
 
 	int classCount;
-	SquareModel* billboard;
+	MeshModel* test;
+
 	GLuint particleMatrixBuffer;
 	GLuint particleColorBuffer;
 
@@ -40,4 +41,7 @@ private:
 
 	int numParticle;
 	int numMaxParticle;
+
+public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };

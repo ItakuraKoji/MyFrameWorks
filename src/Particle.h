@@ -9,7 +9,7 @@
 //パーティクルの情報を管理する、このクラスには描画機能に相当するメゾッドはない
 class Particle {
 public:
-	Particle();
+	Particle(ParticleParameter& parameter);
 	~Particle();
 	bool Initialize(ParticleParameter& parameter);
 	void Run();

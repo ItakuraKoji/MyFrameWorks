@@ -4,8 +4,8 @@
 //public
 ////
 SystemClass::SystemClass() {
-	this->screenWidth = 800;
-	this->screenHeight = 800;
+	this->screenWidth = 1000;
+	this->screenHeight = 1000;
 	this->screenNeer = 0.1f;
 	this->screenFar = 1000.0f;
 	this->isFullScreen = false;
@@ -42,8 +42,7 @@ void SystemClass::Run() {
 	{
 		application->Run();
 
-		glClearColor(0.3f, 0.5f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
 
 		application->Draw();
 

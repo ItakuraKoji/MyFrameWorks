@@ -1,6 +1,7 @@
 #pragma once
 #include<Eigen\Core>
 #include"ShaderClass.h"
+#include"TextureList.h"
 
 using namespace Eigen;
 //ƒ‚ƒfƒ‹Šî’êƒNƒ‰ƒX
@@ -9,10 +10,12 @@ public:
 	Model();
 	virtual ~Model();
 	virtual void Draw() = 0;
+	virtual void InstanceDraw(int numInstance) = 0;
 	void SetMatrix(Matrix4f& world, Matrix4f& view, Matrix4f& projection);
 	void SetShader(ShaderClass* shader);
 protected:
-	ShaderClass *shader;
+	TextureList* textureList;
+	ShaderClass* shader;
 	Matrix4f world;
 	Matrix4f view;
 	Matrix4f projection;

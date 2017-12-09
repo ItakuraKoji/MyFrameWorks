@@ -19,7 +19,7 @@ void BoneData::Add(std::vector<Bone> &boneData) {
 }
 
 void BoneData::SetMatrixTextureData(int arrayIndex, Texture *texture) {
-	int numBone = this->boneData[arrayIndex].size();
+	int numBone = (int)this->boneData[arrayIndex].size();
 	float mat[16 * 70] = {};
 
 	for (int i = 0; i < numBone; ++i) {
@@ -40,7 +40,7 @@ void BoneData::SetClurrentBoneData(int arrayIndex, int time) {
 	fbxTime.SetTime(0, 0, 0, time, 0, FbxTime::eFrames120);
 
 
-	int numBone = this->boneData[arrayIndex].size();
+	int numBone = (int)this->boneData[arrayIndex].size();
 	for (int k = 0; k < numBone; ++k) {
 		FbxAMatrix mat;
 		Matrix4f currentBone;

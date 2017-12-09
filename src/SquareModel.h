@@ -1,10 +1,11 @@
 #pragma once
+#include"Model.h"
 #include"ModelData.h"
 #include"ShaderClass.h"
 #include<vector>
 
 //ビルボードなどに使うであろう板ポリゴン、マテリアルは一つのみ
-class SquareModel{
+class SquareModel : public Model {
 private:
 	struct Vertex
 	{
@@ -12,29 +13,23 @@ private:
 		Vector2f uv;
 	};
 public:
-	SquareModel();
+	SquareModel(std::string textureName, TextureList* list);
 	~SquareModel();
 
-	bool Initialize(const char* texturefileName);
-	void Run();
-	void Draw(int numInstance);
+	bool Initialize(std::string textureName, TextureList* list);
+	void Finalize();
+	void SetTexture(std::string textureName);
+	void Draw();
+	void InstanceDraw(int numInstance);
 	void SetShader(ShaderClass* shader);
 	void SetMatrix(Matrix4f& world, Matrix4f& view, Matrix4f& projection);
 
 private:
 	void InitializeBuffers();
-	void InitializeMaterial(const char* texturefileName);
+	void InitializeMaterial(std::string textureName);
 
 private:
-	ShaderClass *shader;
-
-	Matrix4f world;
-	Matrix4f view;
-	Matrix4f projection;
-
-	VertexData *vertexBuffers;
-	MaterialData *materialDatas;
-
-public:
-	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+	VertexData* vertexBuffers;
+	MaterialData* materialDatas;
+	std::string textureName;
 };

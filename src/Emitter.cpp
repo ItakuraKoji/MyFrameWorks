@@ -5,9 +5,10 @@ Emitter::Emitter() {
 
 }
 Emitter::~Emitter() {
-	if (this->billboard) {
-		delete this->billboard;
+	if (this->test) {
+		delete this->test;
 	}
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glDeleteBuffers(1, &this->particleMatrixBuffer);
 
@@ -16,7 +17,7 @@ Emitter::~Emitter() {
 	}
 }
 
-bool Emitter::Initialize() {
+bool Emitter::Initialize(DrawParameters& param) {
 	this->numParticle = 0;
 	this->numMaxParticle = 60000;
 	this->parameter.emitInterval = 0;
@@ -26,10 +27,12 @@ bool Emitter::Initialize() {
 	this->parameter.firstPositionVelosity << 0.0f, -0.1f, 0.0f;
 	this->classCount = 0;
 
-	this->billboard = new SquareModel;
-	if (!this->billboard->Initialize("particle.tga")) {
-		return false;
-	}
+	ModelDataFactory factory;
+
+	param.textureList->LoadTexture("particle.tga", "particle.tga");
+	this->test = new MeshModel(factory.CreateSquareModel("particle.tga", param));
+
+	this->test->BindVAO();
 	//GLSL ‚Å‚Í Mat4 ‚Ì“ü—Í‚Í4‚Â‚Ì Vec4 ‚Æ‚µ‚Äˆµ‚í‚ê‚é
 	glGenBuffers(1, &this->particleMatrixBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, this->particleMatrixBuffer);
@@ -56,7 +59,7 @@ void Emitter::Run() {
 	UpDateParticle();
 }
 
-void Emitter::Draw() {
+void Emitter::Draw(DrawParameters& param) {
 	if (!numParticle) {
 		return;
 	}
@@ -80,20 +83,15 @@ void Emitter::Draw() {
 	glBufferData(GL_ARRAY_BUFFER, this->numMaxParticle * sizeof(float) * 4, NULL, GL_STREAM_DRAW);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, this->numParticle * sizeof(float) * 4, color);
 
-	this->billboard->Draw(this->numParticle);
+	this->test->InstanceDraw(this->numParticle, param, "static");
 	delete mat;
 	delete color;
-}
-
-void Emitter::SetShader(ShaderClass *shader) {
-	this->billboard->SetShader(shader);
 }
 
 void Emitter::SetMatrix(Matrix4f& world, Matrix4f& view, Matrix4f& projection) {
 	this->world = world;
 	this->view = view;
 	this->projection = projection;
-	this->billboard->SetMatrix(world, view, projection);
 }
 
 ////////
@@ -119,8 +117,7 @@ void Emitter::EmitParticle() {
 		pp.firstColor << (float)rand() / (RAND_MAX), (float)rand() / (RAND_MAX), (float)rand() / (RAND_MAX), 1.0f;
 		
 
-		Particle* particle = new Particle;
-		particle->Initialize(pp);
+		Particle* particle = new Particle(pp);
 		this->particleList.push_back(particle);
 		++this->numParticle;
 	}

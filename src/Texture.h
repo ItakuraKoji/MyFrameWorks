@@ -1,5 +1,6 @@
 #pragma once
 #include<GLEW\glew.h>
+#include<string>
 #include"ImageLoader.h"
 
 //外部から読み込まれた、あるいは作られたテクスチャを保持する
@@ -9,7 +10,7 @@ public:
 	Texture();
 	~Texture();
 	bool Initialize();
-	bool LoadImage(const char *filename);
+	bool LoadImage(const std::string& fileName);
 	void SetImageData(void *data, int width, int height);
 	GLuint GetTextureID();
 	unsigned int GetWidth();

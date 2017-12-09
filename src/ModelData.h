@@ -6,14 +6,13 @@
 #include<GLEW\glew.h>
 #include<Eigen\Core>
 #include<Eigen\Geometry>
-#include"Texture.h"
+#include"TextureList.h"
 
 using namespace Eigen;
 struct Material {
-	char materialName[100];
-	char textureName[100];
+	std::string materialName;
+	std::string textureName;
 	int numFace;
-	Texture *texture;
 	Vector4f diffuse;
 	Vector4f ambient;
 	Vector4f specular;
@@ -27,7 +26,7 @@ struct VertexBuffer {
 	int numFace;
 };
 struct Bone {
-	FbxCluster *cluster;
+	FbxCluster* cluster;
 	Matrix4f bindMat;
 	Matrix4f currentMat;
 	Matrix4f interPolationMat;
@@ -48,20 +47,13 @@ public:
 	bool Initialize();
 
 	void Add(std::vector<Material> material);
-	float GetDiffuseColor();
-	float GetSpecularPower();
-	float GetSpecularColor();
-	float GetAmbient();
-	Texture* GetTexture(int arrayIndex, int materialIndex);
+	void SetTextureName(const std::string& textureName, int arrayIndex, int materialIndex);
+	Material& GetMaterial(int arrayIndex, int materialIndex);
+
 	int GetNumMaterial(int arrayIndex);
 	int GetNumFace(int arrayIndex, int materialIndex);
 
 private:
-	float diffuseColor;
-	float ambient;
-	float specularPower;
-	float specularColor;
-	Texture* texture;
 	std::vector<std::vector<Material>> materialArray;
 };
 
@@ -91,13 +83,15 @@ public:
 	AnimationData();
 	~AnimationData();
 	bool Initialize();
-	void Run();
-	void Add(AnimType &animData);
-	void SetAnimation(std::string animName, FbxScene *fbxScene, bool playOnce, bool loop);
+	void UpdateAnimation();
+	void SetSpeed(int speed);
+	void Add(AnimType& animData);
+	void SetAnimation(const std::string& animName, FbxScene* fbxScene, bool playOnce, bool loop);
 	int GetCurrentAnimTime();
 
 private:
 	std::unordered_map<std::string, AnimType> animList;
+	int speed;
 	int currentAnimID;
 	int currentAnimTime;
 	int maxAnimTime;
@@ -113,7 +107,7 @@ public:
 	bool Initialize();
 	void Add(std::vector<Bone>& boneData);
 	void SetClurrentBoneData(int arrayIndex, int time);
-	void SetMatrixTextureData(int arrayIndex, Texture *texture);
+	void SetMatrixTextureData(int arrayIndex, Texture* texture);
 	int GetNumBone(int arrayIndex);
 
 private:
@@ -124,18 +118,32 @@ private:
 	std::vector<std::vector<Bone>> boneData;
 };
 
-//本当は分離できたらよかったんだが、FBXが思ったよりもデータが多いのでFBXManagerたちはそのまま持っておいたほうがいいかもしれない
+//本当は分離できたらよかったんだが、FBXの情報量が思ったよりも多いのでFBXManagerたちはそのまま持っておいたほうがいいかもしれない
 //FBXManagerの解放責任はここにある
 class FbxData {
 public:
 	FbxData();
 	~FbxData();
 	bool Initialize();
-	void Add(FbxManager* manager, FbxImporter *importer, FbxScene *scene);
+	void Add(FbxManager* manager, FbxImporter* importer, FbxScene* scene);
 	FbxScene* GetScene();
 
 private:
-	FbxManager* manager;
-	FbxImporter *importer;
-	FbxScene *scene;
+	FbxManager*  manager;
+	FbxImporter* importer;
+	FbxScene*    scene;
+};
+
+//モデルデータをひとまとめにしたもの
+struct ModelDatas {
+public:
+	ModelDatas();
+	~ModelDatas();
+
+public:
+	FbxData*       fbxData;
+	VertexData*    vertexBuffer;
+	MaterialData*  material;
+	BoneData*      bone;
+	AnimationData* animation;
 };

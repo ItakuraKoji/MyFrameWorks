@@ -38,6 +38,9 @@ Vector3f CameraClass::GetAxisZ() {
 Vector3f CameraClass::GetTerget() {
 	return this->target;
 }
+Vector3f CameraClass::GetPosition() {
+	return this->position;
+}
 
 //注視点を与えてビュー行列を作成
 void CameraClass::Draw() {
@@ -52,7 +55,6 @@ void CameraClass::Draw() {
 //ビュー行列を作成
 void CameraClass::MatrixLookAt(Vector3f position, Vector3f lookAt, Vector3f up) {
 	Vector3f zAxis, xAxis, yAxis;
-	float length;
 
 	// zAxis = normal(lookAt - position)
 	zAxis.x() = lookAt.x() - position.x();

@@ -3,32 +3,32 @@
 ////////
 //public
 ////
-ShaderClass::ShaderClass() {
+ShaderClass::ShaderClass(const std::string& vsFilename, const std::string& fsFilename) {
 	this->fragmentShader = 0;
 	this->vertexShader = 0;
 	this->shaderProgram = 0;
+	if (!Initialize(vsFilename, fsFilename)) {
+		Finalize();
+		throw "シェーダー読み込み失敗";
+	}
 }
 ShaderClass::~ShaderClass() {
-	glDetachShader(shaderProgram, fragmentShader);
-	glDetachShader(shaderProgram, vertexShader);
-
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-
-	glDeleteProgram(shaderProgram);
+	Finalize();
 }
 
 
-bool ShaderClass::Initialize(std::string vsFilename, std::string fsFilename) {
+bool ShaderClass::Initialize(const std::string& vsFileName, const std::string& fsFileName) {
+	Finalize();
+
 	//一時的な文字列の格納先
 	const char *vsResource, *fsResource;
 
 	//頂点シェーダーとフラグメントシェーダー(ピクセルシェーダー)を読み込み
-	vsResource = LoadTxtResource(vsFilename.data());
+	vsResource = LoadTxtResource(vsFileName);
 	if (!vsResource) {
 		return false;
 	}
-	fsResource = LoadTxtResource(fsFilename.data());
+	fsResource = LoadTxtResource(fsFileName);
 	if (!fsResource) {
 		return false;
 	}
@@ -53,14 +53,14 @@ bool ShaderClass::Initialize(std::string vsFilename, std::string fsFilename) {
 	GLint status;
 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &status);
 	if (status != GL_TRUE) {
-		std::cout << "VertexShader Compile is Failed " << vsFilename << std::endl;
+		std::cout << "VertexShader Compile is Failed " << vsFileName << std::endl;
 		ShowShaderErrors(vertexShader);
 		system("pause");
 		return false;
 	}
 	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &status);
 	if (status != GL_TRUE) {
-		std::cout << "FragmetShader Compile is Failed " << fsFilename << std::endl;
+		std::cout << "FragmetShader Compile is Failed " << fsFileName << std::endl;
 		ShowShaderErrors(fragmentShader);
 		system("pause");
 
@@ -89,23 +89,34 @@ bool ShaderClass::Initialize(std::string vsFilename, std::string fsFilename) {
 	return true;
 }
 
+//開放
+void ShaderClass::Finalize() {
+	glDetachShader(shaderProgram, fragmentShader);
+	glDetachShader(shaderProgram, vertexShader);
+
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+
+	glDeleteProgram(shaderProgram);
+}
+
 //UseProgram
 void ShaderClass::UseShader() {
 	glUseProgram(this->shaderProgram);
 }
 
 //world * view * projection の合成行列を渡す
-void ShaderClass::SetMatrix(Matrix4f& mat) {
+void ShaderClass::SetMatrix(const Matrix4f& mat) {
 	this->SetValue("matrixWVP", mat);
 }
 //ワールド変換行列だけを渡す
-void ShaderClass::SetWorldMatrix(Matrix4f& world) {
+void ShaderClass::SetWorldMatrix(const Matrix4f& world) {
 	this->SetValue("worldMatrix", world);
 }
 //テクスチャリソースの番号を渡す
-void ShaderClass::SetTexture(const char* uniformName, GLuint textureLayer, GLuint textureNumber) {
+void ShaderClass::SetTexture(const std::string& uniformName, GLuint textureLayer, GLuint textureNumber) {
 	GLuint location;
-	location = glGetUniformLocation(this->shaderProgram, uniformName);
+	location = glGetUniformLocation(this->shaderProgram, uniformName.data());
 	if (location != -1) {
 		glActiveTexture(GL_TEXTURE0 + textureLayer);
 		glUniform1i(location, textureLayer);
@@ -113,63 +124,63 @@ void ShaderClass::SetTexture(const char* uniformName, GLuint textureLayer, GLuin
 	}
 }
 //ディレクショナルライト
-void ShaderClass::SetDirectionalLight(float power, Vector4f& color, Vector3f& direction) {
+void ShaderClass::SetDirectionalLight(float power, const Vector4f& color, const Vector3f& direction) {
 	SetValue("lightPower", power);
 	SetValue("lightColor", color);
 	SetValue("lightDir", direction);
 }
 //環境光
-void ShaderClass::SetAmbientLight(float power, Vector4f& color) {
+void ShaderClass::SetAmbientLight(float power, const Vector4f& color) {
 	SetValue("ambientPower", power);
 	SetValue("ambientColor", color);
 }
 
 //汎用受け渡し
-void ShaderClass::SetValue(const char* uniformName, int value) {
+void ShaderClass::SetValue(const std::string& uniformName, int value) {
 	GLuint location;
-	location = glGetUniformLocation(this->shaderProgram, uniformName);
+	location = glGetUniformLocation(this->shaderProgram, uniformName.data());
 	if (location != -1) {
 		glUniform1i(location, value);
 	}
 }
-void ShaderClass::SetValue(const char* uniformName, float value) {
+void ShaderClass::SetValue(const std::string& uniformName, float value) {
 	GLuint location;
-	location = glGetUniformLocation(this->shaderProgram, uniformName);
+	location = glGetUniformLocation(this->shaderProgram, uniformName.data());
 	if (location != -1) {
 		glUniform1f(location, value);
 	}
 }
-void ShaderClass::SetValue(const char* uniformName, Matrix4f& value) {
+void ShaderClass::SetValue(const std::string& uniformName, const Matrix4f& value) {
 	GLuint location;
-	location = glGetUniformLocation(this->shaderProgram, uniformName);
+	location = glGetUniformLocation(this->shaderProgram, uniformName.data());
 	if (location != -1) {
 		glUniformMatrix4fv(location, 1, GL_FALSE, value.data());
 	}
 }
-void ShaderClass::SetValue(const char* uniformName, Vector4f& value) {
+void ShaderClass::SetValue(const std::string& uniformName, const Vector4f& value) {
 	GLuint location;
-	location = glGetUniformLocation(this->shaderProgram, uniformName);
+	location = glGetUniformLocation(this->shaderProgram, uniformName.data());
 	if (location != -1) {
 		glUniform4fv(location, 1, value.data());
 	}
 }
-void ShaderClass::SetValue(const char* uniformName, Vector3f& value) {
+void ShaderClass::SetValue(const std::string& uniformName, const Vector3f& value) {
 	GLuint location;
-	location = glGetUniformLocation(this->shaderProgram, uniformName);
+	location = glGetUniformLocation(this->shaderProgram, uniformName.data());
 	if (location != -1) {
 		glUniform3fv(location, 1, value.data());
 	}
 }
 
 //動的シェーダー設定
-void ShaderClass::SetVertexShaderSubroutine(const char* subroutineFunctionName) {
-	GLuint index = glGetSubroutineIndex(this->shaderProgram, GL_VERTEX_SHADER, subroutineFunctionName);
+void ShaderClass::SetVertexShaderSubroutine(const std::string& subroutineFunctionName) {
+	GLuint index = glGetSubroutineIndex(this->shaderProgram, GL_VERTEX_SHADER, subroutineFunctionName.data());
 	if (index != GL_INVALID_INDEX) {
 		glUniformSubroutinesuiv(GL_VERTEX_SHADER, 1, &index);
 	}
 }
-void ShaderClass::SetFragmentShaderSubroutine(const char* subroutineFunctionName) {
-	GLuint index = glGetSubroutineIndex(this->shaderProgram, GL_FRAGMENT_SHADER, subroutineFunctionName);
+void ShaderClass::SetFragmentShaderSubroutine(const std::string& subroutineFunctionName) {
+	GLuint index = glGetSubroutineIndex(this->shaderProgram, GL_FRAGMENT_SHADER, subroutineFunctionName.data());
 	if (index != GL_INVALID_INDEX) {
 		glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &index);
 	}
@@ -180,13 +191,13 @@ void ShaderClass::SetFragmentShaderSubroutine(const char* subroutineFunctionName
 ////
 
 //シェーダーのテキストファイルを読み込んで文字列を格納したバッファの先頭ポインタを返す
-char* ShaderClass::LoadTxtResource(const char* filename) {
+char* ShaderClass::LoadTxtResource(const std::string& fileName) {
 	std::ifstream fin;
 	char* returnSource;
 	char input;
 	int fileSize;
 
-	fin.open(filename);
+	fin.open(fileName);
 
 	if (fin.fail()) {
 		return 0;
@@ -207,7 +218,7 @@ char* ShaderClass::LoadTxtResource(const char* filename) {
 		return 0;
 	}
 
-	fin.open(filename);
+	fin.open(fileName);
 	fin.read(returnSource, fileSize);
 	fin.close();
 	

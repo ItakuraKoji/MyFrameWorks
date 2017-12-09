@@ -2,10 +2,38 @@
 ////////
 //public
 ////
-SkinModel::SkinModel() {
-
+SkinModel::SkinModel(const char* fileName, TextureList* list) {
+	this->fbxData = 0;
+	this->vertexBuffers = 0;
+	this->materialDatas = 0;
+	this->animationDatas = 0;
+	this->boneDatas = 0;
+	this->boneTexture = 0;
+	if (!Initialize(fileName, list)) {
+		Finalize();
+		throw "読み込み失敗";
+	}
 }
 SkinModel::~SkinModel() {
+	Finalize();
+}
+
+//初期化
+bool SkinModel::Initialize(const char* fileName, TextureList* list) {
+	this->textureList = list;
+	if (!LoadFbxModel(fileName)) {
+		return false;
+	}
+	this->boneTexture = new Texture;
+	this->boneTexture->Initialize();
+
+	//this->animationDatas->SetAnimation("Idle", this->fbxData->GetScene(), false, true);
+
+	return true;
+}
+
+//開放
+void SkinModel::Finalize() {
 	if (this->vertexBuffers) {
 		delete this->vertexBuffers;
 	}
@@ -26,41 +54,53 @@ SkinModel::~SkinModel() {
 	}
 }
 
-//初期化
-bool SkinModel::Initialize(const char* fileName) {
-	if (!LoadFbxModel(fileName)) {
-		return false;
-	}
-	this->boneTexture = new Texture;
-	this->boneTexture->Initialize();
-
-	this->animationDatas->SetAnimation("Idle", this->fbxData->GetScene(), false, true);
-
-	return true;
+void SkinModel::BindVAO() {
+	glBindVertexArray(this->vertexBuffers->GetVAO(0));
 }
 
-//更新
-void SkinModel::Run() {
-	this->animationDatas->Run();
-
+void SkinModel::SetAnimation(std::string animationName, bool isLoop, bool isInterporation, bool playOnce) {
+	this->animationDatas->SetAnimation(animationName, this->fbxData->GetScene(), false, true);
+}
+void SkinModel::SetSpeed(int speed) {
+	this->animationDatas->SetSpeed(speed);
 }
 
 //描画
 void SkinModel::Draw() {
+	if (this->boneDatas) {
+		this->animationDatas->UpdateAnimation();
+	}
+
 	Matrix4f mat = this->projection * this->view * this->world;
 	this->shader->SetMatrix(mat);
 	this->shader->SetWorldMatrix(this->world);
 
-	int time = this->animationDatas->GetCurrentAnimTime();
 	int numArray = this->vertexBuffers->GetNumBuffer();
 	for (int i = 0; i < numArray; ++i) {
-		this->boneDatas->SetClurrentBoneData(i, time);
-		this->boneDatas->SetMatrixTextureData(i, this->boneTexture);
-		this->shader->SetTexture("boneTex", 1, this->boneTexture->GetTextureID());
-		this->shader->SetValue("numBone", this->boneDatas->GetNumBone(i));
-
+		if (this->boneDatas) {
+			SetBone(i);
+		}
 		DrawBuffers(i);
 	}
+}
+
+//インスタンス描画(メッシュ階層の一番上の一つ目のマテリアルのみ)
+void SkinModel::InstanceDraw(int numInstance) {
+	Matrix4f mat = this->projection * this->view * this->world;
+	this->shader->SetMatrix(mat);
+	this->shader->SetWorldMatrix(this->world);
+
+	int numArray = this->vertexBuffers->GetNumBuffer();
+	GLuint VAO = this->vertexBuffers->GetVAO(0);
+	glBindVertexArray(VAO);
+
+	int numMaterial = this->materialDatas->GetNumMaterial(0);
+	Texture* texture = this->textureList->GetTexture(this->materialDatas->GetMaterial(0, 0).textureName);
+	GLuint TextureID = texture->GetTextureID();
+	this->shader->SetTexture("sampler", 0, TextureID);
+	GLuint IBO = this->vertexBuffers->GetIBO(0, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+	glDrawElementsInstanced(GL_TRIANGLES, this->materialDatas->GetNumFace(0, 0) * 3, GL_UNSIGNED_INT, 0, numInstance);
 }
 
 
@@ -70,9 +110,9 @@ void SkinModel::Draw() {
 ////
 
 bool SkinModel::LoadFbxModel(const char* fileName) {
-	FbxModelLoader *loader;
-	loader = new FbxModelLoader;
-	if (!loader->Initialize(fileName)) {
+	FbxModelLoader* loader = new FbxModelLoader;
+	if (!loader->LoadFBX(fileName, this->textureList)) {
+		delete loader;
 		return false;
 	}
 
@@ -86,14 +126,22 @@ bool SkinModel::LoadFbxModel(const char* fileName) {
 	return true;
 }
 
+void SkinModel::SetBone(int arrayIndex) {
+	int time = this->animationDatas->GetCurrentAnimTime();
+	this->boneDatas->SetClurrentBoneData(arrayIndex, time);
+	this->boneDatas->SetMatrixTextureData(arrayIndex, this->boneTexture);
+	this->shader->SetTexture("boneTex", 1, this->boneTexture->GetTextureID());
+	this->shader->SetValue("numBone", this->boneDatas->GetNumBone(arrayIndex));
+}
+
 void SkinModel::DrawBuffers(int arrayIndex) {
 	GLuint VAO = this->vertexBuffers->GetVAO(arrayIndex);
 	glBindVertexArray(VAO);
 
 	int numMaterial = this->materialDatas->GetNumMaterial(arrayIndex);
 	for (int k = 0; k < numMaterial; ++k) {
-
-		GLuint TextureID = this->materialDatas->GetTexture(arrayIndex, k)->GetTextureID();
+		Texture* texture = this->textureList->GetTexture(this->materialDatas->GetMaterial(arrayIndex, k).textureName);
+		GLuint TextureID = texture->GetTextureID();
 		this->shader->SetTexture("sampler", 0, TextureID);
 		GLuint IBO = this->vertexBuffers->GetIBO(arrayIndex, k);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);

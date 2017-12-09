@@ -6,7 +6,7 @@ Model::Model() {
 Model::~Model() {
 
 }
-void Model::SetShader(ShaderClass *shader) {
+void Model::SetShader(ShaderClass* shader) {
 	this->shader = shader;
 }
 

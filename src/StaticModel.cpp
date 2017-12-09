@@ -3,32 +3,35 @@
 ////////
 //public
 ////
-StaticModel::StaticModel() {
-
+StaticModel::StaticModel(const char* fileName, TextureList* list) {
+	this->vertexBuffers = 0;
+	this->materialDatas = 0;
+	if (!Initialize(fileName, list)) {
+		Finalize();
+		throw "読み込み失敗";
+	}
 }
 StaticModel::~StaticModel() {
-	if (this->vertexBuffers) {
-		delete this->vertexBuffers;
-	}
-	if (this->materialDatas) {
-		delete this->materialDatas;
-	}
-	if (this->fbxData) {
-		delete this->fbxData;
-	}
+	Finalize();
 }
 
 //初期化
-bool StaticModel::Initialize(const char* fileName) {
+bool StaticModel::Initialize(const char* fileName, TextureList* list) {
+	this->textureList = list;
 	if (!LoadFbxModel(fileName)) {
 		return false;
 	}
 	return true;
 }
 
-//更新
-void StaticModel::Run() {
-
+//開放
+void StaticModel::Finalize() {
+	if (this->vertexBuffers) {
+		delete this->vertexBuffers;
+	}
+	if (this->materialDatas) {
+		delete this->materialDatas;
+	}
 }
 
 //描画
@@ -43,6 +46,11 @@ void StaticModel::Draw() {
 	}
 }
 
+//インスタンス描画
+void StaticModel::InstanceDraw(int numInstance) {
+
+}
+
 
 
 ////////
@@ -50,13 +58,12 @@ void StaticModel::Draw() {
 ////
 
 bool StaticModel::LoadFbxModel(const char* fileName) {
-	FbxModelLoader *loader;
-	loader = new FbxModelLoader;
-	if (!loader->Initialize(fileName)) {
+	FbxModelLoader* loader = new FbxModelLoader;
+	if (!loader->LoadFBX(fileName, this->textureList)) {
+		delete loader;
 		return false;
 	}
 
-	this->fbxData       = loader->PassFbxData();
 	this->vertexBuffers = loader->PassVertexBuffer();
 	this->materialDatas = loader->PassMaterialData();
 
@@ -70,8 +77,9 @@ void StaticModel::DrawBuffers(int arrayIndex) {
 
 	int numMaterial = this->materialDatas->GetNumMaterial(arrayIndex);
 	for (int k = 0; k < numMaterial; ++k) {
-		if (this->materialDatas->GetTexture(arrayIndex, k)) {
-			GLuint TextureID = this->materialDatas->GetTexture(arrayIndex, k)->GetTextureID();
+		Texture* texture = this->textureList->GetTexture(this->materialDatas->GetMaterial(arrayIndex, k).textureName);
+		if (texture) {
+			GLuint TextureID = texture->GetTextureID();
 			this->shader->SetTexture("sampler", 0, TextureID);
 		}
 		GLuint IBO = this->vertexBuffers->GetIBO(arrayIndex, k);

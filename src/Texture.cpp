@@ -4,7 +4,7 @@
 //public
 ////
 Texture::Texture() {
-
+	Initialize();
 }
 Texture::~Texture() {
 	glDeleteTextures(1, &this->textureID);
@@ -24,9 +24,9 @@ bool Texture::Initialize() {
 	return true;
 }
 
-bool Texture::LoadImage(const char *filename) {
+bool Texture::LoadImage(const std::string& fileName) {
 	ImageLoader loader;
-	if (!loader.LoadTGAImage(filename, this->textureID, this->width, this->height)) {
+	if (!loader.LoadTGAImage(fileName, this->textureID, this->width, this->height)) {
 		return false;
 	}
 	return true;

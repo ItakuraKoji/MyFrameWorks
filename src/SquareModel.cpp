@@ -2,10 +2,33 @@
 ////////
 //public
 ////
-SquareModel::SquareModel() {
-
+SquareModel::SquareModel(std::string textureName, TextureList* list) {
+	this->vertexBuffers = 0;
+	this->materialDatas = 0;
+	if (!Initialize(textureName, list)) {
+		Finalize();
+		throw "そのテクスチャ名は存在しません ： 先にリストへテクスチャを作成してください";
+	}
 }
 SquareModel::~SquareModel() {
+	Finalize();
+}
+
+bool SquareModel::Initialize(std::string textureName, TextureList* list) {
+	this->textureList = list;
+	if (!list->GetTexture(textureName)) {
+		return false;
+	}
+
+	this->vertexBuffers = new VertexData;
+	this->materialDatas = new MaterialData;
+
+	InitializeBuffers();
+	InitializeMaterial(textureName);
+	return true;
+}
+
+void SquareModel::Finalize() {
 	if (this->vertexBuffers) {
 		delete this->vertexBuffers;
 	}
@@ -14,33 +37,30 @@ SquareModel::~SquareModel() {
 	}
 }
 
-bool SquareModel::Initialize(const char* texturefileName) {
-	this->vertexBuffers = new VertexData;
-	this->materialDatas = new MaterialData;
-
-	InitializeBuffers();
-	InitializeMaterial(texturefileName);
-	return true;
-}
-
-void SquareModel::Run() {
+void SquareModel::SetTexture(std::string textureName) {
 
 }
 
-void SquareModel::Draw(int numInstance) {
-	glDepthMask(GL_FALSE);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
-
+//描画
+void SquareModel::Draw() {
 	Matrix4f mat = this->projection * this->view * this->world;
 	this->shader->SetMatrix(mat);
-	this->shader->SetTexture("sampler", 0, this->materialDatas->GetTexture(0, 0)->GetTextureID());
+	Texture* texture = this->textureList->GetTexture(this->materialDatas->GetMaterial(0, 0).textureName);
+	this->shader->SetTexture("sampler", 0, texture->GetTextureID());
+
+	glBindVertexArray(this->vertexBuffers->GetVAO(0));
+	glDrawElements(GL_TRIANGLES, this->vertexBuffers->GetNumFace(0) * 3, GL_UNSIGNED_INT, 0);
+}
+
+//インスタンス描画
+void SquareModel::InstanceDraw(int numInstance) {
+	Matrix4f mat = this->projection * this->view * this->world;
+	this->shader->SetMatrix(mat);
+	Texture* texture = this->textureList->GetTexture(this->materialDatas->GetMaterial(0, 0).textureName);
+	this->shader->SetTexture("sampler", 0, texture->GetTextureID());
 
 	glBindVertexArray(this->vertexBuffers->GetVAO(0));
 	glDrawElementsInstanced(GL_TRIANGLES, this->vertexBuffers->GetNumFace(0) * 3, GL_UNSIGNED_INT, 0, numInstance);
-
-	glDisable(GL_BLEND);
-	glDepthMask(GL_TRUE);
 }
 
 void SquareModel::SetShader(ShaderClass *shader) {
@@ -59,13 +79,13 @@ void SquareModel::SetMatrix(Matrix4f& world, Matrix4f& view, Matrix4f& projectio
 void SquareModel::InitializeBuffers() {
 	Vertex vertex[4];
 	vertex[0].pos << -0.1f, 0.1f, 0.0f;
-	vertex[0].uv << 0.0f, 0.0f;
+	vertex[0].uv << 0.0f, 1.0f;
 	vertex[1].pos << 0.1f, 0.1f, 0.0f;
-	vertex[1].uv << 1.0f, 0.0f;
+	vertex[1].uv << 1.0f, 1.0f;
 	vertex[2].pos << 0.1f, -0.1f, 0.0f;
-	vertex[2].uv << 1.0f, 1.0f;
+	vertex[2].uv << 1.0f, 0.0f;
 	vertex[3].pos << -0.1f, -0.1f, 0.0f;
-	vertex[3].uv << 0.0f, 1.0f;
+	vertex[3].uv << 0.0f, 0.0f;
 
 	unsigned int index[6];
 	index[0] = 0;
@@ -111,7 +131,7 @@ void SquareModel::InitializeBuffers() {
 	this->vertexBuffers->Add(vertexBuffer);
 }
 
-void SquareModel::InitializeMaterial(const char* texturefileName) {
+void SquareModel::InitializeMaterial(std::string textureName) {
 	//メッシュ配列は一つだけで、マテリアルもその中に一つだけ持っている
 	std::vector<Material> material;
 	material.resize(1);
@@ -122,10 +142,7 @@ void SquareModel::InitializeMaterial(const char* texturefileName) {
 	material[0].power = 0.0f;
 	material[0].numFace = 6;
 
-	Texture* texture = new Texture;
-	texture->Initialize();
-	texture->LoadImage(texturefileName);
-	material[0].texture = texture;
+	material[0].textureName = textureName;
 
 	this->materialDatas->Add(material);
 }

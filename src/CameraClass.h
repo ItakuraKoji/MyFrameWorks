@@ -21,6 +21,7 @@ public:
 	Vector3f GetAxisY();
 	Vector3f GetAxisZ();
 	Vector3f GetTerget();
+	Vector3f GetPosition();
 
 private:
 	//ƒrƒ…[s—ñ‚ğì¬

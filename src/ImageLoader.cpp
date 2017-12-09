@@ -1,7 +1,7 @@
 #include"ImageLoader.h"
 
 //TGAƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚İ
-bool ImageLoader::LoadTGAImage(const char* filename, GLuint TextureID, unsigned int &returnWidth, unsigned int &returnHeight) {
+bool ImageLoader::LoadTGAImage(const std::string& fileName, GLuint TextureID, unsigned int &returnWidth, unsigned int &returnHeight) {
 	std::ifstream file;
 
 	char* tgaImage;
@@ -11,7 +11,7 @@ bool ImageLoader::LoadTGAImage(const char* filename, GLuint TextureID, unsigned 
 	GLenum glColorFormat, tgaColorFormat;
 
 
-	file.open(filename, std::ios::binary | std::ios::in);
+	file.open(fileName, std::ios::binary | std::ios::in);
 	if (file.fail()) {
 		return false;
 	}

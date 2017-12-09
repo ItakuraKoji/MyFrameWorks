@@ -6,6 +6,7 @@
 MapPolygon::MapPolygon() {
 	mfbx_manager = 0;
 	mfbx_scene = 0;
+	Initialize();
 }
 MapPolygon::~MapPolygon() {
 	Finalize();
@@ -41,34 +42,6 @@ bool MapPolygon::LoadModel(const char *filename) {
 	return true;
 }
 
-//保有するポリゴンを判定する
-bool MapPolygon::isHitPolygon(int index, Hit::Segment segment, Vector3f &crossPoint) {
-	Vector3f p[3];
-	//ポリゴンデータから頂点を抜き出す（三角ポリゴンなので３つ）
-	for (int i = 0; i < 3; ++i) {
-		float x = m_polygonStack[0].polygon[index].point[i].x();
-		float y = m_polygonStack[0].polygon[index].point[i].y();
-		float z = m_polygonStack[0].polygon[index].point[i].z();
-
-		p[i] = Vector3f(x, y, z);
-	}
-
-	Hit::Segment seg(segment.firstPoint, Vector3f(0.0f, 1.0f, 0.0f));
-	Hit::Capsule cap(seg, 1.0f);
-	Vector3f normal = Hit::GetPolygonNormal(p[0], p[1], p[2]);
-	bool result = Hit::IsHitPolygonAndCapsule(cap, p[0], p[1], p[2], crossPoint);
-	while (Hit::IsHitPolygonAndCapsule(cap, p[0], p[1], p[2], crossPoint)) {
-		cap.segment.firstPoint -= normal / 100.0f;
-	}
-	crossPoint = cap.segment.firstPoint - seg.firstPoint;
-	if (index == 28 || index == 31) {
-		std::cout << "Distance : " << Hit::GetDistanceSegmentAndPolygon(cap.segment, p[0], p[1], p[2]) << std::endl;
-	}
-
-	return result;
-
-	return Hit::HitSegmentAndPolygon(segment, p[0], p[1], p[2], crossPoint);
-}
 
 //ポリゴン数を獲得
 int MapPolygon::GetNumFace() {

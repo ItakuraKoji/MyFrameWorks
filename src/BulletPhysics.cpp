@@ -5,30 +5,10 @@ void printVec3(btVector3& vec) {
 }
 
 BulletPhysics::BulletPhysics() {
-
+	Initialize();
 }
 BulletPhysics::~BulletPhysics() {
-	btCollisionObjectArray a;
-	for (int i = this->bulletWorld->getNumCollisionObjects() - 1; i >= 0; --i) {
-		btCollisionObject *obj = this->bulletWorld->getCollisionObjectArray()[i];
-		btRigidBody       *rigid = btRigidBody::upcast(obj);
-		if (rigid && rigid->getMotionState()) {
-			delete rigid->getMotionState();
-		}
-		this->bulletWorld->removeCollisionObject(obj);
-		delete obj;
-	}
-	for (int i = 0; i < this->shapeArray.size(); ++i) {
-		delete this->shapeArray[i];
-	}
-
-	delete this->bulletWorld;
-	delete this->solver;
-	delete this->broadphase;
-	delete this->dispatcher;
-	delete this->config;
-
-	delete this->shader;
+	Finalize();
 }
 
 //bulletWorldの初期化
@@ -44,19 +24,49 @@ bool BulletPhysics::Initialize() {
 
 	this->bulletWorld->setGravity(btVector3(0.0f, -10.0f, 0.0f));
 
-	this->shader = new ShaderClass;
-	if (!this->shader->Initialize("SimpleShader.vs", "SimpleShader.ps")) {
-		return false;
+	try {
+		this->shader = new ShaderClass("SimpleShader.vs", "SimpleShader.ps");
+	}
+	catch(...){
+		//何もしない
 	}
 	debugDrawer.SetShader(this->shader);
 	return true;
 }
+//開放
+void BulletPhysics::Finalize() {
+	for (int i = this->bulletWorld->getNumCollisionObjects() - 1; i >= 0; --i) {
+		btCollisionObject* obj   = this->bulletWorld->getCollisionObjectArray()[i];
+		btRigidBody*       rigid = btRigidBody::upcast(obj);
+		if (rigid && rigid->getMotionState()) {
+			delete rigid->getMotionState();
+		}
+		this->bulletWorld->removeCollisionObject(obj);
+		delete obj;
+	}
+	for (int i = 0; i < this->shapeArray.size(); ++i) {
+		delete this->shapeArray[i];
+	}
+
+	delete this->bulletWorld;
+	delete this->solver;
+	delete this->broadphase;
+	delete this->dispatcher;
+	delete this->config;
+	delete this->shader;
+}
+
 //シミュレーションを進める
 void BulletPhysics::Run() {
 	this->bulletWorld->stepSimulation(1 / 60.0f, 10, 1 / 60.0f);
 }
 //デバッグ描画
 void BulletPhysics::DebugDraw(Matrix4f& world, Matrix4f& view, Matrix4f& projection) {
+	//シェーダーの読み込みに失敗したときはデバッグ描画できない
+	if (!this->shader) {
+		return;
+	}
+
 	this->shader->UseShader();
 
 	Matrix4f mat = projection * view * world;
@@ -81,86 +91,6 @@ void BulletPhysics::RemoveCollisionObject(btCollisionObject *obj) {
 
 }
 
-//凸形状のコリジョンを動かす。その際に、衝突が発生したらtrueを返す(旧型)
-btVector3 BulletPhysics::MoveCharacterObject(btCollisionObject *obj, btVector3 &moveVector, float limitAngle) {
-	btCollisionShape *shape = obj->getCollisionShape();
-	if (!shape->isConvex()) {
-		return btVector3(0, 0, 0);
-	}
-
-	btTransform from = obj->getWorldTransform();
-	btTransform to = from;
-	to.setOrigin(to.getOrigin() + moveVector);
-	//fromとtoが等しいときにエラーを吐くので帰っていただく
-	if (from == to || moveVector.isZero()) {
-		return btVector3(0, 0, 0);
-	}
-
-	
-	//当然ながら自分自身とは判定を取らないようなコールバックを作ってある
-	MyConvexClosestCallBack cb(obj);
-	this->bulletWorld->convexSweepTest((btConvexShape*)shape, from, to, cb);
-	//std::cout << cb.count << std::endl;
-
-
-	if (!cb.hasHit()) {
-		obj->setWorldTransform(to);
-		return btVector3(0, 0, 0);
-	}
-
-
-	//衝突点を算出
-	btVector3 objPos;
-	//エラー防止でゼロ初期化 （btVector3でwの値は使われないはずなのに、比較時にちゃんと使われるという罠）
-	objPos.setZero();
-	objPos.setInterpolate3(from.getOrigin(), to.getOrigin(), cb.m_closestHitFraction - 0.01f);
-
-	float angle_cos = (float)cb.m_hitNormalWorld.dot(-moveVector.normalized());
-	float limit_cos = (float)btCos(btRadians(limitAngle));
-	angle_cos = (int)(angle_cos * 10000.0f) / 10000.0f;
-	limit_cos = (int)(limit_cos * 10000.0f) / 10000.0f;
-	if (abs(angle_cos - limit_cos) < 0.0001f) {
-		angle_cos = limit_cos;
-	}
-	//指定の角度より坂が緩やかなら滑らない
-	if (angle_cos > limit_cos) {
-		to.setOrigin(objPos);
-		obj->setWorldTransform(to);
-		return cb.m_hitNormalWorld;
-	}
-
-	//壁ずりベクトルを算出
-	btVector3 goVec;
-	goVec.setZero();
-	goVec = to.getOrigin() - objPos;
-	goVec += cb.m_hitNormalWorld * (-goVec.dot(cb.m_hitNormalWorld) + 0.01f);
-
-	float norm = goVec.norm();
-
-
-	MyConvexClosestCallBack cb2(obj);
-	btVector3 result = btVector3(0, 0, 0);
-	//壁ずりの衝突判定
-	from.setOrigin(objPos);
-	to.setOrigin(from.getOrigin() + goVec);
-	//fromとtoが等しいときにエラーを吐くので帰っていただく
-	if (!(from == to)) {
-		this->bulletWorld->convexSweepTest((btConvexShape*)shape, from, to, cb2, 1.0f);
-		//壁ずりベクトルが壁にぶつからなければ衝突法線は返さない
-		if (cb2.hasHit()) {
-			objPos.setInterpolate3(from.getOrigin(), to.getOrigin(), cb2.m_closestHitFraction - 0.01f);
-			from.setOrigin(objPos);
-			to.setOrigin(from.getOrigin());
-			result = cb2.m_hitNormalWorld;
-		}
-	}
-
-	obj->setWorldTransform(to);
-	return result;
-
-
-}
-
 bool BulletPhysics::FindConfrictionObjects(std::vector<btCollisionObject*>& resultArray, btCollisionObject* myself) {
 	return true;
 }
@@ -175,7 +105,7 @@ void BulletPhysics::MoveCharacterObject(btCollisionObject *obj, btVector3 &moveV
 	btVector3 normal;
 	btTransform prevTrans = obj->getWorldTransform();
 	//まず法線を取得してみる
-	normal = MoveConvexObject(obj, -yAxis * 0.1f, 90.0f);
+	normal = MoveConvexObject(obj, -yAxis * 0.1f, 40.0f);
 	if (normal.norm() >= 0.001f) {
 		//床基準の方向軸
 		xAxis = normal.cross(zAxis);
@@ -186,7 +116,7 @@ void BulletPhysics::MoveCharacterObject(btCollisionObject *obj, btVector3 &moveV
 	obj->setWorldTransform(prevTrans);
 	btVector3 virtical = moveVector.y() * yAxis;
 	//縦
-	normal = MoveConvexObject(obj, virtical, 40.0f);
+	MoveConvexObject(obj, virtical, 40.0f);
 	//横
 	btVector3 horizontal = (moveVector.x()) * xAxis + (moveVector.z()) * zAxis;
 	MoveConvexObject(obj, horizontal, 0.0f);
@@ -225,7 +155,8 @@ btVector3 BulletPhysics::MoveConvexObject(btCollisionObject *obj, btVector3 &mov
 	//移動二回目
 	MoveSimulation(obj, goVec, hitFraction);
 
-	return normal;
+	//壁ずり時は衝突法線を返さない
+	return btVector3(0, 0, 0);
 }
 
 //移動部分をまとめ

@@ -1,7 +1,7 @@
 #include"InputClass.h"
 
-InputClass::InputClass() {
-
+InputClass::InputClass(UINT joyID) {
+	Initialize(joyID);
 }
 
 InputClass::~InputClass() {
