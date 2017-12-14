@@ -1,9 +1,5 @@
 #include"BulletPhysics.h"
 
-void printVec3(btVector3& vec) {
-	printf("%+.4f, %+.4f, %+.4f\n", vec.x(), vec.y(), vec.z());
-}
-
 BulletPhysics::BulletPhysics() {
 	Initialize();
 }
@@ -25,7 +21,7 @@ bool BulletPhysics::Initialize() {
 	this->bulletWorld->setGravity(btVector3(0.0f, -10.0f, 0.0f));
 
 	try {
-		this->shader = new ShaderClass("SimpleShader.vs", "SimpleShader.ps");
+		this->shader = new ShaderClass("Shader/SimpleShader.vs", "Shader/SimpleShader.ps");
 	}
 	catch(...){
 		//何もしない
@@ -74,16 +70,44 @@ void BulletPhysics::DebugDraw(Matrix4f& world, Matrix4f& view, Matrix4f& project
 	this->bulletWorld->debugDrawWorld();
 }
 
-void BulletPhysics::AddRigidBody(btRigidBody *rigidbody, int confrictMask, int hitMask) {
-	this->shapeArray.push_back(rigidbody->getCollisionShape());
-	this->bulletWorld->addRigidBody(rigidbody, confrictMask, confrictMask | hitMask);
-	rigidbody->setUserIndex(confrictMask);
-	rigidbody->setUserIndex2(hitMask);
+//オブジェクト生成
+//剛体
+btRigidBody* BulletPhysics::CreateRigidBody(btCollisionShape* shape, btScalar mass, int mask, btVector3& pos, btVector3& rot) {
+	btTransform trans;
+	trans.setIdentity();
+	trans.setOrigin(pos);
+	btQuaternion q = btQuaternion(btVector3(0, 0, 1), rot.z()) * btQuaternion(btVector3(1, 0, 0), rot.x()) * btQuaternion(btVector3(0, 1, 0), rot.y());
+	trans.setRotation(q);
+
+	btVector3 inertia(0.0f, 0.0f, 0.0f);
+	if (mass > 0.0f) {
+		shape->calculateLocalInertia(mass, inertia);
+	}
+	btDefaultMotionState *state = new btDefaultMotionState(trans);
+	btRigidBody::btRigidBodyConstructionInfo info(mass, state, shape, inertia);
+	btRigidBody *rigid = new btRigidBody(info);
+
+	this->shapeArray.push_back(shape);
+	this->bulletWorld->addRigidBody(rigid, 0, mask);
+	return rigid;
 }
-void BulletPhysics::AddCollisionObject(btCollisionObject *obj) {
-	this->shapeArray.push_back(obj->getCollisionShape());
+//コリジョン
+btCollisionObject* BulletPhysics::CreateCollisionObject(btCollisionShape* shape, btVector3& pos, btVector3& rot) {
+	btTransform trans;
+	trans.setIdentity();
+	trans.setOrigin(pos);
+	btQuaternion q = btQuaternion(btVector3(0, 0, 1), rot.z()) * btQuaternion(btVector3(1, 0, 0), rot.x()) * btQuaternion(btVector3(0, 1, 0), rot.y());
+	trans.setRotation(q);
+
+	btCollisionObject* obj = new btCollisionObject;
+	obj->setWorldTransform(trans);
+	obj->setCollisionShape(shape);
+
+	this->shapeArray.push_back(shape);
 	this->bulletWorld->addCollisionObject(obj);
+	return obj;
 }
+
 void BulletPhysics::RemoveRigidBody(btRigidBody *rigidbody) {
 
 }

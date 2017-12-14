@@ -49,7 +49,7 @@ void MeshModel::SetSpeed(int speed) {
 }
 
 //描画
-void MeshModel::Draw(DrawParameters& param, const std::string& shaderName) {
+void MeshModel::Draw(GameParameters& param, const std::string& shaderName) {
 	if (this->data->bone) {
 		this->data->animation->UpdateAnimation();
 	}
@@ -63,7 +63,7 @@ void MeshModel::Draw(DrawParameters& param, const std::string& shaderName) {
 }
 
 //インスタンス描画(メッシュ階層の一番上の一つ目のマテリアルのみ)
-void MeshModel::InstanceDraw(int numInstance, DrawParameters& param, const std::string& shaderName) {
+void MeshModel::InstanceDraw(int numInstance, GameParameters& param, const std::string& shaderName) {
 
 	int numArray = this->data->vertexBuffer->GetNumBuffer();
 	GLuint VAO = this->data->vertexBuffer->GetVAO(0);
@@ -85,7 +85,7 @@ void MeshModel::InstanceDraw(int numInstance, DrawParameters& param, const std::
 //private
 ////
 
-void MeshModel::SetBone(int arrayIndex, DrawParameters& param, const std::string& shaderName) {
+void MeshModel::SetBone(int arrayIndex, GameParameters& param, const std::string& shaderName) {
 	int time = this->data->animation->GetCurrentAnimTime();
 	this->data->bone->SetClurrentBoneData(arrayIndex, time);
 	this->data->bone->SetMatrixTextureData(arrayIndex, this->boneTexture);
@@ -95,7 +95,7 @@ void MeshModel::SetBone(int arrayIndex, DrawParameters& param, const std::string
 	shader->SetValue("numBone", this->data->bone->GetNumBone(arrayIndex));
 }
 
-void MeshModel::DrawBuffers(int arrayIndex, DrawParameters& param, const std::string& shaderName) {
+void MeshModel::DrawBuffers(int arrayIndex, GameParameters& param, const std::string& shaderName) {
 	GLuint VAO = this->data->vertexBuffer->GetVAO(arrayIndex);
 	glBindVertexArray(VAO);
 

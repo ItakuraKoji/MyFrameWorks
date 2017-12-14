@@ -17,7 +17,7 @@ Emitter::~Emitter() {
 	}
 }
 
-bool Emitter::Initialize(DrawParameters& param) {
+bool Emitter::Initialize(GameParameters& param) {
 	this->numParticle = 0;
 	this->numMaxParticle = 60000;
 	this->parameter.emitInterval = 0;
@@ -59,7 +59,7 @@ void Emitter::Run() {
 	UpDateParticle();
 }
 
-void Emitter::Draw(DrawParameters& param) {
+void Emitter::Draw(GameParameters& param) {
 	if (!numParticle) {
 		return;
 	}

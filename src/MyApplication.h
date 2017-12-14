@@ -10,18 +10,19 @@
 #include"MapPolygon.h"
 
 #include"ShaderList.h"
+#include"LightList.h"
+
 
 #include"CameraClass.h"
-#include"Light.h"
 #include"InputClass.h"
 #include"Emitter.h"
-#include"HitPrimitive.h"
 #include"FrameBuffer.h"
 
 #include"BulletPhysics.h"
 #include"DrawParameters.h"
+#include"MyMathFanctions.h"
+#include"Player.h"
 
-#define Noraml_Rad(deg) ((float)M_PI * (deg) / 180.0f)
 
 //実際のアプリケーションの処理をする
 class MyApplication{
@@ -35,7 +36,6 @@ public:
 
 
 private:
-	Matrix4f MatrixPerspectiveLH(float screenWidth, float screenHeight, float fieldOfView, float screenNear, float screenFar);
 	void bulletInitialize();
 	//取り合えず描画パス3つ
 	void DrawPass0();
@@ -43,28 +43,21 @@ private:
 	void DrawPass2();
 
 private:
-	DrawParameters param;
-	int screenWidth;
-	int screenHeight;
-	float fieldOfView;
+	GameParameters param;
 	Matrix4f projectionMat;
 
 	MeshModel *square;
 	MeshModel *skinModel;
 	MeshModel *mapModel;
+	Player* player;
 
 	Emitter *model;
-	TextureList* texture;
-	ShaderList* shader;
 	CameraClass* camera;
-	InputClass* input;
 	MapPolygon* map;
 
-	DirectionalLight *light;
 	Framebuffer* buffer;
 
 	//とりあえず物理エンジン
-	BulletPhysics *physics;
 	btCollisionObject *characterCollision;
 
 };

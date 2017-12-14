@@ -9,6 +9,6 @@
 //・基本図形(板ポリゴンなど)
 class ModelDataFactory {
 public:
-	ModelDatas* LoadFBXModel(const std::string& fileName, DrawParameters& param);
-	ModelDatas* CreateSquareModel(const std::string& textureName, DrawParameters& param);
+	ModelDatas* LoadFBXModel(const std::string& fileName, GameParameters& param);
+	ModelDatas* CreateSquareModel(const std::string& textureName, GameParameters& param);
 };

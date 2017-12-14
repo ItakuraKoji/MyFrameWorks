@@ -7,13 +7,6 @@
 #include<iostream>
 #include<vector>
 
-enum BulletBitMask
-{
-	BIT_ZERO = 0,
-	BIT_MAP = 1,
-	BIT_CHARACTER = 2,
-};
-
 //bulletのワールドを管理するクラス
 class BulletPhysics {
 public:
@@ -24,14 +17,23 @@ public:
 	void Run();
 	void DebugDraw(Matrix4f& world, Matrix4f& view, Matrix4f& projection);
 
+
+
+
 	//AddRigidBody()
 	//・世界に剛体を追加
 	//引数
 	//・セットするオブジェクト
-	//・移動時に衝突するかのビットフラグ
-	//・すり抜けるけど衝突判定はされる物体のフラグ
-	void AddRigidBody         (btRigidBody* rigidbody, int confrictMask, int hitMask);
-	void AddCollisionObject   (btCollisionObject* obj);
+	btRigidBody* CreateRigidBody(btCollisionShape* shape, btScalar mass, int mask, btVector3& pos = btVector3(0, 0, 0), btVector3& rot = btVector3(0, 0, 0));
+
+	//AddCollisionObject()
+	//・世界にコリジョンを追加
+	//引数
+	//・セットするオブジェクト
+	btCollisionObject* CreateCollisionObject(btCollisionShape* shape, btVector3& pos = btVector3(0, 0, 0), btVector3& rot = btVector3(0, 0, 0));
+
+
+
 	void RemoveRigidBody      (btRigidBody* rigidbody);
 	void RemoveCollisionObject(btCollisionObject* obj);
 
@@ -70,6 +72,25 @@ private:
 	bulletDebugDraw                         debugDrawer;
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //sweepTestのコールバックを定義
 struct MyConvexClosestCallBack : public btCollisionWorld::ClosestConvexResultCallback {
 public:
@@ -79,9 +100,6 @@ public:
 	//自分自身にヒットしないようにオーバーライド
 	//戻り値に意味はないみたい
 	virtual btScalar addSingleResult(btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace) {
-		if (!(convexResult.m_hitCollisionObject->getUserIndex() & myself->getUserIndex())) {
-			return btScalar(1.0f);
-		}
 		if (convexResult.m_hitCollisionObject == this->myself) {
 			return btScalar(1.0f);
 		}
@@ -96,22 +114,21 @@ public:
 //contactTestのコールバック定義
 struct MyContactCallBack : public btCollisionWorld::ContactResultCallback {
 public:
-	MyContactCallBack(btCollisionObject* obj) : obj(obj), isHit(false), ContactResultCallback() {
+	MyContactCallBack(btCollisionObject* obj) : obj(obj), count(0), isHit(false), ContactResultCallback() {
 	}
 	//当たったオブジェクトを記録
 	//戻り値に意味はないみたい
 	//こっちは自分自身（contactTestで渡したオブジェクト）とは衝突しないようです
 	virtual	btScalar addSingleResult(btManifoldPoint& cp, const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0, const btCollisionObjectWrapper* colObj1Wrap, int partId1, int index1) {
-		//ビットマスクを確認
-		//if (!(colObj1Wrap->getCollisionObject()->getUserIndex2() & colObj0Wrap->getCollisionObject()->getUserIndex2())) {
-		//	return btScalar(0.0f);
-		//}
 
+		//未衝突判定を出す基準は、「最近衝突物との距離が０（誤差含む）」「押し出しが無限ループに入った（１０００回ぐらい）」とき
 		if (obj == colObj1Wrap->getCollisionObject()) {
 			return btScalar(0.0f);
 		}
-
 		if (cp.getDistance() >= -0.001f) {
+			return btScalar(0.0f);
+		}
+		if (this->count > 1000) {
 			return btScalar(0.0f);
 		}
 
@@ -124,13 +141,16 @@ public:
 		obj->setWorldTransform(trans);
 
 		this->isHit = true;
+		++this->count;
 		return btScalar(0.0f);
 	}
 
 public:
 	//押し出すオブジェクト
 	btCollisionObject* obj;
-
+	//無限ループ防止
+	int count;
+	//結果
 	bool isHit;
 };
 

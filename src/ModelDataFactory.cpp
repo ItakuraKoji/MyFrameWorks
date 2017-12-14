@@ -1,6 +1,6 @@
 #include"ModelDataFactory.h"
 
-ModelDatas* ModelDataFactory::LoadFBXModel(const std::string& fileName, DrawParameters& param) {
+ModelDatas* ModelDataFactory::LoadFBXModel(const std::string& fileName, GameParameters& param) {
 	ModelDatas* data = new ModelDatas;
 	FbxModelLoader loader;
 	if(!loader.LoadFBX(fileName, param.textureList)) {
@@ -18,7 +18,7 @@ ModelDatas* ModelDataFactory::LoadFBXModel(const std::string& fileName, DrawPara
 	return data;
 }
 
-ModelDatas* ModelDataFactory::CreateSquareModel(const std::string& textureName, DrawParameters& param) {
+ModelDatas* ModelDataFactory::CreateSquareModel(const std::string& textureName, GameParameters& param) {
 	struct Vertex {
 		Vector3f pos;
 		Vector2f uv;

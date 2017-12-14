@@ -59,17 +59,7 @@ void MapPolygon::setCollisionWorld(BulletPhysics *physics) {
 		}
 		
 		btCollisionShape* collision = new btConvexHullShape(point, 3, 3 * sizeof(btScalar));
-		btScalar mass(0.0f);
-		btTransform trans;
-		trans = btTransform::getIdentity();
-		trans.setOrigin(btVector3(0.0f, 0.0f, 0.0f));
-		trans.setOrigin(btVector3(0.0f, 0.0f, 0.0f));
-
-		btDefaultMotionState *mt = new btDefaultMotionState(trans);
-		btRigidBody::btRigidBodyConstructionInfo info(mass, mt, collision, btVector3(0.0f, 0.0f, 0.0f));
-		btRigidBody *rigid = new btRigidBody(info);
-		rigid->setUserIndex(i);
-		physics->AddRigidBody(rigid, BulletBitMask::BIT_MAP, BulletBitMask::BIT_ZERO);
+		physics->CreateCollisionObject(collision, btVector3(0.0f, 0.0f, 0.0f));
 	}
 }
 

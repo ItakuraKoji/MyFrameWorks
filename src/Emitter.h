@@ -14,9 +14,9 @@ class Emitter {
 public:
 	Emitter();
 	~Emitter();
-	bool Initialize(DrawParameters& param);
+	bool Initialize(GameParameters& param);
 	void Run();
-	void Draw(DrawParameters& param);
+	void Draw(GameParameters& param);
 	void SetMatrix(Matrix4f& world, Matrix4f& view, Matrix4f& projection);
 
 private:

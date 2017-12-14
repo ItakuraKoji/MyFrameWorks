@@ -18,12 +18,12 @@ public:
 	void BindVAO();
 	void SetAnimation(const std::string& animationName, bool isLoop, bool isInterporation, bool playOnce);
 	void SetSpeed(int speed);
-	void Draw(DrawParameters& param, const std::string& shaderName);
-	void InstanceDraw(int numInstance, DrawParameters& param, const std::string& shaderName);
+	void Draw(GameParameters& param, const std::string& shaderName);
+	void InstanceDraw(int numInstance, GameParameters& param, const std::string& shaderName);
 
 private:
-	void SetBone    (int arrayIndex, DrawParameters& param, const std::string& shaderName);
-	void DrawBuffers(int arrayIndex, DrawParameters& param, const std::string& shaderName);
+	void SetBone    (int arrayIndex, GameParameters& param, const std::string& shaderName);
+	void DrawBuffers(int arrayIndex, GameParameters& param, const std::string& shaderName);
 
 private:
 	ModelDatas* data;
