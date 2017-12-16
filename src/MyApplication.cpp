@@ -44,11 +44,10 @@ bool MyApplication::Initialize(int width, int height) {
 		this->buffer = new Framebuffer(this->param.textureList, "frameBuffer", 1000, 1000);
 
 		ModelDataFactory factory;
-		this->skinModel = new MeshModel(factory.LoadFBXModel("KaminariChan.fbx", this->param));
-		this->skinModel->SetAnimation("Dash", true, false, true);
 		this->mapModel = new MeshModel(factory.LoadFBXModel("Map.fbx", this->param));
 		this->square = new MeshModel(factory.CreateSquareModel("frameBuffer", this->param));
 
+		this->skinModel = new MeshModel(factory.LoadFBXModel("KaminariChan.fbx", this->param));
 		this->player = new Player();
 		this->player->SetPosition(0.0f, 10.6f, 0.0f);
 		this->player->SetDrawModel(this->skinModel);
@@ -63,10 +62,11 @@ bool MyApplication::Initialize(int width, int height) {
 
 		this->camera = new CameraClass(this->param.screenWidth, this->param.screenHeight, 0.1f, 1000.0f, this->param.screenFov);
 		this->camera->SetPosition(0, -20, -1);
+		this->camera->Draw();
 
 		this->param.lightList = new LightList;
-		this->param.lightList->AddAmbient("ambient", 0.3f, Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
-		this->param.lightList->AddDirectional("directional", 0.7f, Vector4f(1.0f, 1.0f, 1.0f, 1.0f), Vector3f(0.0f, 0.0f, 1.0f));
+		this->param.lightList->AddAmbient("ambient", 0.6f, Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
+		this->param.lightList->AddDirectional("directional", 1.0f, Vector4f(1.0f, 1.0f, 1.0f, 1.0f), Vector3f(0.0f, 0.0f, 1.0f));
 	}
 	catch (char* eText) {
 		return false;
@@ -111,7 +111,6 @@ void MyApplication::Finalize() {
 		delete this->camera;
 		this->camera = NULL;
 	}
-
 	if (this->map) {
 		delete this->map;
 		this->map = NULL;
@@ -140,7 +139,7 @@ void MyApplication::Run() {
 }
 
 void MyApplication::Draw() {
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.5f, 0.5f, 0.6f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glViewport(0, 0, this->param.screenWidth, this->param.screenHeight);
 	MatrixPerspectiveLH(this->projectionMat, this->param.screenWidth, this->param.screenHeight, 0.1f, 1000.0f, this->param.screenFov);
@@ -158,8 +157,8 @@ void MyApplication::bulletInitialize() {
 
 	for (int i = 0; i < 1; ++i)
 	{
-		btCollisionShape* shape = new btSphereShape(btScalar(3.0f));
-		this->param.physicsSystem->CreateRigidBody(shape, 1.0f, 0, btVector3(4.0f * i, 20.0f, 0.0f));
+		btCollisionShape* shape = this->param.physicsSystem->CreateSphereShape(3.0f);
+		btRigidBody* rigid = this->param.physicsSystem->CreateRigidBody(shape, 1.0f, 1, 1, btVector3(4.0f * i, 20.0f, 0.0f));
 	}
 	this->map->setCollisionWorld(this->param.physicsSystem);
 }

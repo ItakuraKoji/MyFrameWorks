@@ -2,6 +2,7 @@
 #define _USE_MATH_DEFINES
 #include<math.h>
 #include<Eigen\Core>
+#include<iostream>
 #include"MyMathFanctions.h"
 
 using namespace Eigen;

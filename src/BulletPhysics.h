@@ -18,34 +18,40 @@ public:
 	void DebugDraw(Matrix4f& world, Matrix4f& view, Matrix4f& projection);
 
 
+	btCollisionShape* CreateTriangleShape(btVector3& point1, btVector3& point2, btVector3& point3);
+	btCollisionShape* CreateSphereShape(float radius);
+	btCollisionShape* CreateCapsuleShape(float radius, float height);
+	btCollisionShape* CreateBoxShape(float halfWidth, float halfHeight, float halfDepth);
 
 
-	//AddRigidBody()
-	//・世界に剛体を追加
-	//引数
-	//・セットするオブジェクト
-	btRigidBody* CreateRigidBody(btCollisionShape* shape, btScalar mass, int mask, btVector3& pos = btVector3(0, 0, 0), btVector3& rot = btVector3(0, 0, 0));
+	//CreateRigidBody()
+	//・剛体オブジェクトを作成し、ポインタを返す
+	//・形状、質量、位置、回転の順
+	//・衝突フィルタのクループとビットマスク
+	//・位置と回転は省略可(省略時すべて０)
+	btRigidBody* CreateRigidBody(btCollisionShape* shape, btScalar mass, int group, int mask, btVector3& pos = btVector3(0, 0, 0), btVector3& rot = btVector3(0, 0, 0));
 
-	//AddCollisionObject()
-	//・世界にコリジョンを追加
-	//引数
-	//・セットするオブジェクト
-	btCollisionObject* CreateCollisionObject(btCollisionShape* shape, btVector3& pos = btVector3(0, 0, 0), btVector3& rot = btVector3(0, 0, 0));
+	//明示的に世界に登録している剛体を世界から外してからポインタをdelete
+	//この関数を呼ばなくても、このクラスのデストラクタで全て開放している
+	void RemoveRigidBody(btRigidBody* rigidbody);
 
-
-
-	void RemoveRigidBody      (btRigidBody* rigidbody);
-	void RemoveCollisionObject(btCollisionObject* obj);
+	//明示的にリストに存在するbtCollisionShapeをリストから外してdelete
+	//この関数を呼ばなくても、このクラスのデストラクタで全て開放している
+	void RemoveCollisionShape(btCollisionShape* shape);
 
 	//MoveCharacterObject()
 	//・操作性を意識したコリジョンの移動、壁判定も行う（主にプレイヤー用）
-	//戻り値
-	//・激突したオブジェクトの法線（衝突しなかった場合は長さ０を返す）
 	//引数
-	//・移動するワールドに登録されたオブジェクト
+	//・移動するコリジョンオブジェクト
 	//・移動ベクトル
-	//・(省略可)XYZ軸、マリギャラのようなギミックができたらいいなって
-	void MoveCharacterObject(btCollisionObject* obj, btVector3& moveVector, btVector3& xAxis = btVector3(1, 0, 0), btVector3& yAxis = btVector3(0, 1, 0), btVector3& zAxis = btVector3(0, 0, 1));
+	void MoveCharacterObject(btCollisionObject* obj, btVector3& hMove, btVector3& vMove);
+
+	//DiscreteMoveObject()
+	//・離散的なコリジョンの移動、判定がプレイヤー用よりも大雑把（主にNPC用）
+	//引数
+	//・移動するコリジョンオブジェクト
+	//・移動ベクトル
+	void DiscreteMoveObject(btCollisionObject* obj, btVector3& hMove, btVector3& vMove);
 
 
 	//FindConfrictionObjects()
@@ -68,8 +74,8 @@ private:
 	btCollisionDispatcher*                  dispatcher;
 	btConstraintSolver*                     solver;
 	btBroadphaseInterface*                  broadphase;
-	btAlignedObjectArray<btCollisionShape*> shapeArray;
 	bulletDebugDraw                         debugDrawer;
+	btAlignedObjectArray<btCollisionShape*> shapeArray;
 };
 
 

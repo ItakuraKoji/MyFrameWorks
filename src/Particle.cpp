@@ -20,7 +20,7 @@ void Particle::Run() {
 	this->parameter.firstColor(3) = -(t * t) + 1.0f;
 }
 
-void Particle::GetParticleMatrix(Matrix4f &mat) {
+void Particle::GetParticleMatrix(Matrix4f& mat) {
 	mat = Matrix4f::Identity();
 	mat(0) = 4.0f;
 	mat(5) = 4.0f;
@@ -29,7 +29,7 @@ void Particle::GetParticleMatrix(Matrix4f &mat) {
 	mat(13) = this->parameter.position.y();
 	mat(14) = this->parameter.position.z();
 }
-void Particle::GetParticleColor(Vector4f &color) {
+void Particle::GetParticleColor(Vector4f& color) {
 	color = this->parameter.firstColor;
 }
 

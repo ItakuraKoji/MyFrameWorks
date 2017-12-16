@@ -16,4 +16,5 @@ struct CharacterParameter {
 	int HP;//ヒットポイント
 	int EPLevel;//電力レベル
 	int EP;//現在使用可能な電力
+	int Power;//攻撃力
 };

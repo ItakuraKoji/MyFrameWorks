@@ -19,9 +19,9 @@ Emitter::~Emitter() {
 
 bool Emitter::Initialize(GameParameters& param) {
 	this->numParticle = 0;
-	this->numMaxParticle = 60000;
+	this->numMaxParticle = 10000;
 	this->parameter.emitInterval = 0;
-	this->parameter.emitQuantity = 50;
+	this->parameter.emitQuantity = 10;
 	this->parameter.firstLifeLimit = 100;
 	this->parameter.firstPosition << 0.0f, 0.0f, 0.0f;
 	this->parameter.firstPositionVelosity << 0.0f, -0.1f, 0.0f;
@@ -102,7 +102,7 @@ void Emitter::EmitParticle() {
 	if (this->classCount < this->parameter.emitInterval) {
 		return;
 	}
-	if (this->numParticle > this->numMaxParticle) {
+	if (this->numParticle + this->parameter.emitQuantity > this->numMaxParticle) {
 		return;
 	}
 

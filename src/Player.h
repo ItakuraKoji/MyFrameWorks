@@ -9,7 +9,7 @@ public:
 	virtual void Draw(GameParameters& param);
 
 private:
-	btCollisionObject* characterCollision;
+	btRigidBody* characterCollision;
 	float velocity;
 	float camerarotH, camerarotV;
 };

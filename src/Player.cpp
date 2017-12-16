@@ -5,23 +5,10 @@ bool Player::Initialize(GameParameters& param) {
 	this->camerarotH = 0.0f;
 	this->camerarotV = 0.0f;
 
-	btCollisionShape *characterShape = new btCapsuleShape(btScalar(0.3f), btScalar(0.8f));
+	btCollisionShape *characterShape = param.physicsSystem->CreateCapsuleShape(0.3f, 0.8f);
+	this->characterCollision = param.physicsSystem->CreateRigidBody(characterShape, 0.0f, 1, 1, btVector3(this->position.x(), this->position.y(), this->position.z()));
 
-	/**
-	btTransform trans;
-	btVector3 pos = btVector3(this->position.x(), this->position.y(), this->position.z());
-	trans.setIdentity();
-	trans.setOrigin(pos);
-
-	btVector3 inertia(0.0f, 0.0f, 0.0f);
-	btDefaultMotionState *state = new btDefaultMotionState(trans);
-	btRigidBody::btRigidBodyConstructionInfo info(0.0f, state, characterShape, inertia);
-	btRigidBody *rigid = new btRigidBody(info);
-	this->characterCollision = rigid;
-	*/
-
-	this->characterCollision = param.physicsSystem->CreateRigidBody(characterShape, 0.0f, 1, btVector3(this->position.x(), this->position.y(), this->position.z()));
-	this->GetModel()->SetAnimation("Idle", true, false, false);
+	this->GetModel()->SetAnimation("Dash", true, false, false);
 	return true;
 }
 void Player::Finalize() {
@@ -62,8 +49,11 @@ void Player::Run(GameParameters& param) {
 	zAxis.y() = 0.0f;
 	Vector3f goVec = direction.x() * xAxis.normalized() + Vector3f(0, direction.y(), 0) + direction.z() * zAxis.normalized();
 
-
-	param.physicsSystem->MoveCharacterObject(this->characterCollision, btVector3(goVec.x(), goVec.y(), goVec.z()));
+	goVec /= 1.0f;
+	for (int i = 0; i < 1; ++i) {
+		param.physicsSystem->MoveCharacterObject(this->characterCollision, btVector3(goVec.x(), 0.0f, goVec.z()), btVector3(0.0f, goVec.y(), 0.0f));
+		//param.physicsSystem->DiscreteMoveObject(this->characterCollision, btVector3(goVec.x(), 0.0f, goVec.z()), btVector3(0.0f, goVec.y(), 0.0f));
+	}
 	btTransform trans = this->characterCollision->getWorldTransform();
 	this->position.x() = trans.getOrigin().x();
 	this->position.y() = trans.getOrigin().y() - 0.75f;
@@ -78,6 +68,7 @@ void Player::Run(GameParameters& param) {
 }
 
 void Player::Draw(GameParameters& param) {
+	//return;
 	param.camera->Draw();
 	ShaderClass* shader = param.shaderList->UseShader(this->shaderName);
 	param.lightList->SetAmbient("ambient", shader);

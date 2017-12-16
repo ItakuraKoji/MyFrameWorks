@@ -29,6 +29,7 @@ public:
 		PolygonType* polygon;
 	};
 
+
 public:
 	MapPolygon();
 	~MapPolygon();

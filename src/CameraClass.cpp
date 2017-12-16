@@ -9,6 +9,7 @@ CameraClass::CameraClass(int width, int height, float near, float far, float fov
 	this->screenNear = near;
 	this->screenFar = far;
 	this->fieldOfView = fov;
+	Draw();
 }
 CameraClass::~CameraClass(){
 

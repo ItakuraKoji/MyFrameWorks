@@ -12,8 +12,8 @@ public:
 	~Particle();
 	bool Initialize(ParticleParameter& parameter);
 	void Run();
-	void GetParticleMatrix(Matrix4f &mat);
-	void GetParticleColor(Vector4f &color);
+	void GetParticleMatrix(Matrix4f& mat);
+	void GetParticleColor(Vector4f& color);
 	bool isAlive();
 
 private:

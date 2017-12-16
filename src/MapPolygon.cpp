@@ -14,20 +14,18 @@ MapPolygon::~MapPolygon() {
 
 //”z—ñ‚Ìƒ[ƒƒNƒŠƒA
 bool MapPolygon::Initialize() {
-	m_polygonStack.clear();
-	m_polygonStack.shrink_to_fit();
+	this->m_polygonStack.clear();
+	this->m_polygonStack.shrink_to_fit();
 	return true;
 }
 //‰ð•ú
 void MapPolygon::Finalize() {
-	auto begin = m_polygonStack.begin();
-	auto end = m_polygonStack.end();
-	std::vector<PolygonData>::iterator it;
-	for (it = begin; it < end; ++it) {
+	for (auto it = this->m_polygonStack.begin(); it < this->m_polygonStack.end(); ++it) {
 		delete[](*it).polygon;
 	}
-	if (mfbx_manager) {
-		mfbx_manager->Destroy();
+
+	if (this->mfbx_manager) {
+		this->mfbx_manager->Destroy();
 	}
 }
 
@@ -36,7 +34,7 @@ bool MapPolygon::LoadModel(const char *filename) {
 		return false;
 	}
 
-	if (!LoadFBXNodeRecursive(mfbx_scene->GetRootNode())) {
+	if (!LoadFBXNodeRecursive(this->mfbx_scene->GetRootNode())) {
 		return false;
 	}
 	return true;
@@ -57,9 +55,13 @@ void MapPolygon::setCollisionWorld(BulletPhysics *physics) {
 			point[k * 3 + 1] = m_polygonStack[0].polygon[i].point[k].y();
 			point[k * 3 + 2] = m_polygonStack[0].polygon[i].point[k].z();
 		}
-		
-		btCollisionShape* collision = new btConvexHullShape(point, 3, 3 * sizeof(btScalar));
-		physics->CreateCollisionObject(collision, btVector3(0.0f, 0.0f, 0.0f));
+		btVector3 p1 = m_polygonStack[0].polygon[i].point[0];
+		btVector3 p2 = m_polygonStack[0].polygon[i].point[1];
+		btVector3 p3 = m_polygonStack[0].polygon[i].point[2];
+
+		btCollisionShape* collision = physics->CreateTriangleShape(p1, p2, p3);
+		btRigidBody* rigid = physics->CreateRigidBody(collision, 0.0f, 1, 1, btVector3(0.0f, 0.0f, 0.0f));
+
 	}
 }
 
