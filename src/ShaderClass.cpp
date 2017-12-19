@@ -3,11 +3,9 @@
 ////////
 //public
 ////
-ShaderClass::ShaderClass(const std::string& vsFilename, const std::string& fsFilename) {
-	this->fragmentShader = 0;
-	this->vertexShader = 0;
+ShaderClass::ShaderClass(GLuint vertexShader, GLuint fragmentShader) {
 	this->shaderProgram = 0;
-	if (!Initialize(vsFilename, fsFilename)) {
+	if (!Initialize(vertexShader, fragmentShader)) {
 		Finalize();
 		throw "シェーダー読み込み失敗";
 	}
@@ -17,55 +15,8 @@ ShaderClass::~ShaderClass() {
 }
 
 
-bool ShaderClass::Initialize(const std::string& vsFileName, const std::string& fsFileName) {
+bool ShaderClass::Initialize(GLuint vertexShader, GLuint fragmentShader) {
 	Finalize();
-
-	//一時的な文字列の格納先
-	const char *vsResource, *fsResource;
-
-	//頂点シェーダーとフラグメントシェーダー(ピクセルシェーダー)を読み込み
-	vsResource = LoadTxtResource(vsFileName);
-	if (!vsResource) {
-		return false;
-	}
-	fsResource = LoadTxtResource(fsFileName);
-	if (!fsResource) {
-		return false;
-	}
-
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-
-	glShaderSource(vertexShader, 1, &vsResource, NULL);
-	glShaderSource(fragmentShader, 1, &fsResource, NULL);
-
-	//シェーダーリソースを作成したので文字列バッファ二つはもう用済み
-	delete[] vsResource;
-	vsResource = 0;
-	delete[] fsResource;
-	fsResource = 0;
-
-	//シェーダーをコンパイル
-	glCompileShader(vertexShader);
-	glCompileShader(fragmentShader);
-
-	//エラーチェック
-	GLint status;
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &status);
-	if (status != GL_TRUE) {
-		std::cout << "VertexShader Compile is Failed " << vsFileName << std::endl;
-		ShowShaderErrors(vertexShader);
-		system("pause");
-		return false;
-	}
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &status);
-	if (status != GL_TRUE) {
-		std::cout << "FragmetShader Compile is Failed " << fsFileName << std::endl;
-		ShowShaderErrors(fragmentShader);
-		system("pause");
-
-		return false;
-	}
 
 	//シェーダーをくっつけるプログラムを生成
 	shaderProgram = glCreateProgram();
@@ -78,6 +29,7 @@ bool ShaderClass::Initialize(const std::string& vsFileName, const std::string& f
 	glLinkProgram(shaderProgram);
 
 	//エラーチェック
+	GLint status;
 	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &status);
 	if (status != GL_TRUE) {
 		std::cout << "Program Link Error" << std::endl;
@@ -91,12 +43,6 @@ bool ShaderClass::Initialize(const std::string& vsFileName, const std::string& f
 
 //開放
 void ShaderClass::Finalize() {
-	glDetachShader(shaderProgram, fragmentShader);
-	glDetachShader(shaderProgram, vertexShader);
-
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-
 	glDeleteProgram(shaderProgram);
 }
 
@@ -202,7 +148,6 @@ char* ShaderClass::LoadTxtResource(const std::string& fileName) {
 	if (fin.fail()) {
 		return 0;
 	}
-
 
 	fileSize = 0;
 

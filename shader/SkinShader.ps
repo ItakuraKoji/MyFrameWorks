@@ -15,5 +15,6 @@ void main(void)
 {
 	outputColor = texture2D(sampler, tex);
 	outputColor *= color;
-	//outputColor = color;
+	//float depth = color.z / color.w;
+	//outputColor = vec4(depth, depth, depth, 1.0f);
 }

@@ -36,11 +36,6 @@ bulletDebugDraw::~bulletDebugDraw() {
 	glDeleteBuffers(1, &this->IBO);
 }
 
-void bulletDebugDraw::SetShader(ShaderClass* shader) {
-	this->shader = shader;
-}
-
-
 void bulletDebugDraw::drawLine(const btVector3& from, const btVector3& to, const btVector3& color) {
 	btVector3 lineVertex[] = { from, to };
 	btVector4 lineColor[] = { btVector4(color.x(), color.y(), color.z(), 1.0f), btVector4(color.x(), color.y(), color.z(), 1.0f) };

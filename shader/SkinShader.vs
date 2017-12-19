@@ -107,6 +107,5 @@ void main(void)
 
 	tex = inputTexCoord;
 
-	float a = inputWeight.x + inputWeight.y + inputWeight.z + inputWeight.w;
 	color = CalcLight();
 }

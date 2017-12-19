@@ -6,14 +6,14 @@
 
 using namespace Eigen;
 
-//シェーダーの管理とuniform変数の受け渡しを担当するクラス
+//シェーダープログラムの管理とuniform変数の受け渡しを担当するクラス
 //uniform変数名は固定的な機能を除くと、関数化にキリがないので汎用的な関数を用意
 class ShaderClass {
 public:
-	ShaderClass(const std::string& vsFilename, const std::string& fsFilename);
+	ShaderClass(GLuint vertexShader, GLuint fragmentShader);
 	~ShaderClass();
 
-	bool Initialize(const std::string& vsFilename, const std::string& fsFilename);
+	bool Initialize(GLuint vertexShader, GLuint fragmentShader);
 	void Finalize();
 
 	void UseShader();
@@ -41,6 +41,4 @@ private:
 	void ShowLinkErrors(GLuint shaderID);
 
 	GLuint shaderProgram;
-	GLuint vertexShader;
-	GLuint fragmentShader;
 };

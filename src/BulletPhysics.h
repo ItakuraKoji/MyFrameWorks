@@ -15,7 +15,7 @@ public:
 	bool Initialize();
 	void Finalize();
 	void Run();
-	void DebugDraw(Matrix4f& world, Matrix4f& view, Matrix4f& projection);
+	void DebugDraw(ShaderClass* shader, Matrix4f& world, Matrix4f& view, Matrix4f& projection);
 
 
 	btCollisionShape* CreateTriangleShape(btVector3& point1, btVector3& point2, btVector3& point3);
@@ -66,9 +66,8 @@ public:
 
 private:
 	btVector3 MoveConvexObject(btCollisionObject* obj, btVector3& moveVector, float limitAngle);
-	btVector3 MoveSimulation(btCollisionObject* obj, btVector3& moveVector, float& resultHitFraction);
+	btVector3 MoveSimulation(btCollisionObject* obj, btVector3& moveVector);
 private:
-	ShaderClass *shader;
 	btDiscreteDynamicsWorld*                bulletWorld;
 	btDefaultCollisionConfiguration*        config;
 	btCollisionDispatcher*                  dispatcher;

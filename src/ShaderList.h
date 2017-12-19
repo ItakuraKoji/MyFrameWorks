@@ -13,10 +13,19 @@ public:
 
 	ShaderClass* GetShader(const std::string& shaderName);
 	ShaderClass* UseShader(const std::string& shaderName);
+
+	void AddVertexShader(const std::string& fileName);
+	void AddPixelShader(const std::string& fileName);
+
 	bool Add(const std::string& shaderName, const std::string& vertexShader, const std::string& pixelShader);
-	bool Add(const std::string& shaderName, ShaderClass* shader);
+
+private:
+	char* LoadTxtResource(const std::string& fileName);
+	void ShowShaderErrors(GLuint shaderID);
 
 private:
 	std::unordered_map<std::string, ShaderClass*> shaderList;
+	std::unordered_map<std::string, GLuint> vertexShaders;
+	std::unordered_map<std::string, GLuint> pixelShaders;
 
 };

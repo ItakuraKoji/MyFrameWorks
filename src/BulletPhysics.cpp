@@ -21,12 +21,10 @@ bool BulletPhysics::Initialize() {
 	this->bulletWorld->setGravity(btVector3(0.0f, -10.0f, 0.0f));
 
 	try {
-		this->shader = new ShaderClass("Shader/SimpleShader.vs", "Shader/SimpleShader.ps");
 	}
 	catch(...){
 		//何もしない
 	}
-	debugDrawer.SetShader(this->shader);
 	return true;
 }
 //開放
@@ -49,7 +47,6 @@ void BulletPhysics::Finalize() {
 	delete this->broadphase;
 	delete this->dispatcher;
 	delete this->config;
-	delete this->shader;
 }
 
 //シミュレーションを進める
@@ -57,16 +54,12 @@ void BulletPhysics::Run() {
 	this->bulletWorld->stepSimulation(1 / 60.0f, 10, 1 / 60.0f);
 }
 //デバッグ描画
-void BulletPhysics::DebugDraw(Matrix4f& world, Matrix4f& view, Matrix4f& projection) {
-	//シェーダーの読み込みに失敗したときはデバッグ描画できない
-	if (!this->shader) {
-		return;
-	}
+void BulletPhysics::DebugDraw(ShaderClass* shader, Matrix4f& world, Matrix4f& view, Matrix4f& projection) {
 
-	this->shader->UseShader();
+	shader->UseShader();
 
 	Matrix4f mat = projection * view * world;
-	this->shader->SetMatrix(mat);
+	shader->SetMatrix(mat);
 	this->bulletWorld->debugDrawWorld();
 }
 
@@ -153,12 +146,21 @@ void BulletPhysics::MoveCharacterObject(btCollisionObject *obj, btVector3& hMove
 		//床基準の方向軸
 		if (normal.dot(vMove) > 0) {
 			vMove = vMove.norm() * normal;
+			if (hMove.norm() > 0.01f) {
+				btVector3 x = hMove.cross(normal);
+				hMove = hMove.norm() * (x.cross(vMove)).normalized();
+			}
 		}
 		else if (normal.dot(vMove) < 0) {
 			vMove = -vMove.norm() * normal;
+			if (hMove.norm() > 0.01f) {
+				btVector3 x = hMove.cross(normal);
+				hMove = hMove.norm() * (x.cross(vMove)).normalized();
+			}
 		}
 
 	}
+	//debugDrawer.drawLine(obj->getWorldTransform().getOrigin(), obj->getWorldTransform().getOrigin() + hMove * 3.0f, btVector3(1.0f, 0.0f, 0.0f));
 	obj->setWorldTransform(prevTrans);
 	//縦
 	btVector3 virtical = vMove;
@@ -205,8 +207,9 @@ btVector3 BulletPhysics::MoveConvexObject(btCollisionObject *obj, btVector3 &mov
 
 
 	//移動一回目
-	normal = MoveSimulation(obj, moveVector, hitFraction);
-
+	btVector3 prevPos = obj->getWorldTransform().getOrigin();
+	normal = MoveSimulation(obj, moveVector);
+	hitFraction = (obj->getWorldTransform().getOrigin() - prevPos).norm() / moveVector.norm();
 
 	//壁ずりを作る角度かを確認
 	float angle_cos = (float)-normal.dot(moveVector.normalized());
@@ -229,7 +232,7 @@ btVector3 BulletPhysics::MoveConvexObject(btCollisionObject *obj, btVector3 &mov
 	}
 
 	//移動二回目
-	MoveSimulation(obj, goVec, hitFraction);
+	MoveSimulation(obj, goVec);
 
 
 	//壁ずり時は衝突法線を返さない
@@ -237,8 +240,8 @@ btVector3 BulletPhysics::MoveConvexObject(btCollisionObject *obj, btVector3 &mov
 }
 
 //移動部分をまとめ
-btVector3 BulletPhysics::MoveSimulation(btCollisionObject *obj, btVector3 &moveVector, float &resultHitFraction){
-	const float allowDistance = 0.01f;
+btVector3 BulletPhysics::MoveSimulation(btCollisionObject *obj, btVector3 &moveVector){
+	const float allowDistance = 0.1f;
 	btConvexShape* shape = (btConvexShape*)obj->getCollisionShape();
 
 	btTransform from = obj->getWorldTransform();
@@ -256,7 +259,6 @@ btVector3 BulletPhysics::MoveSimulation(btCollisionObject *obj, btVector3 &moveV
 		obj->setWorldTransform(to);
 		objPos.setInterpolate3(from.getOrigin(), to.getOrigin(), convex_cb.m_closestHitFraction);
 		to.setOrigin(objPos);
-		resultHitFraction = convex_cb.m_closestHitFraction;
 	}
 	obj->setWorldTransform(to);
 

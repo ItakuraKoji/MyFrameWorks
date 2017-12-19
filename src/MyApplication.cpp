@@ -27,6 +27,18 @@ bool MyApplication::Initialize(int width, int height) {
 		this->param.textureList = new TextureList;
 		this->param.shaderList = new ShaderList;
 		this->param.shaderList->Initialize();
+
+		this->param.shaderList->AddVertexShader("Shader/StaticShader.vs");
+		this->param.shaderList->AddVertexShader("Shader/SkinShader.vs");
+		this->param.shaderList->AddVertexShader("Shader/SimpleShader.vs");
+		this->param.shaderList->AddVertexShader("Shader/ScreenShader.vs");
+
+		this->param.shaderList->AddPixelShader("Shader/StaticShader.ps");
+		this->param.shaderList->AddPixelShader("Shader/SkinShader.ps");
+		this->param.shaderList->AddPixelShader("Shader/SimpleShader.ps");
+		this->param.shaderList->AddPixelShader("Shader/ScreenShader.ps");
+
+
 		if (!this->param.shaderList->Add("static", "Shader/StaticShader.vs", "Shader/StaticShader.ps")) {
 			return false;
 		}
@@ -48,21 +60,23 @@ bool MyApplication::Initialize(int width, int height) {
 		this->square = new MeshModel(factory.CreateSquareModel("frameBuffer", this->param));
 
 		this->skinModel = new MeshModel(factory.LoadFBXModel("KaminariChan.fbx", this->param));
+
+		this->camera = new CameraClass(ProjectionType::Perspective, this->param.screenWidth, this->param.screenHeight, 0.1f, 1000.0f, this->param.screenFov);
+		this->camera->SetPosition(0, -20, -1);
+		this->camera->Draw();
+
 		this->player = new Player();
 		this->player->SetPosition(0.0f, 10.6f, 0.0f);
 		this->player->SetDrawModel(this->skinModel);
 		this->player->SetShaderName("skin");
 		this->player->Initialize(this->param);
 
+		this->player->SetCameraMan(this->camera);
 
 		this->model = new Emitter;
 		if (!this->model->Initialize(this->param)) {
 			return false;
 		}
-
-		this->camera = new CameraClass(this->param.screenWidth, this->param.screenHeight, 0.1f, 1000.0f, this->param.screenFov);
-		this->camera->SetPosition(0, -20, -1);
-		this->camera->Draw();
 
 		this->param.lightList = new LightList;
 		this->param.lightList->AddAmbient("ambient", 0.6f, Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
@@ -100,6 +114,7 @@ void MyApplication::Finalize() {
 		this->model = NULL;
 	}
 	if (this->player) {
+		this->player->Finalize();
 		delete this->player;
 		this->player = NULL;
 	}
@@ -131,6 +146,7 @@ void MyApplication::Run() {
 	this->param.input->Run();
 
 	this->param.camera = this->camera;
+
 	this->player->Run(this->param);
 
 	this->param.physicsSystem->Run();
@@ -142,7 +158,8 @@ void MyApplication::Draw() {
 	glClearColor(0.5f, 0.5f, 0.6f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glViewport(0, 0, this->param.screenWidth, this->param.screenHeight);
-	MatrixPerspectiveLH(this->projectionMat, this->param.screenWidth, this->param.screenHeight, 0.1f, 1000.0f, this->param.screenFov);
+	//MatrixPerspectiveLH(this->projectionMat, this->param.screenWidth, this->param.screenHeight, 10.0f, 100.0f, this->param.screenFov);
+	this->projectionMat = this->camera->GetProjectionMatrix();
 	DrawPass0();
 }
 
@@ -216,7 +233,7 @@ void MyApplication::DrawPass0() {
 	scale = DiagonalMatrix<float, 3>(1.0f, 1.0f, 1.0f);
 	rot = AngleAxisf(DegToRad(0.0f), Vector3f::UnitX());
 	mat = trans * rot * scale;
-	this->param.physicsSystem->DebugDraw(mat.matrix(), view, projectionMat);
+	//this->param.physicsSystem->DebugDraw(this->param.shaderList->GetShader("simple"), mat.matrix(), view, projectionMat);
 }
 void MyApplication::DrawPass1() {
 }

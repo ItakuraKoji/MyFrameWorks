@@ -11,6 +11,8 @@ public:
 	void Draw(GameParameters& param);
 
 	void SetParameter(GameObject* terget, CameraClass* camera);
+	float GetRotationH();
+	float GetRotationV();
 
 private:
 	GameObject* terget;

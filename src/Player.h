@@ -1,5 +1,7 @@
 #pragma once
 #include"GameObject.h"
+#include"CameraMan.h"
+
 
 class Player : public GameObject {
 public:
@@ -8,8 +10,12 @@ public:
 	virtual void Run(GameParameters& param);
 	virtual void Draw(GameParameters& param);
 
+	void SetCameraMan(CameraClass* camera);
+
 private:
 	btRigidBody* characterCollision;
+	float speed;
 	float velocity;
-	float camerarotH, camerarotV;
+	//移動ベクトルの補正に使う専属のカメラマン
+	CameraMan* camera;
 };
