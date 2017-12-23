@@ -7,6 +7,8 @@
 #include<Eigen\Core>
 #include<Eigen\Geometry>
 #include"TextureList.h"
+#include"MyMathFanctions.h"
+
 
 using namespace Eigen;
 struct Material {

@@ -18,7 +18,7 @@ ModelDatas* ModelDataFactory::LoadFBXModel(const std::string& fileName, GamePara
 	return data;
 }
 
-ModelDatas* ModelDataFactory::CreateSquareModel(const std::string& textureName, GameParameters& param) {
+ModelDatas* ModelDataFactory::CreateSquareModel(float width, float height, const std::string& textureName, GameParameters& param) {
 	struct Vertex {
 		Vector3f pos;
 		Vector2f uv;
@@ -28,11 +28,16 @@ ModelDatas* ModelDataFactory::CreateSquareModel(const std::string& textureName, 
 	data->vertexBuffer = new VertexData;
 	data->material = new MaterialData;
 
+	float right = -width * 0.5f;
+	float left  = width * 0.5f;
+	float up    = -height * 0.5f;
+	float down  = height * 0.5f;
+
 	Vertex vertex[4];
-	vertex[0].pos << -0.1f, 0.1f , 0.0f;
-	vertex[1].pos << 0.1f , 0.1f , 0.0f;
-	vertex[2].pos << 0.1f , -0.1f, 0.0f;
-	vertex[3].pos << -0.1f, -0.1f, 0.0f;
+	vertex[0].pos << right, down, 0.0f;
+	vertex[1].pos << left, down, 0.0f;
+	vertex[2].pos << left, up, 0.0f;
+	vertex[3].pos << right, up, 0.0f;
 
 	vertex[0].uv << 0.0f, 1.0f;
 	vertex[1].uv << 1.0f, 1.0f;

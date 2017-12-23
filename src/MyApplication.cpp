@@ -16,9 +16,7 @@ MyApplication::~MyApplication() {
 
 bool MyApplication::Initialize(int width, int height) {
 	try {
-		this->map = new MapPolygon;
-		this->map->LoadModel("Map.fbx");
-		bulletInitialize();
+		this->param.physicsSystem = new BulletPhysics;
 		this->param.gravity = 0.03f;
 		this->param.screenWidth = width;
 		this->param.screenHeight = height;
@@ -28,59 +26,75 @@ bool MyApplication::Initialize(int width, int height) {
 		this->param.shaderList = new ShaderList;
 		this->param.shaderList->Initialize();
 
+		this->param.shaderList->AddVertexShader("Shader/VertexShader.vs");
+		this->param.shaderList->AddPixelShader("Shader/TextureSampler.ps");
+		this->param.shaderList->AddPixelShader("Shader/DepthShader.ps");
+		if (!this->param.shaderList->Add("standard", "Shader/VertexShader.vs", "Shader/TextureSampler.ps")) {
+			return false;
+		}
+		if (!this->param.shaderList->Add("depth", "Shader/VertexShader.vs", "Shader/DepthShader.ps")) {
+			return false;
+		}
+
 		this->param.shaderList->AddVertexShader("Shader/StaticShader.vs");
-		this->param.shaderList->AddVertexShader("Shader/SkinShader.vs");
 		this->param.shaderList->AddVertexShader("Shader/SimpleShader.vs");
-		this->param.shaderList->AddVertexShader("Shader/ScreenShader.vs");
 
 		this->param.shaderList->AddPixelShader("Shader/StaticShader.ps");
-		this->param.shaderList->AddPixelShader("Shader/SkinShader.ps");
 		this->param.shaderList->AddPixelShader("Shader/SimpleShader.ps");
-		this->param.shaderList->AddPixelShader("Shader/ScreenShader.ps");
+
 
 
 		if (!this->param.shaderList->Add("static", "Shader/StaticShader.vs", "Shader/StaticShader.ps")) {
 			return false;
 		}
-		if (!this->param.shaderList->Add("skin", "Shader/SkinShader.vs", "Shader/SkinShader.ps")) {
-			return false;
-		}
 		if (!this->param.shaderList->Add("simple", "Shader/SimpleShader.vs", "Shader/SimpleShader.ps")) {
 			return false;
 		}
-		if (!this->param.shaderList->Add("screen", "Shader/ScreenShader.vs", "Shader/ScreenShader.ps")) {
-			return false;
-		}
 
 
-		this->buffer = new Framebuffer(this->param.textureList, "frameBuffer", 1000, 1000);
 
 		ModelDataFactory factory;
-		this->mapModel = new MeshModel(factory.LoadFBXModel("Map.fbx", this->param));
-		this->square = new MeshModel(factory.CreateSquareModel("frameBuffer", this->param));
+		this->mapModel = new MeshObject(new MeshModel(factory.LoadFBXModel("Map.fbx", this->param)));
 
-		this->skinModel = new MeshModel(factory.LoadFBXModel("KaminariChan.fbx", this->param));
 
-		this->camera = new CameraClass(ProjectionType::Perspective, this->param.screenWidth, this->param.screenHeight, 0.1f, 1000.0f, this->param.screenFov);
-		this->camera->SetPosition(0, -20, -1);
-		this->camera->Draw();
+
+		this->skinModel = new MeshObject(new MeshModel(factory.LoadFBXModel("KaminariChan.fbx", this->param)));
+		this->camera = new CameraClass(ProjectionType::Perspective, this->param.screenWidth, this->param.screenHeight, 5.1f, 1000.0f, this->param.screenFov);
+		this->lightCamera = new CameraClass(ProjectionType::Ortho, 230.0f, 230.0f, 10.0f, 100.0f, this->param.screenFov);
+		this->lightCamera->SetPosition(3, 1, -1);
+		this->lightCamera->SetTarget(3, 0, 0);
+		this->lightCamera->Draw();
 
 		this->player = new Player();
-		this->player->SetPosition(0.0f, 10.6f, 0.0f);
 		this->player->SetDrawModel(this->skinModel);
-		this->player->SetShaderName("skin");
+		this->player->SetPosition(0.0f, 10.6f, 0.0f);
 		this->player->Initialize(this->param);
-
 		this->player->SetCameraMan(this->camera);
 
-		this->model = new Emitter;
-		if (!this->model->Initialize(this->param)) {
-			return false;
-		}
+		this->map = new MapPolygon;
+		this->map->LoadModel("Map.fbx");
+		this->map->setCollisionWorld(this->param.physicsSystem);
+
+		this->mapObj = new StaticObject;
+		this->mapObj->SetDrawModel(this->mapModel);
+		this->mapObj->Initialize(this->param);
+		this->mapObj->SetMapCollision(this->map);
+
+		//this->model = new Emitter;
+		//if (!this->model->Initialize(this->param)) {
+		//	return false;
+		//}
+
+		//
+		this->buffer = new Framebuffer(this->param.textureList, "frameBuffer", this->param.screenWidth, this->param.screenWidth);
+		this->square = new MeshObject(new MeshModel(factory.CreateSquareModel(this->param.screenWidth, this->param.screenHeight, "frameBuffer", this->param)));
 
 		this->param.lightList = new LightList;
-		this->param.lightList->AddAmbient("ambient", 0.6f, Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
-		this->param.lightList->AddDirectional("directional", 1.0f, Vector4f(1.0f, 1.0f, 1.0f, 1.0f), Vector3f(0.0f, 0.0f, 1.0f));
+		this->param.lightList->AddAmbient("ambient", 0.4f, Vector4f(0.5f, 1.0f, 1.0f, 1.0f));
+		this->param.lightList->AddDirectional("directional", 1.0f, Vector4f(0.7f, 1.0f, 1.0f, 1.0f), Vector3f(0.0f, -1.0f, 1.0f));
+
+
+
 	}
 	catch (char* eText) {
 		return false;
@@ -109,26 +123,26 @@ void MyApplication::Finalize() {
 		delete this->param.physicsSystem;
 		this->param.physicsSystem = NULL;
 	}
-	if (this->model) {
-		delete this->model;
-		this->model = NULL;
-	}
+	//if (this->model) {
+	//	delete this->model;
+	//	this->model = NULL;
+	//}
 	if (this->player) {
 		this->player->Finalize();
 		delete this->player;
 		this->player = NULL;
 	}
-	if (this->mapModel) {
-		delete this->mapModel;
-		this->mapModel = NULL;
+	if (this->mapObj) {
+		this->mapObj->Finalize();
+		delete this->mapObj;
 	}
 	if (this->camera) {
 		delete this->camera;
 		this->camera = NULL;
 	}
-	if (this->map) {
-		delete this->map;
-		this->map = NULL;
+	if (this->lightCamera) {
+		delete this->lightCamera;
+		this->lightCamera = NULL;
 	}
 
 	if (this->buffer) {
@@ -151,92 +165,95 @@ void MyApplication::Run() {
 
 	this->param.physicsSystem->Run();
 
-	this->model->Run();
+	//this->model->Run();
 }
 
 void MyApplication::Draw() {
-	glClearColor(0.5f, 0.5f, 0.6f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	glViewport(0, 0, this->param.screenWidth, this->param.screenHeight);
 	//MatrixPerspectiveLH(this->projectionMat, this->param.screenWidth, this->param.screenHeight, 10.0f, 100.0f, this->param.screenFov);
-	this->projectionMat = this->camera->GetProjectionMatrix();
-	DrawPass0();
+	DrawPass1();
 }
 
 ////////
 //private
 ////
 
-//とりあえず物理エンジンのコード（初期化）
-void MyApplication::bulletInitialize() {
-	//エンジンを初期化
-	this->param.physicsSystem = new BulletPhysics;
-
-	for (int i = 0; i < 1; ++i)
-	{
-		btCollisionShape* shape = this->param.physicsSystem->CreateSphereShape(3.0f);
-		btRigidBody* rigid = this->param.physicsSystem->CreateRigidBody(shape, 1.0f, 1, 1, btVector3(4.0f * i, 20.0f, 0.0f));
-	}
-	this->map->setCollisionWorld(this->param.physicsSystem);
-}
-
 //描画パス
 void MyApplication::DrawPass0() {
-	Matrix4f view;
 	this->camera->Draw();
-	view = this->camera->GetViewMatrix();
+	this->param.camera = lightCamera;
+
+	//深度描画
+	param.currentShader = param.shaderList->UseShader("depth");
+	param.lightList->SetAmbient("ambient", param.currentShader);
+	param.lightList->SetDirectional("directional", param.currentShader);
+
+	param.currentShader->SetVertexShaderSubroutine("CalcBoneMat");
+	param.currentShader->SetFragmentShaderSubroutine("CalcLight");
+	this->player->Draw(this->param);
 
 
+	param.currentShader->SetVertexShaderSubroutine("NotSkinning");
+	param.currentShader->SetFragmentShaderSubroutine("CalcLight");
+	this->mapObj->Draw(this->param);
+
+}
+void MyApplication::DrawPass1() {
+	glClearColor(0.5f, 0.5f, 0.6f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); 
+	glViewport(0, 0, this->param.screenWidth, this->param.screenHeight);
+
+	this->camera->Draw();
+	this->param.camera = camera;
+
+
+	param.currentShader = param.shaderList->UseShader("standard");
+	param.lightList->SetAmbient("ambient", param.currentShader);
+	param.lightList->SetDirectional("directional", param.currentShader);
+
+	param.currentShader->SetVertexShaderSubroutine("CalcBoneMat");
+	param.currentShader->SetFragmentShaderSubroutine("CalcLight");
+	this->player->Draw(this->param);
+
+
+	param.currentShader->SetVertexShaderSubroutine("NotSkinning");
+	param.currentShader->SetFragmentShaderSubroutine("CalcLight");
+	this->mapObj->Draw(this->param);
+
+
+	//Matrix3f cameraInv = this->camera->GetCameraMatrix().block(0, 0, 3, 3);
+	//world = Matrix4f::Identity();
+	//trans = Translation<float, 3>(0, 0.0f, 0.0f);
+	//scale = DiagonalMatrix<float, 3>(1.0f, 1.0f, 1.0f);
+	//rot = AngleAxisf(DegToRad(0.0f), Vector3f::UnitX());
+	//mat = trans * cameraInv * rot * scale;
+	//shader = this->param.shaderList->UseShader("static");
+	//this->model->SetMatrix(mat.matrix(), view, projectionMat);
+
+	//glDepthMask(GL_FALSE);
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
+	//this->model->Draw(this->param);
+	//glDisable(GL_BLEND);
+	//glDepthMask(GL_TRUE);
+
+
+
+
+
+	//デバッグ用コリジョン描画
+	Matrix4f projection = this->param.camera->GetProjectionMatrix();
+	Matrix4f view = this->param.camera->GetViewMatrix();
 	Matrix4f world;
 	Translation<float, 3> trans;
 	DiagonalMatrix<float, 3> scale;
 	Quaternionf rot;
 	Affine3f mat;
-	ShaderClass* shader;
-
-	world = Matrix4f::Identity();
-	trans = Translation<float, 3>(0.0f, 0.0f, 0.0f);
-	scale = DiagonalMatrix<float, 3>(-1.0f, 1.0f, 1.0f);
-	rot = AngleAxisf(DegToRad(0.0f), Vector3f::UnitX());
-	mat = trans * rot * scale;
-	shader = this->param.shaderList->UseShader("skin");
-	this->param.lightList->SetAmbient("ambient", shader);
-	this->param.lightList->SetAmbient("directional", shader);
-	shader->SetVertexShaderSubroutine("NotSkinning");
-	shader->SetMatrix(projectionMat * view * mat.matrix());
-	shader->SetWorldMatrix(mat.matrix());
-	this->mapModel->Draw(param, "skin");
-
-
-	this->player->Draw(this->param);
-
-
-	Matrix3f cameraInv = this->camera->GetCameraMatrix().block(0, 0, 3, 3);
-	world = Matrix4f::Identity();
-	trans = Translation<float, 3>(0, 0.0f, 0.0f);
-	scale = DiagonalMatrix<float, 3>(1.0f, 1.0f, 1.0f);
-	rot = AngleAxisf(DegToRad(0.0f), Vector3f::UnitX());
-	mat = trans * cameraInv * rot * scale;
-	shader = this->param.shaderList->UseShader("static");
-	this->model->SetMatrix(mat.matrix(), view, projectionMat);
-
-	glDepthMask(GL_FALSE);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
-	this->model->Draw(this->param);
-	glDisable(GL_BLEND);
-	glDepthMask(GL_TRUE);
-
-	//デバッグ用コリジョン描画
 	world = Matrix4f::Identity();
 	trans = Translation<float, 3>(0, 0, 0);
 	scale = DiagonalMatrix<float, 3>(1.0f, 1.0f, 1.0f);
 	rot = AngleAxisf(DegToRad(0.0f), Vector3f::UnitX());
 	mat = trans * rot * scale;
-	//this->param.physicsSystem->DebugDraw(this->param.shaderList->GetShader("simple"), mat.matrix(), view, projectionMat);
-}
-void MyApplication::DrawPass1() {
+	//this->param.physicsSystem->DebugDraw(this->param.shaderList->GetShader("simple"), mat.matrix(), view, projection);
 }
 void MyApplication::DrawPass2() {
-
 }

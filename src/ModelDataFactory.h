@@ -10,5 +10,5 @@
 class ModelDataFactory {
 public:
 	ModelDatas* LoadFBXModel(const std::string& fileName, GameParameters& param);
-	ModelDatas* CreateSquareModel(const std::string& textureName, GameParameters& param);
+	ModelDatas* CreateSquareModel(float width, float height, const std::string& textureName, GameParameters& param);
 };

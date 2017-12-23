@@ -195,6 +195,8 @@ bool FbxModelLoader::LoadFbxMesh(FbxMesh* mesh) {
 
 //面ベースでメッシュ読み込み
 void FbxModelLoader::LoadVertex(FbxMesh* mesh, Vertex* vertex) {
+	//座標軸のずれはblenderではなくプログラム側で対応
+
 	int numVertex = mesh->GetControlPointsCount();
 	int numFace = mesh->GetPolygonCount();
 	int numUV = mesh->GetTextureUVCount();
@@ -342,6 +344,7 @@ void FbxModelLoader::LoadMaterial(FbxMesh* mesh, std::vector<Material>& material
 				material[i].textureName = fileName;
 				
 				if (!this->textureList->LoadTexture(fileName, fileName)) {
+					
 					material[i].textureName = "";
 				}
 

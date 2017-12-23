@@ -30,12 +30,15 @@ bool Emitter::Initialize(GameParameters& param) {
 	ModelDataFactory factory;
 
 	param.textureList->LoadTexture("particle.tga", "particle.tga");
-	this->test = new MeshModel(factory.CreateSquareModel("particle.tga", param));
+	int width = param.textureList->GetTexture("particle.tga")->GetWidth();
+	int height = param.textureList->GetTexture("particle.tga")->GetHeight();
+	this->test = new MeshModel(factory.CreateSquareModel(width, height, "particle.tga", param));
 
 	this->test->BindVAO();
 	//GLSL ‚Å‚Í Mat4 ‚Ì“ü—Í‚Í4‚Â‚Ì Vec4 ‚Æ‚µ‚Äˆµ‚í‚ê‚é
 	glGenBuffers(1, &this->particleMatrixBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, this->particleMatrixBuffer);
+
 	int location = 2;
 	for (int i = 0; i < 4; ++i) {
 		glEnableVertexAttribArray(location + i);
@@ -43,13 +46,14 @@ bool Emitter::Initialize(GameParameters& param) {
 		glVertexAttribDivisor    (location + i, 1);
 	}
 
+	//Fî•ñ‚àŽ‚Á‚Ä‚é
 	glGenBuffers(1, &this->particleColorBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, this->particleColorBuffer);
 	glEnableVertexAttribArray(6);
 	glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, 0);
 	glVertexAttribDivisor(6, 1);
 
-	glBindVertexArray(0);
+	this->test->UnBindVAO();
 	return true;
 }
 
@@ -83,7 +87,8 @@ void Emitter::Draw(GameParameters& param) {
 	glBufferData(GL_ARRAY_BUFFER, this->numMaxParticle * sizeof(float) * 4, NULL, GL_STREAM_DRAW);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, this->numParticle * sizeof(float) * 4, color);
 
-	this->test->InstanceDraw(this->numParticle, param, "static");
+	param.currentShader = param.shaderList->UseShader("static");
+	this->test->InstanceDraw(this->numParticle, param);
 	delete mat;
 	delete color;
 }

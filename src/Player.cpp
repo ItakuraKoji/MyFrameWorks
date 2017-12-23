@@ -7,7 +7,7 @@ bool Player::Initialize(GameParameters& param) {
 	btCollisionShape *characterShape = param.physicsSystem->CreateCapsuleShape(0.3f, 0.8f);
 	this->characterCollision = param.physicsSystem->CreateRigidBody(characterShape, 0.0f, 1, 1, btVector3(this->position.x(), this->position.y(), this->position.z()));
 
-	this->GetModel()->SetAnimation("Dash", true, false, false);
+	this->GetModel()->drawModel->SetAnimation("Dash", true, false, false);
 	return true;
 }
 void Player::Finalize() {
@@ -19,7 +19,7 @@ void Player::Run(GameParameters& param) {
 
 	//アナログが倒されている方向 カメラの回転 に対応したキャラの向き
 	if (slPower) {
-		this->rotation.y() = slRotation + DegToRad(90.0f) + this->camera->GetRotationH();
+		this->rotation.y() = slRotation + DegToRad(-90.0f) + this->camera->GetRotationH();
 	}
 
 	Vector3f direction(0.0f, 0.0f, 0.0f);
@@ -48,18 +48,12 @@ void Player::Run(GameParameters& param) {
 	this->position.z() = trans.getOrigin().z();
 	this->characterCollision->activate(true);
 
+	//カメラ操作はカメラマンが行う
 	this->camera->Run(param);
 }
 
 void Player::Draw(GameParameters& param) {
-	//return;
-	param.camera->Draw();
-	ShaderClass* shader = param.shaderList->UseShader(this->shaderName);
-	param.lightList->SetAmbient("ambient", shader);
-	param.lightList->SetDirectional("directional", shader);
-	shader->SetVertexShaderSubroutine("CalcBoneMat");
-	SetMatrix(param);
-	this->GetModel()->Draw(param, this->shaderName);
+	this->GetModel()->Draw(param, this->position, this->rotation, this->scale);
 }
 
 void Player::SetCameraMan(CameraClass* camera) {

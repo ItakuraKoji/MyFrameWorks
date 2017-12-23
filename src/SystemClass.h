@@ -46,6 +46,7 @@ private:
 	GLFWwindow* windowHandle;
 	MyApplication* application;
 
+	//FPSŒv‘ª
 	unsigned long cullentTime;
 	unsigned long startTime;
 	int framecount;

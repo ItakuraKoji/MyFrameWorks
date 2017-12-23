@@ -7,6 +7,7 @@
 #include<vector>
 #include<iostream>
 
+#include"MyMathFanctions.h"
 #include"BulletPhysics.h"
 
 //判定用モデルのポリゴン情報を持つクラス、描画は一切できない。行列による回転にも対応していない

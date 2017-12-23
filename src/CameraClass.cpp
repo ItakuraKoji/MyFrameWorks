@@ -3,7 +3,6 @@
 CameraClass::CameraClass(ProjectionType type, int width, int height, float near, float far, float fov) {
 	SetPosition(0, 0, 0);
 	SetTarget(0, 0, 0);
-
 	this->screenWidth = width;
 	this->screenHeight = height;
 	this->screenNear = near;

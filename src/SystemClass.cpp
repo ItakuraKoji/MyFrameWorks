@@ -4,8 +4,8 @@
 //public
 ////
 SystemClass::SystemClass() {
-	this->screenWidth = 1000;
-	this->screenHeight = 1000;
+	this->screenWidth = 600;
+	this->screenHeight = 600;
 	this->screenNeer = 0.1f;
 	this->screenFar = 1000.0f;
 	this->isFullScreen = false;
@@ -31,6 +31,7 @@ bool SystemClass::Initialize() {
 		return false;
 	}
 
+	//•ª‰ð”\‚Í1ƒ~ƒŠ•b
 	startTime = timeGetTime();
 	framecount = 0;
 	return true;
@@ -40,14 +41,10 @@ bool SystemClass::Initialize() {
 void SystemClass::Run() {
 	while (!glfwWindowShouldClose(this->windowHandle))
 	{
+		glfwPollEvents();
 		application->Run();
-
-
-
 		application->Draw();
-
 		glfwSwapBuffers(this->windowHandle);
-
 
 		++framecount;
 
@@ -59,8 +56,6 @@ void SystemClass::Run() {
 			std::cout << fps << std::endl;
 			framecount = 0;
 		}
-		glfwPollEvents();
-		
 	}
 }
 
@@ -96,6 +91,7 @@ bool SystemClass::CreateAppricationWindow(const char* windowName, int width, int
 
 	glfwMakeContextCurrent(this->windowHandle);
 	glfwSwapInterval(1);
+	
 	return true;
 }
 

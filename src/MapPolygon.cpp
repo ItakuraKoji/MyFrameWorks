@@ -61,7 +61,6 @@ void MapPolygon::setCollisionWorld(BulletPhysics *physics) {
 
 		btCollisionShape* collision = physics->CreateTriangleShape(p1, p2, p3);
 		btRigidBody* rigid = physics->CreateRigidBody(collision, 0.0f, 1, 1, btVector3(0.0f, 0.0f, 0.0f));
-
 	}
 }
 
@@ -137,8 +136,8 @@ bool MapPolygon::LoadFBX(FbxMesh *mesh) {
 
 	//UVベースの読み込みは想定しない
 	for (int i = 0; i < numFace; ++i) {
-		int polygonCount = mesh->GetPolygonVertexIndex(i);
-		int *vertexIndex = mesh->GetPolygonVertices();
+		int  polygonCount = mesh->GetPolygonVertexIndex(i);
+		int* vertexIndex = mesh->GetPolygonVertices();
 
 		int polygonIndices[3] = {};
 		polygonIndices[0] = vertexIndex[polygonCount];

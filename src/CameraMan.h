@@ -17,6 +17,8 @@ public:
 private:
 	GameObject* terget;
 	CameraClass* camera;
+	float distance;
+	float height;
 	float camerarotH, camerarotV;
 
 };

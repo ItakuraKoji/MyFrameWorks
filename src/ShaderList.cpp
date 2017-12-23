@@ -104,7 +104,7 @@ bool ShaderList::Add(const std::string& name, const std::string& vertex, const s
 	if (this->vertexShaders.find(vertex) == this->vertexShaders.end()) {
 		return false;
 	}
-	if (this->pixelShaders.find(pixel) == this->vertexShaders.end()) {
+	if (this->pixelShaders.find(pixel) == this->pixelShaders.end()) {
 		return false;
 	}
 
@@ -172,4 +172,6 @@ void ShaderList::ShowShaderErrors(GLuint shaderID) {
 		std::cout << errorLog[i];
 	}
 	std::cout << std::endl;
+
+	delete[] errorLog;
 }

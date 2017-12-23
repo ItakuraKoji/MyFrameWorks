@@ -2,15 +2,48 @@
 
 //input
 in vec2 outTexCoord;
+in vec3 outNormal;
 
 //output
-out vec4 outputColor;
+out vec4 resultColor;
 
 //uniform
 uniform sampler2D sampler;
+uniform vec3 lightDir;
+uniform vec4 lightColor;
+uniform float lightPower;
+uniform vec4 ambientColor;
+uniform float ambientPower;
+
+//Subroutine
+subroutine vec4 Lighting(void);
+subroutine uniform Lighting lightingFunc;
+
+
+subroutine(Lighting)
+vec4 None(void){
+	return vec4(1.0, 1.0, 1.0, 1.0);
+}
+subroutine(Lighting)
+vec4 CalcLight(void)
+{
+	vec4 result;
+
+	result = lightPower * lightColor * dot(outNormal, -lightDir);
+	result = clamp(result, 0.0f, 1.0f);
+	result += ambientPower * ambientColor;
+	result = clamp(result, 0.0f, 1.0f);
+	result.a = 1.0f;
+
+	return result;
+}
+
 
 //FragmentShader
 void main(void)
 {
-	outputColor = texture2D(sampler, outTexCoord);
+	resultColor = texture2D(sampler, outTexCoord);
+
+	vec4 light = lightingFunc();
+	resultColor *= light;
 }

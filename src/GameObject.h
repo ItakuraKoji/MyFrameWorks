@@ -1,6 +1,6 @@
 #pragma once
 
-#include"MeshModel.h"
+#include"MeshObject.h"
 #include"DrawParameters.h"
 #include"MyMathFanctions.h"
 
@@ -19,13 +19,10 @@ class GameObject {
 public:
 	GameObject();
 	virtual ~GameObject();
-	virtual bool Initialize(GameParameters& param) = 0;
-	virtual void Finalize() = 0;
 	virtual void Run(GameParameters& param) = 0;
 	virtual void Draw(GameParameters& param) = 0;
 
-	void SetDrawModel(MeshModel* model);
-	void SetShaderName(const std::string& name);
+	void SetDrawModel(MeshObject* model);
 	void SetPosition(float x, float y, float z);
 	void SetRotation(float x, float y, float z);
 	void SetScale(float x, float y, float z);
@@ -35,15 +32,14 @@ public:
 	Vector3f GetScale();
 
 protected:
-	MeshModel* GetModel();
-	void SetMatrix(GameParameters& param);
+	MeshObject* GetModel();
+	void LoadModel(GameParameters& param);
 
 protected:
 	Vector3f        position;
 	Vector3f        rotation;
 	Vector3f        scale;
-	std::string     shaderName;
 private:
 	//äÎÇ»Ç¢ÇÃÇ≈êGÇÁÇπÇ»Ç¢ï˚êjÇ≈
-	MeshModel*      drawModel;
+	MeshObject*      drawModel;
 };

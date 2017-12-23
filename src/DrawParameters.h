@@ -17,6 +17,7 @@ public:
 	ShaderList*    shaderList;
 	LightList*     lightList;
 	CameraClass*   camera;
+	ShaderClass*   currentShader;
 	int            screenWidth;
 	int            screenHeight;
 	float          screenFov;

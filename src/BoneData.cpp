@@ -1,4 +1,5 @@
 #include"ModelData.h"
+static float a;
 
 ////////
 //public
@@ -19,6 +20,8 @@ void BoneData::Add(std::vector<Bone> &boneData) {
 }
 
 void BoneData::SetMatrixTextureData(int arrayIndex, Texture *texture) {
+	++a;
+
 	int numBone = (int)this->boneData[arrayIndex].size();
 	float mat[16 * 70] = {};
 
@@ -69,5 +72,11 @@ void BoneData::BoneInterporation(int arrayIndex, float ratio) {
 Matrix4f BoneData::CalculateBoneMatrix(int arrayIndex, int boneIndex) {
 	Matrix4f bind = this->boneData[arrayIndex][boneIndex].bindMat.inverse();
 	Matrix4f current = this->boneData[arrayIndex][boneIndex].currentMat;
-	return current * bind;
+
+	//blenderの出力ではボーンは軸情報に従わないので補正(180度Y軸回転　→　90度X軸回転)
+	Matrix3f rot = (AngleAxisf(DegToRad(90), Vector3f(1.0f, 0.0f, 0.0f)) * AngleAxisf(DegToRad(180), Vector3f(0.0f, 1.0f, 0.0f))).matrix();
+	Matrix4f mat = Matrix4f::Identity();
+	mat.block(0, 0, 3, 3) = rot;
+
+	return current * bind * mat;
 }

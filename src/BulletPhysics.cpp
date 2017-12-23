@@ -57,6 +57,8 @@ void BulletPhysics::Run() {
 void BulletPhysics::DebugDraw(ShaderClass* shader, Matrix4f& world, Matrix4f& view, Matrix4f& projection) {
 
 	shader->UseShader();
+	shader->SetVertexShaderSubroutine("NotSkinning");
+	shader->SetFragmentShaderSubroutine("None");
 
 	Matrix4f mat = projection * view * world;
 	shader->SetMatrix(mat);

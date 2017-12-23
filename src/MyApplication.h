@@ -4,7 +4,7 @@
 #include<bullet\btBulletDynamicsCommon.h>
 #include<string>
 
-#include"MeshModel.h"
+#include"MeshObject.h"
 #include"ModelDataFactory.h"
 
 #include"MapPolygon.h"
@@ -22,6 +22,7 @@
 #include"DrawParameters.h"
 #include"MyMathFanctions.h"
 #include"Player.h"
+#include"StaticObject.h"
 
 
 //実際のアプリケーションの処理をする
@@ -36,7 +37,6 @@ public:
 
 
 private:
-	void bulletInitialize();
 	//取り合えず描画パス3つ
 	void DrawPass0();
 	void DrawPass1();
@@ -44,21 +44,18 @@ private:
 
 private:
 	GameParameters param;
-	Matrix4f projectionMat;
 
-	MeshModel *square;
-	MeshModel *skinModel;
-	MeshModel *mapModel;
+	MeshObject *square;
+	MeshObject *skinModel;
+	MeshObject *mapModel;
 	Player* player;
+	StaticObject* mapObj;
 
-	Emitter *model;
+	//Emitter *model;
 	CameraClass* camera;
+	CameraClass* lightCamera;
 	MapPolygon* map;
 
 	Framebuffer* buffer;
-
-	//とりあえず物理エンジン
-	btCollisionObject *characterCollision;
-
 };
 

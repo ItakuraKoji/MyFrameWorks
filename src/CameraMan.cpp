@@ -4,6 +4,8 @@
 bool CameraMan::Initialize(GameParameters& param) {
 	this->camerarotH = 0.0f;
 	this->camerarotV = 0.0f;
+	this->distance = 20.0f;
+	this->height = 4.0f;
 	return true;
 }
 void CameraMan::Finalize() {
@@ -17,12 +19,15 @@ void CameraMan::Run(GameParameters& param) {
 	this->camerarotH += 2.0f * srPower * cosf(srRotation);
 	this->camerarotV -= 2.0f * srPower * sinf(srRotation);
 
-	float cx = -20.0f * sinf(DegToRad(camerarotH)) + this->terget->GetPosition().x();
-	float cy = -20.0f * sinf(DegToRad(camerarotV)) + this->terget->GetPosition().y();
-	float cz = -20.0f * cosf(DegToRad(camerarotH)) * cosf(DegToRad(camerarotV)) + this->terget->GetPosition().z();
+	this->distance = 20.0f;
+	this->height = 4.0f;
 
-	this->camera->SetPosition(cx, cy + 4.0f, cz);
-	this->camera->SetTarget(this->terget->GetPosition().x(), this->terget->GetPosition().y() + 4.0f, this->terget->GetPosition().z());
+	float cx = -this->distance * sinf(DegToRad(camerarotH)) + this->terget->GetPosition().x();
+	float cy = -this->distance * sinf(DegToRad(camerarotV)) + this->terget->GetPosition().y();
+	float cz = -this->distance * cosf(DegToRad(camerarotH)) * cosf(DegToRad(camerarotV)) + this->terget->GetPosition().z();
+
+	this->camera->SetPosition(cx, cy + this->height, cz);
+	this->camera->SetTarget(this->terget->GetPosition().x(), this->terget->GetPosition().y() + this->height, this->terget->GetPosition().z());
 }
 void CameraMan::Draw(GameParameters& param) {
 
