@@ -4,14 +4,10 @@ ShaderList::ShaderList() {
 	Initialize();
 }
 ShaderList::~ShaderList() {
-	Finalize();
+	Initialize();
 }
 
 bool ShaderList::Initialize() {
-	Finalize();
-	return true;
-}
-void ShaderList::Finalize() {
 	for (auto i : this->shaderList) {
 		delete i.second;
 	}
@@ -25,6 +21,7 @@ void ShaderList::Finalize() {
 	this->shaderList.clear();
 	this->vertexShaders.clear();
 	this->pixelShaders.clear();
+	return true;
 }
 
 //頂点シェーダー作成

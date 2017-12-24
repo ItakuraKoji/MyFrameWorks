@@ -1,6 +1,6 @@
 #include"CameraClass.h"
 
-CameraClass::CameraClass(ProjectionType type, int width, int height, float near, float far, float fov) {
+CameraClass::CameraClass(CameraType type, int width, int height, float near, float far, float fov) {
 	SetPosition(0, 0, 0);
 	SetTarget(0, 0, 0);
 	this->screenWidth = width;
@@ -71,7 +71,7 @@ void CameraClass::Draw() {
 	this->zAxis = this->viewMatrix.block(2, 0, 1, 3).transpose();
 
 	//プロジェクション行列を作成
-	if (this->projectionType == ProjectionType::Perspective) {
+	if (this->projectionType == CameraType::Perspective) {
 		MatrixPerspectiveLH(this->projectionMatrix, this->screenWidth, this->screenHeight, this->screenNear, this->screenFar, this->fieldOfView);
 	}
 	else {

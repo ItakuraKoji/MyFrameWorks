@@ -9,7 +9,6 @@ public:
 	ShaderList();
 	~ShaderList();
 	bool Initialize();
-	void Finalize();
 
 	ShaderClass* GetShader(const std::string& shaderName);
 	ShaderClass* UseShader(const std::string& shaderName);

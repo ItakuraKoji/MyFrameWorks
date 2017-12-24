@@ -1,7 +1,7 @@
 #pragma once
 
 #include"MeshObject.h"
-#include"DrawParameters.h"
+#include"GameParameters.h"
 #include"MyMathFanctions.h"
 
 #include<Eigen\Core>
@@ -19,8 +19,8 @@ class GameObject {
 public:
 	GameObject();
 	virtual ~GameObject();
-	virtual void Run(GameParameters& param) = 0;
-	virtual void Draw(GameParameters& param) = 0;
+	virtual void Run(GameParameters* param) = 0;
+	virtual void Draw(GameParameters* param) = 0;
 
 	void SetDrawModel(MeshObject* model);
 	void SetPosition(float x, float y, float z);

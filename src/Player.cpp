@@ -1,11 +1,11 @@
 #include"Player.h"
 
-bool Player::Initialize(GameParameters& param) {
+bool Player::Initialize(GameParameters* param) {
 	this->velocity = 0.0f;
 	this->speed = 0.4f;
 
-	btCollisionShape *characterShape = param.physicsSystem->CreateCapsuleShape(0.3f, 0.8f);
-	this->characterCollision = param.physicsSystem->CreateRigidBody(characterShape, 0.0f, 1, 1, btVector3(this->position.x(), this->position.y(), this->position.z()));
+	btCollisionShape *characterShape = param->GetPhysics()->CreateCapsuleShape(0.3f, 0.8f);
+	this->characterCollision = param->GetPhysics()->CreateRigidBody(characterShape, 0.0f, 1, 1, btVector3(this->position.x(), this->position.y(), this->position.z()));
 
 	this->GetModel()->drawModel->SetAnimation("Dash", true, false, false);
 	return true;
@@ -13,9 +13,9 @@ bool Player::Initialize(GameParameters& param) {
 void Player::Finalize() {
 	delete this->camera;
 }
-void Player::Run(GameParameters& param) {
-	float slRotation = param.input->GetStickRotation(VPAD_STICK_L);
-	float slPower    = param.input->GetStickPower(VPAD_STICK_L);
+void Player::Run(GameParameters* param) {
+	float slRotation = param->GetInput()->GetStickRotation(VPAD_STICK_L);
+	float slPower    = param->GetInput()->GetStickPower(VPAD_STICK_L);
 
 	//アナログが倒されている方向 カメラの回転 に対応したキャラの向き
 	if (slPower) {
@@ -26,10 +26,10 @@ void Player::Run(GameParameters& param) {
 	direction.x() += this->speed * slPower * cosf(slRotation);
 	direction.z() -= this->speed * slPower * sinf(slRotation);
 
-	if (param.input->isPressButton(VPAD_BUTTON_A)) {
+	if (param->GetInput()->isPressButton(VPAD_BUTTON_A)) {
 		this->velocity = 1.0f;
 	}
-	this->velocity -= param.gravity;
+	this->velocity -= 0.03f;
 	if (this->velocity < -1.0f) {
 		this->velocity = -1.0f;
 	}
@@ -39,7 +39,7 @@ void Player::Run(GameParameters& param) {
 	//移動ベクトルを指定したカメラの軸に合わせる
 	Vector3f goVec = AngleAxisf(this->camera->GetRotationH(), Vector3f(0.0f, 1.0f, 0.0f)) * direction;
 
-	param.physicsSystem->MoveCharacterObject(this->characterCollision, btVector3(goVec.x(), 0.0f, goVec.z()), btVector3(0.0f, goVec.y(), 0.0f));
+	param->GetPhysics()->MoveCharacterObject(this->characterCollision, btVector3(goVec.x(), 0.0f, goVec.z()), btVector3(0.0f, goVec.y(), 0.0f));
 	//param.physicsSystem->DiscreteMoveObject(this->characterCollision, btVector3(goVec.x(), 0.0f, goVec.z()), btVector3(0.0f, goVec.y(), 0.0f));
 	
 	btTransform trans = this->characterCollision->getWorldTransform();
@@ -52,7 +52,7 @@ void Player::Run(GameParameters& param) {
 	this->camera->Run(param);
 }
 
-void Player::Draw(GameParameters& param) {
+void Player::Draw(GameParameters* param) {
 	this->GetModel()->Draw(param, this->position, this->rotation, this->scale);
 }
 

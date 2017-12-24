@@ -19,7 +19,7 @@
 #include"FrameBuffer.h"
 
 #include"BulletPhysics.h"
-#include"DrawParameters.h"
+#include"GameParameters.h"
 #include"MyMathFanctions.h"
 #include"Player.h"
 #include"StaticObject.h"
@@ -43,7 +43,7 @@ private:
 	void DrawPass2();
 
 private:
-	GameParameters param;
+	GameParameters* param;
 
 	MeshObject *square;
 	MeshObject *skinModel;
@@ -52,8 +52,6 @@ private:
 	StaticObject* mapObj;
 
 	//Emitter *model;
-	CameraClass* camera;
-	CameraClass* lightCamera;
 	MapPolygon* map;
 
 	Framebuffer* buffer;

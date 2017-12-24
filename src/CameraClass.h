@@ -5,7 +5,7 @@
 #include<iostream>
 #include"MyMathFanctions.h"
 
-enum ProjectionType {
+enum CameraType {
 	Perspective,
 	Ortho,
 };
@@ -14,7 +14,7 @@ using namespace Eigen;
 
 class CameraClass {
 public:
-	CameraClass(ProjectionType type, int width, int height, float near, float far, float fov);
+	CameraClass(CameraType type, int width, int height, float near, float far, float fov);
 	~CameraClass();
 
 
@@ -54,7 +54,7 @@ private:
 	Vector3f yAxis;
 	Vector3f zAxis;
 
-	ProjectionType projectionType;
+	CameraType projectionType;
 	Matrix4f       projectionMatrix;
 	int            screenWidth;
 	int            screenHeight;

@@ -52,7 +52,7 @@ void MeshModel::SetSpeed(int speed) {
 }
 
 //描画
-void MeshModel::Draw(GameParameters& param) {
+void MeshModel::Draw(GameParameters* param) {
 	if (this->data->bone) {
 		this->data->animation->UpdateAnimation();
 	}
@@ -66,16 +66,16 @@ void MeshModel::Draw(GameParameters& param) {
 }
 
 //インスタンス描画(メッシュ階層の一番上の一つ目のマテリアルのみ)
-void MeshModel::InstanceDraw(int numInstance, GameParameters& param) {
+void MeshModel::InstanceDraw(int numInstance, GameParameters* param) {
 
 	int numArray = this->data->vertexBuffer->GetNumBuffer();
 	GLuint VAO = this->data->vertexBuffer->GetVAO(0);
 	glBindVertexArray(VAO);
 
 	int numMaterial = this->data->material->GetNumMaterial(0);
-	Texture* texture = param.textureList->GetTexture(this->data->material->GetMaterial(0, 0).textureName);
+	Texture* texture = param->GetTextureList()->GetTexture(this->data->material->GetMaterial(0, 0).textureName);
 	GLuint TextureID = texture->GetTextureID();
-	param.currentShader->SetTexture("sampler", 0, TextureID);
+	param->currentShader->SetTexture("sampler", 0, TextureID);
 	GLuint IBO = this->data->vertexBuffer->GetIBO(0, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 	glDrawElementsInstanced(GL_TRIANGLES, this->data->material->GetNumFace(0, 0) * 3, GL_UNSIGNED_INT, 0, numInstance);
@@ -87,24 +87,24 @@ void MeshModel::InstanceDraw(int numInstance, GameParameters& param) {
 //private
 ////
 
-void MeshModel::SetBone(int arrayIndex, GameParameters& param) {
+void MeshModel::SetBone(int arrayIndex, GameParameters* param) {
 	int time = this->data->animation->GetCurrentAnimTime();
 	this->data->bone->SetClurrentBoneData(arrayIndex, time);
 	this->data->bone->SetMatrixTextureData(arrayIndex, this->boneTexture);
 
-	param.currentShader->SetTexture("boneTex", 1, this->boneTexture->GetTextureID());
-	param.currentShader->SetValue("numBone", this->data->bone->GetNumBone(arrayIndex));
+	param->currentShader->SetTexture("boneTex", 1, this->boneTexture->GetTextureID());
+	param->currentShader->SetValue("numBone", this->data->bone->GetNumBone(arrayIndex));
 }
 
-void MeshModel::DrawBuffers(int arrayIndex, GameParameters& param) {
+void MeshModel::DrawBuffers(int arrayIndex, GameParameters* param) {
 	GLuint VAO = this->data->vertexBuffer->GetVAO(arrayIndex);
 	glBindVertexArray(VAO);
 
 	int numMaterial = this->data->material->GetNumMaterial(arrayIndex);
 	for (int k = 0; k < numMaterial; ++k) {
-		Texture* texture = param.textureList->GetTexture(this->data->material->GetMaterial(arrayIndex, k).textureName);
+		Texture* texture = param->GetTextureList()->GetTexture(this->data->material->GetMaterial(arrayIndex, k).textureName);
 		GLuint TextureID = texture->GetTextureID();
-		param.currentShader->SetTexture("sampler", 0, TextureID);
+		param->currentShader->SetTexture("sampler", 0, TextureID);
 		GLuint IBO = this->data->vertexBuffer->GetIBO(arrayIndex, k);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 		glDrawElements(GL_TRIANGLES, this->data->material->GetNumFace(arrayIndex, k) * 3, GL_UNSIGNED_INT, 0);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include"DrawParameters.h"
+#include"GameParameters.h"
 #include"MeshModel.h"
 #include"ModelDataFactory.h"
 #include"ParticleParameter.h"
@@ -14,9 +14,9 @@ class Emitter {
 public:
 	Emitter();
 	~Emitter();
-	bool Initialize(GameParameters& param);
+	bool Initialize(GameParameters* param);
 	void Run();
-	void Draw(GameParameters& param);
+	void Draw(GameParameters* param);
 	void SetMatrix(Matrix4f& world, Matrix4f& view, Matrix4f& projection);
 
 private:

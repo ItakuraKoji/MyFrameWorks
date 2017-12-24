@@ -2,7 +2,7 @@
 
 #include"FbxModelLoader.h"
 #include"ModelData.h"
-#include"DrawParameters.h"
+#include"GameParameters.h"
 #include"ShaderClass.h"
 
 //モデルクラス。ファクトリーから生産されたモデルデータを受け取って初期化
@@ -18,12 +18,12 @@ public:
 	void UnBindVAO();
 	void SetAnimation(const std::string& animationName, bool isLoop, bool isInterporation, bool playOnce);
 	void SetSpeed(int speed);
-	void Draw(GameParameters& param);
-	void InstanceDraw(int numInstance, GameParameters& param);
+	void Draw(GameParameters* param);
+	void InstanceDraw(int numInstance, GameParameters* param);
 
 private:
-	void SetBone    (int arrayIndex, GameParameters& param);
-	void DrawBuffers(int arrayIndex, GameParameters& param);
+	void SetBone    (int arrayIndex, GameParameters* param);
+	void DrawBuffers(int arrayIndex, GameParameters* param);
 
 private:
 	ModelDatas* data;

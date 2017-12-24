@@ -17,7 +17,7 @@ Emitter::~Emitter() {
 	}
 }
 
-bool Emitter::Initialize(GameParameters& param) {
+bool Emitter::Initialize(GameParameters* param) {
 	this->numParticle = 0;
 	this->numMaxParticle = 10000;
 	this->parameter.emitInterval = 0;
@@ -29,9 +29,9 @@ bool Emitter::Initialize(GameParameters& param) {
 
 	ModelDataFactory factory;
 
-	param.textureList->LoadTexture("particle.tga", "particle.tga");
-	int width = param.textureList->GetTexture("particle.tga")->GetWidth();
-	int height = param.textureList->GetTexture("particle.tga")->GetHeight();
+	param->GetTextureList()->LoadTexture("particle.tga", "particle.tga");
+	int width = param->GetTextureList()->GetTexture("particle.tga")->GetWidth();
+	int height = param->GetTextureList()->GetTexture("particle.tga")->GetHeight();
 	this->test = new MeshModel(factory.CreateSquareModel(width, height, "particle.tga", param));
 
 	this->test->BindVAO();
@@ -63,7 +63,7 @@ void Emitter::Run() {
 	UpDateParticle();
 }
 
-void Emitter::Draw(GameParameters& param) {
+void Emitter::Draw(GameParameters* param) {
 	if (!numParticle) {
 		return;
 	}
@@ -87,7 +87,7 @@ void Emitter::Draw(GameParameters& param) {
 	glBufferData(GL_ARRAY_BUFFER, this->numMaxParticle * sizeof(float) * 4, NULL, GL_STREAM_DRAW);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, this->numParticle * sizeof(float) * 4, color);
 
-	param.currentShader = param.shaderList->UseShader("static");
+	param->UseShader("static");
 	this->test->InstanceDraw(this->numParticle, param);
 	delete mat;
 	delete color;

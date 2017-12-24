@@ -1,7 +1,7 @@
 #pragma once
 
 #include<string>
-#include"DrawParameters.h"
+#include"GameParameters.h"
 #include"GameObject.h"
 
 

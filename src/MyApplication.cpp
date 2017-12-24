@@ -16,41 +16,37 @@ MyApplication::~MyApplication() {
 
 bool MyApplication::Initialize(int width, int height) {
 	try {
-		this->param.physicsSystem = new BulletPhysics;
-		this->param.gravity = 0.03f;
-		this->param.screenWidth = width;
-		this->param.screenHeight = height;
-		this->param.screenFov = DegToRad(45.0f);
-		this->param.input = new InputClass(0);
-		this->param.textureList = new TextureList;
-		this->param.shaderList = new ShaderList;
-		this->param.shaderList->Initialize();
+		this->param = new GameParameters;
+		this->param->Initialize(width, height);
 
-		this->param.shaderList->AddVertexShader("Shader/VertexShader.vs");
-		this->param.shaderList->AddPixelShader("Shader/TextureSampler.ps");
-		this->param.shaderList->AddPixelShader("Shader/DepthShader.ps");
-		if (!this->param.shaderList->Add("standard", "Shader/VertexShader.vs", "Shader/TextureSampler.ps")) {
+		ShaderList* shaderList = this->param->GetShaderList();
+		shaderList->AddVertexShader("Shader/VertexShader.vs");
+		shaderList->AddPixelShader("Shader/TextureSampler.ps");
+		shaderList->AddPixelShader("Shader/DepthShader.ps");
+		if (!shaderList->Add("standard", "Shader/VertexShader.vs", "Shader/TextureSampler.ps")) {
 			return false;
 		}
-		if (!this->param.shaderList->Add("depth", "Shader/VertexShader.vs", "Shader/DepthShader.ps")) {
+		if (!shaderList->Add("depth", "Shader/VertexShader.vs", "Shader/DepthShader.ps")) {
 			return false;
 		}
 
-		this->param.shaderList->AddVertexShader("Shader/StaticShader.vs");
-		this->param.shaderList->AddVertexShader("Shader/SimpleShader.vs");
+		shaderList->AddVertexShader("Shader/StaticShader.vs");
+		shaderList->AddVertexShader("Shader/SimpleShader.vs");
 
-		this->param.shaderList->AddPixelShader("Shader/StaticShader.ps");
-		this->param.shaderList->AddPixelShader("Shader/SimpleShader.ps");
+		shaderList->AddPixelShader("Shader/StaticShader.ps");
+		shaderList->AddPixelShader("Shader/SimpleShader.ps");
 
-
-
-		if (!this->param.shaderList->Add("static", "Shader/StaticShader.vs", "Shader/StaticShader.ps")) {
+		if (!shaderList->Add("static", "Shader/StaticShader.vs", "Shader/StaticShader.ps")) {
 			return false;
 		}
-		if (!this->param.shaderList->Add("simple", "Shader/SimpleShader.vs", "Shader/SimpleShader.ps")) {
+		if (!shaderList->Add("simple", "Shader/SimpleShader.vs", "Shader/SimpleShader.ps")) {
 			return false;
 		}
 
+		CameraList* cameraList = this->param->GetCameraList();
+		cameraList->AddPerspectiveCamera("mainCamera", this->param->screenWidth, this->param->screenHeight, 0.1f, 1000.0f, DegToRad(45.0f));
+		cameraList->AddOrthoCamera      ("lightCamera", 230.0f, 230.0f, 10.0f, 100.0f);
+		cameraList->AddOrthoCamera      ("2DCamera", this->param->screenWidth, this->param->screenHeight, 10.0f, 100.0f);
 
 
 		ModelDataFactory factory;
@@ -59,21 +55,16 @@ bool MyApplication::Initialize(int width, int height) {
 
 
 		this->skinModel = new MeshObject(new MeshModel(factory.LoadFBXModel("KaminariChan.fbx", this->param)));
-		this->camera = new CameraClass(ProjectionType::Perspective, this->param.screenWidth, this->param.screenHeight, 5.1f, 1000.0f, this->param.screenFov);
-		this->lightCamera = new CameraClass(ProjectionType::Ortho, 230.0f, 230.0f, 10.0f, 100.0f, this->param.screenFov);
-		this->lightCamera->SetPosition(3, 1, -1);
-		this->lightCamera->SetTarget(3, 0, 0);
-		this->lightCamera->Draw();
 
 		this->player = new Player();
 		this->player->SetDrawModel(this->skinModel);
 		this->player->SetPosition(0.0f, 10.6f, 0.0f);
 		this->player->Initialize(this->param);
-		this->player->SetCameraMan(this->camera);
+		this->player->SetCameraMan(this->param->GetCameraList()->GetCamera("mainCamera"));
 
 		this->map = new MapPolygon;
 		this->map->LoadModel("Map.fbx");
-		this->map->setCollisionWorld(this->param.physicsSystem);
+		this->map->setCollisionWorld(this->param->GetPhysics());
 
 		this->mapObj = new StaticObject;
 		this->mapObj->SetDrawModel(this->mapModel);
@@ -86,12 +77,12 @@ bool MyApplication::Initialize(int width, int height) {
 		//}
 
 		//
-		this->buffer = new Framebuffer(this->param.textureList, "frameBuffer", this->param.screenWidth, this->param.screenWidth);
-		this->square = new MeshObject(new MeshModel(factory.CreateSquareModel(this->param.screenWidth, this->param.screenHeight, "frameBuffer", this->param)));
+		this->buffer = new Framebuffer(this->param->GetTextureList(), "frameBuffer", this->param->screenWidth, this->param->screenWidth);
+		this->square = new MeshObject(new MeshModel(factory.CreateSquareModel(this->param->screenWidth, this->param->screenHeight, "frameBuffer", this->param)));
 
-		this->param.lightList = new LightList;
-		this->param.lightList->AddAmbient("ambient", 0.4f, Vector4f(0.5f, 1.0f, 1.0f, 1.0f));
-		this->param.lightList->AddDirectional("directional", 1.0f, Vector4f(0.7f, 1.0f, 1.0f, 1.0f), Vector3f(0.0f, -1.0f, 1.0f));
+		LightList* lightList = this->param->GetLightList();
+		lightList->AddAmbient("ambient", 0.4f, Vector4f(0.5f, 1.0f, 1.0f, 1.0f));
+		lightList->AddDirectional("directional", 1.0f, Vector4f(0.7f, 1.0f, 1.0f, 1.0f), Vector3f(0.0f, -1.0f, 1.0f));
 
 
 
@@ -103,25 +94,10 @@ bool MyApplication::Initialize(int width, int height) {
 }
 
 void MyApplication::Finalize() {
-	if (this->param.textureList) {
-		delete this->param.textureList;
-		this->param.textureList = NULL;
-	}
-	if (this->param.shaderList) {
-		delete this->param.shaderList;
-		this->param.shaderList = NULL;
-	}
-	if (this->param.lightList) {
-		delete this->param.lightList;
-		this->param.lightList = NULL;
-	}
-	if (this->param.input) {
-		delete this->param.input;
-		this->param.input = NULL;
-	}
-	if (this->param.physicsSystem) {
-		delete this->param.physicsSystem;
-		this->param.physicsSystem = NULL;
+	if (this->param) {
+		this->param->Finalize();
+		delete this->param;
+		this->param = NULL;
 	}
 	//if (this->model) {
 	//	delete this->model;
@@ -136,14 +112,6 @@ void MyApplication::Finalize() {
 		this->mapObj->Finalize();
 		delete this->mapObj;
 	}
-	if (this->camera) {
-		delete this->camera;
-		this->camera = NULL;
-	}
-	if (this->lightCamera) {
-		delete this->lightCamera;
-		this->lightCamera = NULL;
-	}
 
 	if (this->buffer) {
 		delete this->buffer;
@@ -157,13 +125,9 @@ void MyApplication::Finalize() {
 
 void MyApplication::Run() {
 
-	this->param.input->Run();
-
-	this->param.camera = this->camera;
+	this->param->Run();
 
 	this->player->Run(this->param);
-
-	this->param.physicsSystem->Run();
 
 	//this->model->Run();
 }
@@ -179,46 +143,60 @@ void MyApplication::Draw() {
 
 //描画パス
 void MyApplication::DrawPass0() {
-	this->camera->Draw();
-	this->param.camera = lightCamera;
+	this->param->UseCamera("lightCamera");
+	this->param->currentCamera->Draw();
 
 	//深度描画
-	param.currentShader = param.shaderList->UseShader("depth");
-	param.lightList->SetAmbient("ambient", param.currentShader);
-	param.lightList->SetDirectional("directional", param.currentShader);
+	param->UseShader("depth");
+	param->UseAmbient("ambient");
+	param->UseDirectional("directional");
 
-	param.currentShader->SetVertexShaderSubroutine("CalcBoneMat");
-	param.currentShader->SetFragmentShaderSubroutine("CalcLight");
+	param->currentShader->SetVertexShaderSubroutine("CalcBoneMat");
+	param->currentShader->SetFragmentShaderSubroutine("CalcLight");
 	this->player->Draw(this->param);
 
 
-	param.currentShader->SetVertexShaderSubroutine("NotSkinning");
-	param.currentShader->SetFragmentShaderSubroutine("CalcLight");
+	param->currentShader->SetVertexShaderSubroutine("NotSkinning");
+	param->currentShader->SetFragmentShaderSubroutine("CalcLight");
 	this->mapObj->Draw(this->param);
 
 }
 void MyApplication::DrawPass1() {
+	this->buffer->Bind();
 	glClearColor(0.5f, 0.5f, 0.6f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); 
-	glViewport(0, 0, this->param.screenWidth, this->param.screenHeight);
+	glViewport(0, 0, this->param->screenWidth, this->param->screenHeight);
 
-	this->camera->Draw();
-	this->param.camera = camera;
+	this->param->UseCamera("mainCamera");
+	this->param->currentCamera->Draw();
 
+	param->UseShader("standard");
+	param->UseAmbient("ambient");
+	param->UseDirectional("directional");
 
-	param.currentShader = param.shaderList->UseShader("standard");
-	param.lightList->SetAmbient("ambient", param.currentShader);
-	param.lightList->SetDirectional("directional", param.currentShader);
-
-	param.currentShader->SetVertexShaderSubroutine("CalcBoneMat");
-	param.currentShader->SetFragmentShaderSubroutine("CalcLight");
+	//プレイヤー
+	param->currentShader->SetVertexShaderSubroutine("CalcBoneMat");
+	param->currentShader->SetFragmentShaderSubroutine("CalcLight");
 	this->player->Draw(this->param);
-
-
-	param.currentShader->SetVertexShaderSubroutine("NotSkinning");
-	param.currentShader->SetFragmentShaderSubroutine("CalcLight");
+	//マップ
+	param->currentShader->SetVertexShaderSubroutine("NotSkinning");
+	param->currentShader->SetFragmentShaderSubroutine("CalcLight");
 	this->mapObj->Draw(this->param);
 
+	this->buffer->UnBind();
+
+	//レンダリング結果のテクスチャ描画
+	this->param->UseCamera("2DCamera");
+	this->param->currentCamera->SetPosition(0, 0, -1);
+	this->param->currentCamera->SetTarget(0, 0, 0);
+	this->param->currentCamera->Draw();
+
+	glClearColor(0.5f, 0.5f, 0.6f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glViewport(0, 0, this->param->screenWidth, this->param->screenHeight);
+	param->currentShader->SetVertexShaderSubroutine("NotSkinning");
+	param->currentShader->SetFragmentShaderSubroutine("None");
+	this->square->Draw(this->param, Vector3f(0, 0, 10), Vector3f(0, 0, 0), Vector3f(-1, 1, 1));
 
 	//Matrix3f cameraInv = this->camera->GetCameraMatrix().block(0, 0, 3, 3);
 	//world = Matrix4f::Identity();
@@ -241,8 +219,8 @@ void MyApplication::DrawPass1() {
 
 
 	//デバッグ用コリジョン描画
-	Matrix4f projection = this->param.camera->GetProjectionMatrix();
-	Matrix4f view = this->param.camera->GetViewMatrix();
+	Matrix4f projection = this->param->currentCamera->GetProjectionMatrix();
+	Matrix4f view = this->param->currentCamera->GetViewMatrix();
 	Matrix4f world;
 	Translation<float, 3> trans;
 	DiagonalMatrix<float, 3> scale;
