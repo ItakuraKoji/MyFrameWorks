@@ -14,18 +14,29 @@ void CameraList::Initialize() {
 }
 
 //パースペクティブ投影
-void CameraList::AddPerspectiveCamera(const std::string& name, int width, int height, float neer, float far, float fieldOfView) {
+void CameraList::AddPerspectiveCamera(const std::string& name, Vector3f& position, Vector3f& target, int width, int height, float neer, float far, float fieldOfView) {
 	if (this->cameraList.find(name) != this->cameraList.end()) {
 		return;
 	}
-	this->cameraList[name] = new CameraClass(CameraType::Perspective, width, height, neer, far, fieldOfView);
+
+	CameraClass* camera = new CameraClass(CameraType::Perspective, width, height, neer, far, fieldOfView);
+	camera->SetPosition(position.x(), position.y(), position.z());
+	camera->SetTarget(target.x(), target.y(), target.z());
+	camera->Draw();
+	this->cameraList[name] = camera;
 }
+
 //平行投影
-void CameraList::AddOrthoCamera(const std::string& name, int width, int height, float neer, float far) {
+void CameraList::AddOrthoCamera(const std::string& name, Vector3f& position, Vector3f& target, int width, int height, float neer, float far) {
 	if (this->cameraList.find(name) != this->cameraList.end()) {
 		return;
 	}
-	this->cameraList[name] = new CameraClass(CameraType::Ortho, width, height, neer, far, 0.0f);
+
+	CameraClass* camera = new CameraClass(CameraType::Ortho, width, height, neer, far, 0.0f);
+	camera->SetPosition(position.x(), position.y(), position.z());
+	camera->SetTarget(target.x(), target.y(), target.z());
+	camera->Draw();
+	this->cameraList[name] = camera;
 }
 
 CameraClass* CameraList::GetCamera(const std::string& name) {

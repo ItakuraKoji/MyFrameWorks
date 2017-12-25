@@ -63,11 +63,12 @@ void ShaderClass::SetWorldMatrix(const Matrix4f& world) {
 void ShaderClass::SetTexture(const std::string& uniformName, GLuint textureLayer, GLuint textureNumber) {
 	GLuint location;
 	location = glGetUniformLocation(this->shaderProgram, uniformName.data());
-	if (location != -1) {
-		glActiveTexture(GL_TEXTURE0 + textureLayer);
-		glUniform1i(location, textureLayer);
-		glBindTexture(GL_TEXTURE_2D, textureNumber);
+	if (location == -1) {
+		return;
 	}
+	glActiveTexture(GL_TEXTURE0 + textureLayer);
+	glUniform1i(location, textureLayer);
+	glBindTexture(GL_TEXTURE_2D, textureNumber);
 }
 //ディレクショナルライト
 void ShaderClass::SetDirectionalLight(float power, const Vector4f& color, const Vector3f& direction) {

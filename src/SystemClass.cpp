@@ -4,8 +4,8 @@
 //public
 ////
 SystemClass::SystemClass() {
-	this->screenWidth = 600;
-	this->screenHeight = 600;
+	this->screenWidth = 1920;
+	this->screenHeight = 1080;
 	this->screenNeer = 0.1f;
 	this->screenFar = 1000.0f;
 	this->isFullScreen = false;

@@ -21,12 +21,21 @@ bool MyApplication::Initialize(int width, int height) {
 
 		ShaderList* shaderList = this->param->GetShaderList();
 		shaderList->AddVertexShader("Shader/VertexShader.vs");
+		shaderList->AddVertexShader("Shader/ShadowMapping.vs");
 		shaderList->AddPixelShader("Shader/TextureSampler.ps");
 		shaderList->AddPixelShader("Shader/DepthShader.ps");
+		shaderList->AddPixelShader("Shader/ShadowMapping.ps");
+		shaderList->AddPixelShader("Shader/MultipleTexture.ps");
 		if (!shaderList->Add("standard", "Shader/VertexShader.vs", "Shader/TextureSampler.ps")) {
 			return false;
 		}
 		if (!shaderList->Add("depth", "Shader/VertexShader.vs", "Shader/DepthShader.ps")) {
+			return false;
+		}
+		if (!shaderList->Add("shadowMap", "Shader/ShadowMapping.vs", "Shader/ShadowMapping.ps")) {
+			return false;
+		}
+		if (!shaderList->Add("shadow", "Shader/VertexShader.vs", "Shader/MultipleTexture.ps")) {
 			return false;
 		}
 
@@ -44,9 +53,9 @@ bool MyApplication::Initialize(int width, int height) {
 		}
 
 		CameraList* cameraList = this->param->GetCameraList();
-		cameraList->AddPerspectiveCamera("mainCamera", this->param->screenWidth, this->param->screenHeight, 0.1f, 1000.0f, DegToRad(45.0f));
-		cameraList->AddOrthoCamera      ("lightCamera", 230.0f, 230.0f, 10.0f, 100.0f);
-		cameraList->AddOrthoCamera      ("2DCamera", this->param->screenWidth, this->param->screenHeight, 10.0f, 100.0f);
+		cameraList->AddPerspectiveCamera("mainCamera", Vector3f(0, 0, -1), Vector3f(0, 0, 0), this->param->screenWidth, this->param->screenHeight, 0.1f, 1000.0f, DegToRad(45.0f));
+		cameraList->AddOrthoCamera      ("lightCamera", Vector3f(0, 50, -50), Vector3f(0, 0, 0), 230.0f, 230.0f, 10.0f, 500.0f);
+		cameraList->AddOrthoCamera      ("2DCamera", Vector3f(0, 0, -1), Vector3f(0, 0, 0), this->param->screenWidth, this->param->screenHeight, 10.0f, 500.0f);
 
 
 		ModelDataFactory factory;
@@ -77,7 +86,10 @@ bool MyApplication::Initialize(int width, int height) {
 		//}
 
 		//
-		this->buffer = new Framebuffer(this->param->GetTextureList(), "frameBuffer", this->param->screenWidth, this->param->screenWidth);
+		this->buffer = new Framebuffer(this->param->GetTextureList(), "frameBuffer", this->param->screenWidth, this->param->screenHeight);
+		this->shadowMap = new Framebuffer(this->param->GetTextureList(), "shadowMap", this->param->screenWidth, this->param->screenHeight);
+		this->lightDepthMap = new Framebuffer(this->param->GetTextureList(), "lightDepth", this->param->screenWidth, this->param->screenHeight);
+
 		this->square = new MeshObject(new MeshModel(factory.CreateSquareModel(this->param->screenWidth, this->param->screenHeight, "frameBuffer", this->param)));
 
 		LightList* lightList = this->param->GetLightList();
@@ -116,6 +128,12 @@ void MyApplication::Finalize() {
 	if (this->buffer) {
 		delete this->buffer;
 	}
+	if (this->shadowMap) {
+		delete this->shadowMap;
+	}
+	if (this->lightDepthMap) {
+		delete this->lightDepthMap;
+	}
 	if (this->square) {
 		delete this->square;
 	}
@@ -134,6 +152,7 @@ void MyApplication::Run() {
 
 void MyApplication::Draw() {
 	//MatrixPerspectiveLH(this->projectionMat, this->param.screenWidth, this->param.screenHeight, 10.0f, 100.0f, this->param.screenFov);
+	DrawPass0();
 	DrawPass1();
 }
 
@@ -143,13 +162,16 @@ void MyApplication::Draw() {
 
 //描画パス
 void MyApplication::DrawPass0() {
+	this->lightDepthMap->Bind();
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glViewport(0, 0, this->param->screenWidth, this->param->screenHeight);
+
 	this->param->UseCamera("lightCamera");
-	this->param->currentCamera->Draw();
+
 
 	//深度描画
 	param->UseShader("depth");
-	param->UseAmbient("ambient");
-	param->UseDirectional("directional");
 
 	param->currentShader->SetVertexShaderSubroutine("CalcBoneMat");
 	param->currentShader->SetFragmentShaderSubroutine("CalcLight");
@@ -159,20 +181,27 @@ void MyApplication::DrawPass0() {
 	param->currentShader->SetVertexShaderSubroutine("NotSkinning");
 	param->currentShader->SetFragmentShaderSubroutine("CalcLight");
 	this->mapObj->Draw(this->param);
-
+	this->lightDepthMap->UnBind();
 }
+
 void MyApplication::DrawPass1() {
-	this->buffer->Bind();
-	glClearColor(0.5f, 0.5f, 0.6f, 1.0f);
+	this->shadowMap->Bind();
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); 
-	glViewport(0, 0, this->param->screenWidth, this->param->screenHeight);
+	glViewport(0, 0, this->shadowMap->GetWidth(), this->shadowMap->GetHeight());
 
 	this->param->UseCamera("mainCamera");
 	this->param->currentCamera->Draw();
 
-	param->UseShader("standard");
-	param->UseAmbient("ambient");
-	param->UseDirectional("directional");
+
+
+	param->UseShader("shadowMap");
+	param->UseCamera("lightCamera");
+	Matrix4f matVP = param->currentCamera->GetProjectionMatrix() * param->currentCamera->GetViewMatrix();
+	param->currentShader->SetTexture("depthMap", 2, param->GetTextureList()->GetTexture("lightDepth")->GetTextureID());
+	param->currentShader->SetValue("lightMatrixVP", matVP);
+
+	param->UseCamera("mainCamera");
 
 	//プレイヤー
 	param->currentShader->SetVertexShaderSubroutine("CalcBoneMat");
@@ -183,19 +212,40 @@ void MyApplication::DrawPass1() {
 	param->currentShader->SetFragmentShaderSubroutine("CalcLight");
 	this->mapObj->Draw(this->param);
 
+	this->shadowMap->UnBind();
+
+	this->buffer->Bind();
+	glClearColor(0.5f, 0.5f, 0.6f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glViewport(0, 0, this->param->screenWidth, this->param->screenHeight);
+	param->UseShader("standard");
+	param->UseAmbient("ambient");
+	param->UseDirectional("directional");
+
+	param->UseCamera("mainCamera");
+
+	//プレイヤー
+	param->currentShader->SetVertexShaderSubroutine("CalcBoneMat");
+	param->currentShader->SetFragmentShaderSubroutine("CalcLight");
+	this->player->Draw(this->param);
+	//マップ
+	param->currentShader->SetVertexShaderSubroutine("NotSkinning");
+	param->currentShader->SetFragmentShaderSubroutine("CalcLight");
+	this->mapObj->Draw(this->param);
 	this->buffer->UnBind();
+
 
 	//レンダリング結果のテクスチャ描画
 	this->param->UseCamera("2DCamera");
-	this->param->currentCamera->SetPosition(0, 0, -1);
-	this->param->currentCamera->SetTarget(0, 0, 0);
-	this->param->currentCamera->Draw();
 
 	glClearColor(0.5f, 0.5f, 0.6f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glViewport(0, 0, this->param->screenWidth, this->param->screenHeight);
+	param->UseShader("shadow");
 	param->currentShader->SetVertexShaderSubroutine("NotSkinning");
 	param->currentShader->SetFragmentShaderSubroutine("None");
+	param->currentShader->SetTexture("sampler2", 2, param->GetTextureList()->GetTexture("shadowMap")->GetTextureID());
+	this->square->SetTexture("frameBuffer", 0, 0);
 	this->square->Draw(this->param, Vector3f(0, 0, 10), Vector3f(0, 0, 0), Vector3f(-1, 1, 1));
 
 	//Matrix3f cameraInv = this->camera->GetCameraMatrix().block(0, 0, 3, 3);
@@ -214,10 +264,6 @@ void MyApplication::DrawPass1() {
 	//glDisable(GL_BLEND);
 	//glDepthMask(GL_TRUE);
 
-
-
-
-
 	//デバッグ用コリジョン描画
 	Matrix4f projection = this->param->currentCamera->GetProjectionMatrix();
 	Matrix4f view = this->param->currentCamera->GetViewMatrix();
@@ -233,5 +279,6 @@ void MyApplication::DrawPass1() {
 	mat = trans * rot * scale;
 	//this->param.physicsSystem->DebugDraw(this->param.shaderList->GetShader("simple"), mat.matrix(), view, projection);
 }
+
 void MyApplication::DrawPass2() {
 }

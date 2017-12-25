@@ -11,8 +11,8 @@ public:
 	~CameraList();
 	void Initialize();
 
-	void AddPerspectiveCamera(const std::string& name, int width, int height, float neer, float far, float fieldOfView);
-	void AddOrthoCamera      (const std::string& name, int width, int height, float neer, float far);
+	void AddPerspectiveCamera(const std::string& name, Vector3f& position, Vector3f& target, int width, int height, float neer, float far, float fieldOfView);
+	void AddOrthoCamera      (const std::string& name, Vector3f& position, Vector3f& target, int width, int height, float neer, float far);
 	CameraClass* GetCamera(const std::string& name);
 
 private:

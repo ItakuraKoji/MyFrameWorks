@@ -50,6 +50,8 @@ void Player::Run(GameParameters* param) {
 
 	//カメラ操作はカメラマンが行う
 	this->camera->Run(param);
+	//アニメーション更新
+	this->GetModel()->UpdateAnimation();
 }
 
 void Player::Draw(GameParameters* param) {

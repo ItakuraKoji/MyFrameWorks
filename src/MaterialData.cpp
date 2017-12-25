@@ -18,6 +18,12 @@ void MaterialData::Add(std::vector<Material> material) {
 }
 
 void MaterialData::SetTextureName(const std::string& textureName, int arrayIndex, int materialIndex) {
+	if (this->materialArray.size() < arrayIndex) {
+		return;
+	}
+	if (this->materialArray[arrayIndex].size() < materialIndex) {
+		return;
+	}
 	this->materialArray[arrayIndex][materialIndex].textureName = textureName;
 }
 

@@ -1,7 +1,6 @@
 #pragma once
 #include<GLEW\glew.h>
 #include<Eigen\Geometry>
-#include<bullet\btBulletDynamicsCommon.h>
 #include<string>
 
 #include"MeshObject.h"
@@ -9,18 +8,11 @@
 
 #include"MapPolygon.h"
 
-#include"ShaderList.h"
-#include"LightList.h"
-
-
-#include"CameraClass.h"
-#include"InputClass.h"
 #include"Emitter.h"
 #include"FrameBuffer.h"
 
-#include"BulletPhysics.h"
-#include"GameParameters.h"
 #include"MyMathFanctions.h"
+#include"GameParameters.h"
 #include"Player.h"
 #include"StaticObject.h"
 
@@ -55,5 +47,7 @@ private:
 	MapPolygon* map;
 
 	Framebuffer* buffer;
+	Framebuffer* lightDepthMap;
+	Framebuffer* shadowMap;
 };
 

@@ -50,12 +50,20 @@ void MeshModel::SetAnimation(const std::string& animationName, bool isLoop, bool
 void MeshModel::SetSpeed(int speed) {
 	this->data->animation->SetSpeed(speed);
 }
+void MeshModel::SetTexture(const std::string& textureName, int arrayIndex, int materialIndex) {
+	this->data->material->SetTextureName(textureName, arrayIndex, materialIndex);
+}
 
-//•`‰æ
-void MeshModel::Draw(GameParameters* param) {
+
+void MeshModel::UpdateAnimation() {
 	if (this->data->bone) {
 		this->data->animation->UpdateAnimation();
 	}
+}
+
+//•`‰æ
+void MeshModel::Draw(GameParameters* param) {
+
 	int numArray = this->data->vertexBuffer->GetNumBuffer();
 	for (int i = 0; i < numArray; ++i) {
 		if (this->data->bone) {
@@ -105,6 +113,8 @@ void MeshModel::DrawBuffers(int arrayIndex, GameParameters* param) {
 		Texture* texture = param->GetTextureList()->GetTexture(this->data->material->GetMaterial(arrayIndex, k).textureName);
 		GLuint TextureID = texture->GetTextureID();
 		param->currentShader->SetTexture("sampler", 0, TextureID);
+
+
 		GLuint IBO = this->data->vertexBuffer->GetIBO(arrayIndex, k);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 		glDrawElements(GL_TRIANGLES, this->data->material->GetNumFace(arrayIndex, k) * 3, GL_UNSIGNED_INT, 0);

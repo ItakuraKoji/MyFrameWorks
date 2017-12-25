@@ -17,7 +17,10 @@ public:
 	void BindVAO();
 	void UnBindVAO();
 	void SetAnimation(const std::string& animationName, bool isLoop, bool isInterporation, bool playOnce);
+	void SetTexture(const std::string& textureName, int arrayIndex, int materialIndex);
 	void SetSpeed(int speed);
+
+	void UpdateAnimation();
 	void Draw(GameParameters* param);
 	void InstanceDraw(int numInstance, GameParameters* param);
 

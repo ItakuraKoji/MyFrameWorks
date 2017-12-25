@@ -1,0 +1,29 @@
+#version 400
+
+//input
+in vec4 outLightDepth;
+
+
+//output
+out vec4 resultColor;
+
+//uniform
+uniform sampler2D depthMap;
+
+
+//FragmentShader
+void main(void)
+{
+	vec3 suv = (outLightDepth.xyz / outLightDepth.w);
+	suv = (suv + 1.0) * 0.5;
+
+	float texDepth = texture2D(depthMap, suv.xy).x;
+	float depth = outLightDepth.z / outLightDepth.w;
+	float visible = 1.0;
+
+	if(texDepth < depth - 0.005){
+		visible = 0.5;
+	}
+		resultColor = vec4(visible, visible, visible, 1.0);
+
+}

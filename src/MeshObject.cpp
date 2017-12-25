@@ -8,6 +8,13 @@ MeshObject::~MeshObject() {
 		delete this->drawModel;
 	}
 }
+void MeshObject::SetTexture(const std::string& textureName, int arrayIndex, int materialIndex) {
+	this->drawModel->SetTexture(textureName, arrayIndex, materialIndex);
+}
+
+void MeshObject::UpdateAnimation() {
+	this->drawModel->UpdateAnimation();
+}
 
 void MeshObject::Draw(GameParameters* param, Vector3f& position, Vector3f& rotation, Vector3f& scale) {
 	SetMatrix(param, position, rotation, scale);

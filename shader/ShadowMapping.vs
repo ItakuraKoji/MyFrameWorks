@@ -8,19 +8,21 @@ layout(location = 3)in vec4 inputWeight;
 layout(location = 4)in vec4 inputIndex;
 
 //output
-out vec2 outTexCoord;
-out vec3 outNormal;
-out vec4 outPosition;
+out vec4 outLightDepth;
 
 //uniform
 uniform mat4 matrixWVP;
 uniform mat4 worldMatrix;
+uniform mat4 lightMatrixVP;
 uniform sampler2D boneTex;
 uniform int numBone;
 
 //skined
 vec4 finalPos;
 vec3 finalNormal;
+
+//projection texture mapping matrix
+
 
 //subroutine
 subroutine void Skinning(vec3 vertexPos, vec3 vertexNormal);
@@ -84,9 +86,5 @@ void main(void)
 	skinFunc(inputPos, inputNormal);
 	gl_Position = matrixWVP * finalPos;
 
-	finalNormal = mat3(worldMatrix) * finalNormal;
-
-	outPosition = gl_Position;
-	outNormal = finalNormal;
-	outTexCoord = inputTexCoord;
+	outLightDepth = lightMatrixVP * worldMatrix * finalPos;
 }

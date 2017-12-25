@@ -34,6 +34,7 @@ bool Texture::LoadImage(const std::string& fileName) {
 
 //画像データを渡す（空データも可能）
 void Texture::SetImageData(void *data, int width, int height) {
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, this->textureID);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, data);
 	//画像の外側の描画について設定
