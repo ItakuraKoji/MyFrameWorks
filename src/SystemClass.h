@@ -2,6 +2,13 @@
 
 #define GLEW_STATIC
 
+#pragma comment(lib, "common.lib")
+#pragma comment(lib, "OpenAL32.lib")
+
+#pragma comment ( lib, "libogg_static.lib" )
+#pragma comment ( lib, "libvorbis_static.lib" )
+#pragma comment ( lib, "libvorbisfile_static.lib" )
+
 #if defined(_DEBUG)
 #pragma comment(lib, "glew32d.lib")
 #pragma comment(lib, "glfw3d.lib")

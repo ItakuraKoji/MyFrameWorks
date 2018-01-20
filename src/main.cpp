@@ -15,5 +15,7 @@ int main() {
 	if (system->Initialize()) {
 		system->Run();
 	}
+
 	delete system;
+
 }

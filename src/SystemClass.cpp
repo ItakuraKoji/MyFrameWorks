@@ -17,6 +17,7 @@ SystemClass::~SystemClass() {
 		this->application = NULL;
 	}
 
+
 	glfwTerminate();
 }
 

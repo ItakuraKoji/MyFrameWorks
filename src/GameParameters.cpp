@@ -15,32 +15,37 @@ bool GameParameters::Initialize(int screenWidth, int screenHeight) {
 	this->shaderList    = new ShaderList;
 	this->cameraList    = new CameraList;
 	this->lightList     = new LightList;
+	this->audioPlayer   = new SoundClass;
 	return true;
 }
 void GameParameters::Finalize() {
 	if (this->input) {
 		delete this->input;
-		this->input = 0;
+		this->input = nullptr;
 	}
 	if (this->physicsSystem) {
 		delete this->physicsSystem;
-		this->physicsSystem = 0;
+		this->physicsSystem = nullptr;
 	}
 	if (this->textureList) {
 		delete this->textureList;
-		this->textureList = 0;
+		this->textureList = nullptr;
 	}
 	if (this->shaderList) {
 		delete this->shaderList;
-		this->shaderList = 0;
+		this->shaderList = nullptr;
 	}
 	if (this->lightList) {
 		delete this->lightList;
-		this->lightList = 0;
+		this->lightList = nullptr;
 	}
 	if (this->cameraList) {
 		delete this->cameraList;
-		this->cameraList = 0;
+		this->cameraList = nullptr;
+	}
+	if (this->audioPlayer) {
+		delete this->audioPlayer;
+		this->audioPlayer = nullptr;
 	}
 }
 void GameParameters::Run() {
@@ -78,4 +83,7 @@ LightList* GameParameters::GetLightList() {
 }
 CameraList* GameParameters::GetCameraList() {
 	return this->cameraList;
+}
+SoundClass* GameParameters::GetAudioList() {
+	return this->audioPlayer;
 }
