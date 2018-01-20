@@ -17,13 +17,29 @@ void main(void)
 	vec3 suv = (outLightDepth.xyz / outLightDepth.w);
 	suv = (suv + 1.0) * 0.5;
 
-	float texDepth = texture2D(depthMap, suv.xy).x;
+	float samp = 0.1;
+	float fix = 700.0;
+	float texDepth1 = texture(depthMap, suv.xy + vec2(samp, 0.0) / fix).x;
+	float texDepth2 = texture(depthMap, suv.xy + vec2(-samp, 0.0) / fix).x;
+	float texDepth3 = texture(depthMap, suv.xy + vec2(0.0, samp) / fix).x;
+	float texDepth4 = texture(depthMap, suv.xy + vec2(0.0, -samp) / fix).x;
+
 	float depth = outLightDepth.z / outLightDepth.w;
 	float visible = 1.0;
 
-	if(texDepth < depth - 0.005){
-		visible = 0.5;
+	float bias = 0.002;
+	if(texDepth1 < depth - bias){
+		visible -= 0.2;
 	}
-		resultColor = vec4(visible, visible, visible, 1.0);
+	if(texDepth2 < depth - bias){
+		visible -= 0.2;
+	}
+	if(texDepth3 < depth - bias){
+		visible -= 0.2;
+	}
+	if(texDepth4 < depth - bias){
+		visible -= 0.2;
+	}
 
+	resultColor = vec4(visible, visible, visible, 1.0);
 }

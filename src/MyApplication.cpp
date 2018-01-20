@@ -20,35 +20,35 @@ bool MyApplication::Initialize(int width, int height) {
 		this->param->Initialize(width, height);
 
 		ShaderList* shaderList = this->param->GetShaderList();
-		shaderList->AddVertexShader("Shader/VertexShader.vs");
-		shaderList->AddVertexShader("Shader/ShadowMapping.vs");
-		shaderList->AddPixelShader("Shader/TextureSampler.ps");
-		shaderList->AddPixelShader("Shader/DepthShader.ps");
-		shaderList->AddPixelShader("Shader/ShadowMapping.ps");
-		shaderList->AddPixelShader("Shader/MultipleTexture.ps");
-		if (!shaderList->Add("standard", "Shader/VertexShader.vs", "Shader/TextureSampler.ps")) {
+		shaderList->LoadVertexShader("Shader/VertexShader.vs");
+		shaderList->LoadVertexShader("Shader/ShadowMapping.vs");
+		shaderList->LoadFragmentShader("Shader/TextureSampler.ps");
+		shaderList->LoadFragmentShader("Shader/DepthShader.ps");
+		shaderList->LoadFragmentShader("Shader/ShadowMapping.ps");
+		shaderList->LoadFragmentShader("Shader/MultipleTexture.ps");
+		if (!shaderList->CreateShaderProgram("standard", "Shader/VertexShader.vs", "Shader/TextureSampler.ps")) {
 			return false;
 		}
-		if (!shaderList->Add("depth", "Shader/VertexShader.vs", "Shader/DepthShader.ps")) {
+		if (!shaderList->CreateShaderProgram("depth", "Shader/VertexShader.vs", "Shader/DepthShader.ps")) {
 			return false;
 		}
-		if (!shaderList->Add("shadowMap", "Shader/ShadowMapping.vs", "Shader/ShadowMapping.ps")) {
+		if (!shaderList->CreateShaderProgram("shadowMap", "Shader/ShadowMapping.vs", "Shader/ShadowMapping.ps")) {
 			return false;
 		}
-		if (!shaderList->Add("shadow", "Shader/VertexShader.vs", "Shader/MultipleTexture.ps")) {
+		if (!shaderList->CreateShaderProgram("shadow", "Shader/VertexShader.vs", "Shader/MultipleTexture.ps")) {
 			return false;
 		}
 
-		shaderList->AddVertexShader("Shader/StaticShader.vs");
-		shaderList->AddVertexShader("Shader/SimpleShader.vs");
+		shaderList->LoadVertexShader("Shader/StaticShader.vs");
+		shaderList->LoadVertexShader("Shader/SimpleShader.vs");
 
-		shaderList->AddPixelShader("Shader/StaticShader.ps");
-		shaderList->AddPixelShader("Shader/SimpleShader.ps");
+		shaderList->LoadFragmentShader("Shader/StaticShader.ps");
+		shaderList->LoadFragmentShader("Shader/SimpleShader.ps");
 
-		if (!shaderList->Add("static", "Shader/StaticShader.vs", "Shader/StaticShader.ps")) {
+		if (!shaderList->CreateShaderProgram("static", "Shader/StaticShader.vs", "Shader/StaticShader.ps")) {
 			return false;
 		}
-		if (!shaderList->Add("simple", "Shader/SimpleShader.vs", "Shader/SimpleShader.ps")) {
+		if (!shaderList->CreateShaderProgram("simple", "Shader/SimpleShader.vs", "Shader/SimpleShader.ps")) {
 			return false;
 		}
 
@@ -58,11 +58,13 @@ bool MyApplication::Initialize(int width, int height) {
 		cameraList->AddOrthoCamera      ("2DCamera", Vector3f(0, 0, -1), Vector3f(0, 0, 0), this->param->screenWidth, this->param->screenHeight, 10.0f, 500.0f);
 
 
+		this->buffer = new Framebuffer(this->param->GetTextureList(), "frameBuffer", this->param->screenWidth, this->param->screenHeight);
+		this->shadowMap = new Framebuffer(this->param->GetTextureList(), "shadowMap", this->param->screenWidth, this->param->screenHeight);
+		this->lightDepthMap = new Framebuffer(this->param->GetTextureList(), "lightDepth", 2048, 2048);
+
 		ModelDataFactory factory;
-		this->mapModel = new MeshObject(new MeshModel(factory.LoadFBXModel("Map.fbx", this->param)));
-
-
-
+		this->square    = new MeshObject(new MeshModel(factory.CreateSquareModel(this->param->screenWidth, this->param->screenHeight, "frameBuffer", this->param)));
+		this->mapModel  = new MeshObject(new MeshModel(factory.LoadFBXModel("Map.fbx", this->param)));
 		this->skinModel = new MeshObject(new MeshModel(factory.LoadFBXModel("KaminariChan.fbx", this->param)));
 
 		this->player = new Player();
@@ -86,11 +88,7 @@ bool MyApplication::Initialize(int width, int height) {
 		//}
 
 		//
-		this->buffer = new Framebuffer(this->param->GetTextureList(), "frameBuffer", this->param->screenWidth, this->param->screenHeight);
-		this->shadowMap = new Framebuffer(this->param->GetTextureList(), "shadowMap", this->param->screenWidth, this->param->screenHeight);
-		this->lightDepthMap = new Framebuffer(this->param->GetTextureList(), "lightDepth", this->param->screenWidth, this->param->screenHeight);
 
-		this->square = new MeshObject(new MeshModel(factory.CreateSquareModel(this->param->screenWidth, this->param->screenHeight, "frameBuffer", this->param)));
 
 		LightList* lightList = this->param->GetLightList();
 		lightList->AddAmbient("ambient", 0.4f, Vector4f(0.5f, 1.0f, 1.0f, 1.0f));
@@ -165,7 +163,7 @@ void MyApplication::DrawPass0() {
 	this->lightDepthMap->Bind();
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	glViewport(0, 0, this->param->screenWidth, this->param->screenHeight);
+	glViewport(0, 0, this->lightDepthMap->GetWidth(), this->lightDepthMap->GetHeight());
 
 	this->param->UseCamera("lightCamera");
 
@@ -186,7 +184,7 @@ void MyApplication::DrawPass0() {
 
 void MyApplication::DrawPass1() {
 	this->shadowMap->Bind();
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); 
 	glViewport(0, 0, this->shadowMap->GetWidth(), this->shadowMap->GetHeight());
 

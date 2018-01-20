@@ -25,7 +25,7 @@ bool ShaderList::Initialize() {
 }
 
 //頂点シェーダー作成
-void ShaderList::AddVertexShader(const std::string& fileName) {
+void ShaderList::LoadVertexShader(const std::string& fileName) {
 	char* shaderResource = LoadTxtResource(fileName);
 
 	if (!shaderResource) {
@@ -53,7 +53,7 @@ void ShaderList::AddVertexShader(const std::string& fileName) {
 	this->vertexShaders[fileName] = vs;
 }
 //ピクセルシェーダー作成
-void ShaderList::AddPixelShader(const std::string& fileName) {
+void ShaderList::LoadFragmentShader(const std::string& fileName) {
 	char* shaderResource = LoadTxtResource(fileName);
 
 	if (!shaderResource) {
@@ -97,15 +97,15 @@ ShaderClass* ShaderList::GetShader(const std::string& name) {
 }
 
 //作成済みのシェーダーの組み合わせでシェーダープログラム作成、リストへ登録
-bool ShaderList::Add(const std::string& name, const std::string& vertex, const std::string& pixel) {
+bool ShaderList::CreateShaderProgram(const std::string& name, const std::string& vertex, const std::string& fragment) {
 	if (this->vertexShaders.find(vertex) == this->vertexShaders.end()) {
 		return false;
 	}
-	if (this->pixelShaders.find(pixel) == this->pixelShaders.end()) {
+	if (this->pixelShaders.find(fragment) == this->pixelShaders.end()) {
 		return false;
 	}
 
-	ShaderClass* newShader = new ShaderClass(this->vertexShaders[vertex], this->pixelShaders[pixel]);
+	ShaderClass* newShader = new ShaderClass(this->vertexShaders[vertex], this->pixelShaders[fragment]);
 	if (!newShader) {
 		return false;
 	}

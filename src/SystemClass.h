@@ -1,4 +1,7 @@
 #pragma once
+
+#define GLEW_STATIC
+
 #if defined(_DEBUG)
 #pragma comment(lib, "glew32d.lib")
 #pragma comment(lib, "glfw3d.lib")
