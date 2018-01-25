@@ -11,6 +11,8 @@ public:
 	SoundClass();
 	~SoundClass();
 
+	void Run();
+
 	bool CreateSource(const char* sourceName, const char* filePass);
 	void DeleteSource(const char* sourceName);
 

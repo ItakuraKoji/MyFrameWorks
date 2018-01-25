@@ -51,6 +51,7 @@ void GameParameters::Finalize() {
 void GameParameters::Run() {
 	this->input->Run();
 	this->physicsSystem->Run();
+	this->audioPlayer->Run();
 }
 
 void GameParameters::UseAmbient(const std::string& name) {

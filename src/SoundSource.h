@@ -4,6 +4,8 @@
 #include<string>
 #include<thread>
 #include<mutex>
+#include<iostream>
+
 
 #include"AudioDataFactory.h"
 
@@ -34,7 +36,7 @@ private:
 	AudioData* audio;
 
 	std::thread* streamingThread;
-	std::mutex _mutex;
+	std::recursive_mutex _mutex;
 
 
 	ALuint sourceID;

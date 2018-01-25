@@ -53,25 +53,22 @@ SoundSource::~SoundSource() {
 
 
 void SoundSource::Play(bool loop) {
-	std::lock_guard<std::mutex> lock(this->_mutex);
-
+	alSourcePlay(this->sourceID);
+	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
 	this->isPlayed = true;
 	this->isLoop = loop;
-	alSourcePlay(this->sourceID);
 }
 
 void SoundSource::Pause() {
-	std::lock_guard<std::mutex> lock(this->_mutex);
-	
-	this->isPlayed = false;
+	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
 	alSourceStop(this->sourceID);
+	this->isPlayed = false;
 }
 
 void SoundSource::Stop() {
-	std::lock_guard<std::mutex> lock(this->_mutex);
-	
-	this->isPlayed = false;
+	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
 	alSourceStop(this->sourceID);
+	this->isPlayed = false;
 
 	//バッファを初期化
 	this->audio->Seek(0);
@@ -83,19 +80,21 @@ void SoundSource::Stop() {
 	for (int i = 0; i < this->numBuffer; ++i) {
 		ReadBuffer(this->bufferIDs[i], 4096);
 	}
-
 }
 
 void SoundSource::SetVolume(float volume) {
+	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
 	this->volume = volume;
 	alSourcef(this->sourceID, AL_MAX_GAIN, this->volume);
 }
 void SoundSource::SetPosition(float x, float y, float z) {
+	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
 	this->posX = x;
 	this->posY = y;
 	this->posZ = z;
 }
 void SoundSource::SetVelocity(float x, float y, float z) {
+	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
 	this->velocityX = x;
 	this->velocityY = y;
 	this->velocityZ = z;
@@ -131,10 +130,10 @@ void SoundSource::StreamingThread() {
 
 //フラグを立ててスレッドを終わらせる
 void SoundSource::EndStreamingThread() {
-	std::lock_guard<std::mutex> lock(this->_mutex);
-
+	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
 	alSourceStop(this->sourceID);
-	alSourcei(this->sourceID, AL_BUFFER, AL_NONE); 
+	alSourcei(this->sourceID, AL_BUFFER, AL_NONE);
+
 	this->isEnd = true;
 	this->isPlayed = false;
 }

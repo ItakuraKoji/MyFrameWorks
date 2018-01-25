@@ -185,7 +185,7 @@ void BulletPhysics::DiscreteMoveObject(btCollisionObject *obj, btVector3& hMove,
 	obj->setWorldTransform(to);
 
 	//衝突が解消されるまで法線方向に押し出す
-	MyContactCallBack contact_cb(obj);
+	FixContactCallBack contact_cb(obj);
 	do {
 		contact_cb.isHit = false;
 		this->bulletWorld->contactTest(obj, contact_cb);
@@ -251,7 +251,7 @@ btVector3 BulletPhysics::MoveSimulation(btCollisionObject *obj, btVector3 &moveV
 	to.setOrigin(to.getOrigin() + moveVector);
 
 	//sweepTest
-	MyConvexClosestCallBack convex_cb(obj);
+	SweepTestCallBack convex_cb(obj);
 	this->bulletWorld->convexSweepTest(shape, from, to, convex_cb, allowDistance);
 
 
@@ -266,7 +266,7 @@ btVector3 BulletPhysics::MoveSimulation(btCollisionObject *obj, btVector3 &moveV
 
 	//衝突が解消されるまで法線方向に押し出す
 	btVector3 prevPos = obj->getWorldTransform().getOrigin();
-	MyContactCallBack contact_cb(obj);
+	FixContactCallBack contact_cb(obj);
 	do {
 		contact_cb.isHit = false;
 		this->bulletWorld->contactTest(obj, contact_cb);

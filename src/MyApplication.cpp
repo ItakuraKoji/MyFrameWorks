@@ -94,9 +94,9 @@ bool MyApplication::Initialize(int width, int height) {
 		lightList->AddAmbient("ambient", 0.4f, Vector4f(0.5f, 1.0f, 1.0f, 1.0f));
 		lightList->AddDirectional("directional", 1.0f, Vector4f(0.7f, 1.0f, 1.0f, 1.0f), Vector3f(0.0f, -1.0f, 1.0f));
 
-		this->param->GetAudioList()->CreateSource("bgm", "PerituneMaterial_Rapid3_loop.ogg");
+		this->param->GetAudioList()->CreateSource("bgm", "PerituneMaterial_Prairie_loop.ogg");
+		this->param->GetAudioList()->GetSource("bgm")->SetVolume(0.5f);
 		this->param->GetAudioList()->GetSource("bgm")->Play(true);
-		this->param->GetAudioList()->GetSource("bgm")->SetVolume(0.2f);
 
 	}
 	catch (char* eText) {

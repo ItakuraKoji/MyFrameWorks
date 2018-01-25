@@ -6,10 +6,10 @@ SoundClass::SoundClass() {
 		return;
 	}
 	this->context = alcCreateContext(this->device, nullptr);
-	alcMakeContextCurrent(this->context);
 	if (!this->context) {
 		return;
 	}
+	alcMakeContextCurrent(this->context);
 }
 SoundClass::~SoundClass() {
 	for (auto i : this->source) {
@@ -20,6 +20,14 @@ SoundClass::~SoundClass() {
 	alcDestroyContext(this->context);
 	alcCloseDevice(this->device);
 }
+
+void SoundClass::Run() {
+	ALenum a = alcGetError(this->device);
+	if (a != ALC_NO_ERROR) {
+		std::cout << "error" << std::endl;
+	}
+}
+
 
 bool SoundClass::CreateSource(const char* sourceName, const char* filePass) {
 	//ソース名の重複は許さない
