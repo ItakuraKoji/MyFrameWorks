@@ -32,9 +32,11 @@ SoundSource::SoundSource(const char* sourceName, const char* filePass, int numBu
 		ReadBuffer(this->bufferIDs[i], 4096);
 	}
 
-
 	//スレッド開始 (スレッドにメンバー関数を指定する際は第二引数にthisポインターを指定する)
 	this->streamingThread = new std::thread(&SoundSource::StreamingThread, this);
+
+	printf("%x\n", this->streamingThread->get_id());
+
 }
 
 SoundSource::~SoundSource() {
@@ -60,16 +62,17 @@ void SoundSource::Play(bool loop) {
 }
 
 void SoundSource::Pause() {
-	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
 	alSourceStop(this->sourceID);
+	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
 	this->isPlayed = false;
 }
 
 void SoundSource::Stop() {
-	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
 	alSourceStop(this->sourceID);
-	this->isPlayed = false;
-
+	{
+		std::lock_guard<std::recursive_mutex> lock(this->_mutex);
+		this->isPlayed = false;
+	}
 	//バッファを初期化
 	this->audio->Seek(0);
 	int num;
@@ -83,17 +86,19 @@ void SoundSource::Stop() {
 }
 
 void SoundSource::SetVolume(float volume) {
+	alSourcef(this->sourceID, AL_MAX_GAIN, volume);
 	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
 	this->volume = volume;
-	alSourcef(this->sourceID, AL_MAX_GAIN, this->volume);
 }
 void SoundSource::SetPosition(float x, float y, float z) {
+	alSource3f(this->sourceID, AL_POSITION, x, y, z);
 	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
 	this->posX = x;
 	this->posY = y;
 	this->posZ = z;
 }
 void SoundSource::SetVelocity(float x, float y, float z) {
+	alSource3f(this->sourceID, AL_VELOCITY, x, y, z);
 	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
 	this->velocityX = x;
 	this->velocityY = y;
@@ -101,6 +106,7 @@ void SoundSource::SetVelocity(float x, float y, float z) {
 }
 
 bool SoundSource::IsPlay() {
+	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
 	return this->isPlayed;
 }
 
@@ -130,10 +136,10 @@ void SoundSource::StreamingThread() {
 
 //フラグを立ててスレッドを終わらせる
 void SoundSource::EndStreamingThread() {
-	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
 	alSourceStop(this->sourceID);
 	alSourcei(this->sourceID, AL_BUFFER, AL_NONE);
 
+	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
 	this->isEnd = true;
 	this->isPlayed = false;
 }
@@ -173,7 +179,7 @@ void SoundSource::FillBuffer() {
 	//処理済みキューがない場合はそのまま帰る予定
 	int numProcessed = 0;
 
-	while (size < fillSize && this->isPlayed) {
+	while (this->isPlayed) {
 		alGetSourcei(this->sourceID, AL_BUFFERS_PROCESSED, &numProcessed);
 		if (numProcessed == 0) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(600)); 
@@ -209,6 +215,9 @@ void SoundSource::FillBuffer() {
 
 //bufferに最大maxReadSize分だけ読んでキューする、実際の読み込みサイズが返る
 int SoundSource::ReadBuffer(ALuint buffer, int maxReadSize) {
+	if (maxReadSize > 4096) {
+		return 0;
+	}
 
 	//readBufferが埋まるまで読みこむ
 	int readSize = 0;

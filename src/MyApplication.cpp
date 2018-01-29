@@ -26,6 +26,7 @@ bool MyApplication::Initialize(int width, int height) {
 		shaderList->LoadFragmentShader("Shader/DepthShader.ps");
 		shaderList->LoadFragmentShader("Shader/ShadowMapping.ps");
 		shaderList->LoadFragmentShader("Shader/MultipleTexture.ps");
+
 		if (!shaderList->CreateShaderProgram("standard", "Shader/VertexShader.vs", "Shader/TextureSampler.ps")) {
 			return false;
 		}
@@ -95,9 +96,11 @@ bool MyApplication::Initialize(int width, int height) {
 		lightList->AddDirectional("directional", 1.0f, Vector4f(0.7f, 1.0f, 1.0f, 1.0f), Vector3f(0.0f, -1.0f, 1.0f));
 
 		this->param->GetAudioList()->CreateSource("bgm", "PerituneMaterial_Prairie_loop.ogg");
-		this->param->GetAudioList()->GetSource("bgm")->SetVolume(0.5f);
+		this->param->GetAudioList()->GetSource("bgm")->SetVolume(0.2f);
 		this->param->GetAudioList()->GetSource("bgm")->Play(true);
 
+		this->param->GetEffects()->SetMatrix(this->param->GetCameraList()->GetCamera("mainCamera"));
+		this->param->GetEffects()->AddEffectSource("test", "test2.efk");
 	}
 	catch (char* eText) {
 		return false;
@@ -143,9 +146,9 @@ void MyApplication::Finalize() {
 
 void MyApplication::Run() {
 
-	this->param->Run();
 
 	this->player->Run(this->param);
+	this->param->Run();
 
 	//this->model->Run();
 }
@@ -162,6 +165,7 @@ void MyApplication::Draw() {
 
 //描画パス
 void MyApplication::DrawPass0() {
+	//深度マップ
 	this->lightDepthMap->Bind();
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -177,7 +181,6 @@ void MyApplication::DrawPass0() {
 	param->currentShader->SetFragmentShaderSubroutine("CalcLight");
 	this->player->Draw(this->param);
 
-
 	param->currentShader->SetVertexShaderSubroutine("NotSkinning");
 	param->currentShader->SetFragmentShaderSubroutine("CalcLight");
 	this->mapObj->Draw(this->param);
@@ -185,55 +188,62 @@ void MyApplication::DrawPass0() {
 }
 
 void MyApplication::DrawPass1() {
-	this->shadowMap->Bind();
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); 
-	glViewport(0, 0, this->shadowMap->GetWidth(), this->shadowMap->GetHeight());
+	//シャドウのみ描画
+	{
+		this->shadowMap->Bind();
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glViewport(0, 0, this->shadowMap->GetWidth(), this->shadowMap->GetHeight());
 
-	this->param->UseCamera("mainCamera");
-	this->param->currentCamera->Draw();
+		this->param->UseCamera("mainCamera");
+		this->param->currentCamera->Draw();
 
+		param->UseShader("shadowMap");
+		param->UseCamera("lightCamera");
+		Matrix4f matVP = param->currentCamera->GetProjectionMatrix() * param->currentCamera->GetViewMatrix();
+		param->currentShader->SetTexture("depthMap", 2, param->GetTextureList()->GetTexture("lightDepth")->GetTextureID());
+		param->currentShader->SetValue("lightMatrixVP", matVP);
 
+		param->UseCamera("mainCamera");
 
-	param->UseShader("shadowMap");
-	param->UseCamera("lightCamera");
-	Matrix4f matVP = param->currentCamera->GetProjectionMatrix() * param->currentCamera->GetViewMatrix();
-	param->currentShader->SetTexture("depthMap", 2, param->GetTextureList()->GetTexture("lightDepth")->GetTextureID());
-	param->currentShader->SetValue("lightMatrixVP", matVP);
+		//プレイヤー
+		param->currentShader->SetVertexShaderSubroutine("CalcBoneMat");
+		param->currentShader->SetFragmentShaderSubroutine("CalcLight");
+		this->player->Draw(this->param);
+		//マップ
+		param->currentShader->SetVertexShaderSubroutine("NotSkinning");
+		param->currentShader->SetFragmentShaderSubroutine("CalcLight");
+		this->mapObj->Draw(this->param);
+		//エフェクト描画
+		this->param->GetEffects()->Draw();
+		this->buffer->UnBind();
+		this->shadowMap->UnBind();
+	}
+	//通常描画
+	{
+		this->buffer->Bind();
+		glClearColor(0.5f, 0.5f, 0.6f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glViewport(0, 0, this->param->screenWidth, this->param->screenHeight);
 
-	param->UseCamera("mainCamera");
+		param->UseShader("standard");
+		param->UseAmbient("ambient");
+		param->UseDirectional("directional");
+		param->UseCamera("mainCamera");
 
-	//プレイヤー
-	param->currentShader->SetVertexShaderSubroutine("CalcBoneMat");
-	param->currentShader->SetFragmentShaderSubroutine("CalcLight");
-	this->player->Draw(this->param);
-	//マップ
-	param->currentShader->SetVertexShaderSubroutine("NotSkinning");
-	param->currentShader->SetFragmentShaderSubroutine("CalcLight");
-	this->mapObj->Draw(this->param);
+		//プレイヤー
+		param->currentShader->SetVertexShaderSubroutine("CalcBoneMat");
+		param->currentShader->SetFragmentShaderSubroutine("CalcLight");
+		this->player->Draw(this->param);
+		//マップ
+		param->currentShader->SetVertexShaderSubroutine("NotSkinning");
+		param->currentShader->SetFragmentShaderSubroutine("CalcLight");
+		this->mapObj->Draw(this->param);
 
-	this->shadowMap->UnBind();
-
-	this->buffer->Bind();
-	glClearColor(0.5f, 0.5f, 0.6f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	glViewport(0, 0, this->param->screenWidth, this->param->screenHeight);
-	param->UseShader("standard");
-	param->UseAmbient("ambient");
-	param->UseDirectional("directional");
-
-	param->UseCamera("mainCamera");
-
-	//プレイヤー
-	param->currentShader->SetVertexShaderSubroutine("CalcBoneMat");
-	param->currentShader->SetFragmentShaderSubroutine("CalcLight");
-	this->player->Draw(this->param);
-	//マップ
-	param->currentShader->SetVertexShaderSubroutine("NotSkinning");
-	param->currentShader->SetFragmentShaderSubroutine("CalcLight");
-	this->mapObj->Draw(this->param);
-	this->buffer->UnBind();
-
+		//エフェクト描画
+		this->param->GetEffects()->Draw();
+		this->buffer->UnBind();
+	}
 
 	//レンダリング結果のテクスチャ描画
 	this->param->UseCamera("2DCamera");
@@ -277,7 +287,7 @@ void MyApplication::DrawPass1() {
 	scale = DiagonalMatrix<float, 3>(1.0f, 1.0f, 1.0f);
 	rot = AngleAxisf(DegToRad(0.0f), Vector3f::UnitX());
 	mat = trans * rot * scale;
-	//this->param.physicsSystem->DebugDraw(this->param.shaderList->GetShader("simple"), mat.matrix(), view, projection);
+	//this->param->GetPhysics()->DebugDraw(this->param->GetShaderList()->GetShader("simple"), mat.matrix(), view, projection);
 }
 
 void MyApplication::DrawPass2() {

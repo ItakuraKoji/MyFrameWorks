@@ -20,6 +20,7 @@ bool InputClass::Initialize(UINT joyID) {
 
 	//仮想キーとキーボードの対応
 	this->vpadState[VPAD_BUTTON_A].keyboard = VK_SPACE;
+	this->vpadState[VPAD_BUTTON_B].keyboard = 'Z';
 	this->vpadState[VPAD_BUTTON_RIGHT].keyboard = VK_RIGHT;
 	this->vpadState[VPAD_BUTTON_LEFT].keyboard = VK_LEFT;
 	this->vpadState[VPAD_BUTTON_UP].keyboard = VK_UP;

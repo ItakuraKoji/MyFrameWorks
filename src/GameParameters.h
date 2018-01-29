@@ -6,8 +6,8 @@
 #include"InputClass.h"
 #include"BulletPhysics.h"
 
-#include"AudioDataFactory.h"
 #include"SoundClass.h"
+#include"EffectClass.h"
 
 //描画世界パラメーター
 //・いい加減、すべてのオブジェクトに共通なデータを個別に渡すのがアホらしくなってきたのでまとめる
@@ -34,6 +34,7 @@ public:
 	LightList*     GetLightList();
 	CameraList*    GetCameraList();
 	SoundClass*    GetAudioList();
+	EffectClass*   GetEffects();
 
 private:
 	InputClass*    input;
@@ -43,6 +44,7 @@ private:
 	LightList*     lightList;
 	CameraList*    cameraList;
 	SoundClass*    audioPlayer;
+	EffectClass*   effectSystem;
 
 public:
 	CameraClass*   currentCamera;

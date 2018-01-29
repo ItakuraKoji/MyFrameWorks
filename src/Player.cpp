@@ -29,6 +29,11 @@ void Player::Run(GameParameters* param) {
 	if (param->GetInput()->isPressButton(VPAD_BUTTON_A)) {
 		this->velocity = 1.0f;
 	}
+	if (param->GetInput()->isPressButton(VPAD_BUTTON_B)) {
+		param->GetEffects()->Play("test", this->position.x(), this->position.y(), this->position.z());
+	}
+
+
 	this->velocity -= 0.03f;
 	if (this->velocity < -1.0f) {
 		this->velocity = -1.0f;

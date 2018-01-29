@@ -2,12 +2,23 @@
 
 #define GLEW_STATIC
 
+#pragma warning (disable : 4099)
+
+#pragma comment(lib, "OPENGL32.lib")
+#pragma comment(lib, "libfbxsdk-md.lib")
+
+#pragma comment(lib, "winmm.lib")//時間計測用
+
 #pragma comment(lib, "common.lib")
 #pragma comment(lib, "OpenAL32.lib")
 
 #pragma comment ( lib, "libogg_static.lib" )
 #pragma comment ( lib, "libvorbis_static.lib" )
 #pragma comment ( lib, "libvorbisfile_static.lib" )
+
+#pragma comment(lib, "Effekseer.lib" )
+#pragma comment(lib, "EffekseerRendererGL.lib" )
+#pragma comment(lib, "EffekseerSoundAL.lib" )
 
 #if defined(_DEBUG)
 #pragma comment(lib, "glew32d.lib")
@@ -22,10 +33,7 @@
 #pragma comment(lib, "BulletCollision.lib")
 #pragma comment(lib, "LinearMath.lib")
 #endif
-#pragma comment(lib, "OPENGL32.lib")
-#pragma comment(lib, "libfbxsdk-md.lib")
 
-#pragma comment(lib, "winmm.lib")//時間計測用
 
 
 #include<Windows.h>

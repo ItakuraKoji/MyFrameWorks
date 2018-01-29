@@ -9,23 +9,28 @@ SoundClass::SoundClass() {
 	if (!this->context) {
 		return;
 	}
-	alcMakeContextCurrent(this->context);
+	if (alcMakeContextCurrent(this->context) == ALC_FALSE) {
+		return;
+	}
 }
 SoundClass::~SoundClass() {
 	for (auto i : this->source) {
 		delete i.second;
 	}
-
 	alcMakeContextCurrent(nullptr);
 	alcDestroyContext(this->context);
 	alcCloseDevice(this->device);
 }
 
 void SoundClass::Run() {
-	ALenum a = alcGetError(this->device);
-	if (a != ALC_NO_ERROR) {
-		std::cout << "error" << std::endl;
-	}
+	//ALenum a = alcGetError(this->device);
+	//if (a != ALC_NO_ERROR) {
+	//	std::cout << "error" << std::endl;
+	//}
+	//ALenum b = alGetError();
+	//if (b != AL_NO_ERROR) {
+	//	std::cout << "error" << std::endl;
+	//}
 }
 
 

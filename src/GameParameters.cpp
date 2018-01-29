@@ -16,6 +16,7 @@ bool GameParameters::Initialize(int screenWidth, int screenHeight) {
 	this->cameraList    = new CameraList;
 	this->lightList     = new LightList;
 	this->audioPlayer   = new SoundClass;
+	this->effectSystem  = new EffectClass;
 	return true;
 }
 void GameParameters::Finalize() {
@@ -47,11 +48,16 @@ void GameParameters::Finalize() {
 		delete this->audioPlayer;
 		this->audioPlayer = nullptr;
 	}
+	if (this->effectSystem) {
+		delete this->effectSystem;
+		this->effectSystem = nullptr;
+	}
 }
 void GameParameters::Run() {
 	this->input->Run();
 	this->physicsSystem->Run();
 	this->audioPlayer->Run();
+	this->effectSystem->Run();
 }
 
 void GameParameters::UseAmbient(const std::string& name) {
@@ -88,3 +94,8 @@ CameraList* GameParameters::GetCameraList() {
 SoundClass* GameParameters::GetAudioList() {
 	return this->audioPlayer;
 }
+EffectClass* GameParameters::GetEffects() {
+	return this->effectSystem;
+}
+
+
