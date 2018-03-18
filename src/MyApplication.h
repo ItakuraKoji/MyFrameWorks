@@ -1,20 +1,28 @@
 #pragma once
+
 #include<GLEW\glew.h>
 #include<Eigen\Geometry>
 #include<string>
+#include<uchar.h>
 
 #include"MeshObject.h"
+#include"SpriteObject.h"
 #include"ModelDataFactory.h"
 
 #include"MapPolygon.h"
 
-#include"Emitter.h"
-#include"FrameBuffer.h"
+#include"FrameBufferList.h"
 
 #include"MyMathFanctions.h"
 #include"GameParameters.h"
 #include"Player.h"
 #include"StaticObject.h"
+
+#include"FontRenderer.h"
+
+//note
+//シェーダーをセットせずにカメラをセットするとUniform変数の挙動がエラーを吐く（動作には一切影響ない）
+//使用の際はシェーダーを先にセットすべし
 
 
 //実際のアプリケーションの処理をする
@@ -22,7 +30,7 @@ class MyApplication{
 public:
 	MyApplication();
 	~MyApplication();
-	bool Initialize(int width, int height);
+	bool Initialize(GLFWwindow* window, int width, int height);
 	void Finalize();
 	void Run();
 	void Draw();
@@ -40,14 +48,13 @@ private:
 	MeshObject *square;
 	MeshObject *skinModel;
 	MeshObject *mapModel;
+	SpriteObject* testSprite;
 	Player* player;
 	StaticObject* mapObj;
 
-	//Emitter *model;
 	MapPolygon* map;
 
-	Framebuffer* buffer;
-	Framebuffer* lightDepthMap;
-	Framebuffer* shadowMap;
+	FrameBufferList* frameBuffer;
+	FontRenderer* fontRenderer;
 };
 

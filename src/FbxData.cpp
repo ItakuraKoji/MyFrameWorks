@@ -9,7 +9,7 @@ FbxData::FbxData() {
 	this->scene = 0;
 }
 FbxData::~FbxData() {
-	if (this->manager) {
+	if (this->manager != nullptr) {
 		this->manager->Destroy();
 	}
 }

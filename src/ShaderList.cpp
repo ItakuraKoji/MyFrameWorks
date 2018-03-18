@@ -7,7 +7,7 @@ ShaderList::~ShaderList() {
 	Initialize();
 }
 
-bool ShaderList::Initialize() {
+void ShaderList::Initialize() {
 	for (auto i : this->shaderList) {
 		delete i.second;
 	}
@@ -21,15 +21,15 @@ bool ShaderList::Initialize() {
 	this->shaderList.clear();
 	this->vertexShaders.clear();
 	this->pixelShaders.clear();
-	return true;
+	return;
 }
 
 //頂点シェーダー作成
 void ShaderList::LoadVertexShader(const std::string& fileName) {
 	char* shaderResource = LoadTxtResource(fileName);
 
-	if (!shaderResource) {
-		return;
+	if (shaderResource == nullptr) {
+		throw("VertexShader Load Failed : " + fileName);
 	}
 
 	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
@@ -44,11 +44,8 @@ void ShaderList::LoadVertexShader(const std::string& fileName) {
 	GLint status;
 	glGetShaderiv(vs, GL_COMPILE_STATUS, &status);
 	if (status != GL_TRUE) {
-		std::cout << "VertexShader Compile is Failed " << fileName << std::endl;
 		ShowShaderErrors(vs);
-		system("pause");
-
-		return;
+		throw("VertexShader Compile Failed : " + fileName);
 	}
 	this->vertexShaders[fileName] = vs;
 }
@@ -56,8 +53,8 @@ void ShaderList::LoadVertexShader(const std::string& fileName) {
 void ShaderList::LoadFragmentShader(const std::string& fileName) {
 	char* shaderResource = LoadTxtResource(fileName);
 
-	if (!shaderResource) {
-		return;
+	if (shaderResource == nullptr) {
+		throw("FragmentShader Load Failed : " + fileName);
 	}
 
 	GLuint ps = glCreateShader(GL_FRAGMENT_SHADER);
@@ -72,10 +69,8 @@ void ShaderList::LoadFragmentShader(const std::string& fileName) {
 	GLint status;
 	glGetShaderiv(ps, GL_COMPILE_STATUS, &status);
 	if (status != GL_TRUE) {
-		std::cout << "FragmentShader Compile is Failed " << fileName << std::endl;
 		ShowShaderErrors(ps);
-		system("pause");
-		return;
+		throw("FragmentShader Compile Failed : " + fileName);
 	}
 	this->pixelShaders[fileName] = ps;
 }
@@ -97,20 +92,19 @@ ShaderClass* ShaderList::GetShader(const std::string& name) {
 }
 
 //作成済みのシェーダーの組み合わせでシェーダープログラム作成、リストへ登録
-bool ShaderList::CreateShaderProgram(const std::string& name, const std::string& vertex, const std::string& fragment) {
+void ShaderList::CreateShaderProgram(const std::string& name, const std::string& vertex, const std::string& fragment) {
 	if (this->vertexShaders.find(vertex) == this->vertexShaders.end()) {
-		return false;
+		throw("VertexShader Not Found : " + name);
 	}
 	if (this->pixelShaders.find(fragment) == this->pixelShaders.end()) {
-		return false;
+		throw("FragmentShader Shader Not Found : " + name);
 	}
 
 	ShaderClass* newShader = new ShaderClass(this->vertexShaders[vertex], this->pixelShaders[fragment]);
-	if (!newShader) {
-		return false;
+	if (newShader == nullptr) {
+		throw("Shader Create is Failed : " + name);
 	}
 	this->shaderList[name] = newShader;
-	return true;
 }
 
 ////////
@@ -141,7 +135,7 @@ char* ShaderList::LoadTxtResource(const std::string& fileName) {
 	fin.close();
 
 	returnSource = new char[fileSize + 1];
-	if (!returnSource) {
+	if (returnSource == nullptr) {
 		return 0;
 	}
 

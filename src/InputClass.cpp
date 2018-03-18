@@ -128,27 +128,27 @@ float InputClass::FixStickState(float stickPos) {
 }
 
 //‰Ÿ‚µ‚½uŠÔ
-bool InputClass::isPressButton(int buttonID) {
+bool InputClass::isPressButton(ButtonID buttonID) {
 	return this->vpadState[buttonID].press && !this->vpadState[buttonID].prevPress;
 }
 //‰Ÿ‚µ‚Ä‚¢‚éŠÔ
-bool InputClass::isStayButton(int buttonID) {
+bool InputClass::isStayButton(ButtonID buttonID) {
 	return (this->vpadState[buttonID].press && this->vpadState[buttonID].prevPress) || isPressButton(buttonID);
 }
 //—£‚³‚ê‚½uŠÔ
-bool InputClass::isReaveButton(int buttonID) {
+bool InputClass::isReaveButton(ButtonID buttonID) {
 	return !this->vpadState[buttonID].press && this->vpadState[buttonID].prevPress;
 }
 
 //ƒXƒeƒBƒbƒNî•ñ
-float InputClass::GetStickState(int axisID) {
+float InputClass::GetStickState(ButtonID axisID) {
 	return this->vpadStickAxis[axisID].pos;
 }
 //Šp“x‚ÆŒX‚«
-float InputClass::GetStickRotation(int stickID){
+float InputClass::GetStickRotation(ButtonID stickID){
 	return this->vpadStickState[stickID].GetRotation();
 }
-float InputClass::GetStickPower(int stickID) {
+float InputClass::GetStickPower(ButtonID stickID) {
 	float power = this->vpadStickState[stickID].GetPower();
 	if (power > 1.0f) {
 		power = 1.0f;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include<OpenAL\al.h>
-#include<OpenAL\alc.h>
+#include<OpenAL\AL\al.h>
+#include<OpenAL\AL\alc.h>
 #include<unordered_map>
 #include"SoundSource.h"
 
@@ -11,9 +11,7 @@ public:
 	SoundClass();
 	~SoundClass();
 
-	void Run();
-
-	bool CreateSource(const char* sourceName, const char* filePass);
+	bool CreateSource(const char* sourceName, const char* filePass, SoundSource::LoadMode mode);
 	void DeleteSource(const char* sourceName);
 
 	SoundSource* GetSource(const char* sourceName);

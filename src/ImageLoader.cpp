@@ -4,9 +4,7 @@
 bool ImageLoader::LoadTGAImage(const std::string& fileName, GLuint TextureID, unsigned int &returnWidth, unsigned int &returnHeight) {
 	std::ifstream file;
 
-	char* tgaImage;
 	TGAHeader header;
-	int width, height, bpp, imagesize;
 	unsigned int numColor;
 	GLenum glColorFormat, tgaColorFormat;
 
@@ -18,10 +16,20 @@ bool ImageLoader::LoadTGAImage(const std::string& fileName, GLuint TextureID, un
 	file.read((char*)&header, sizeof(TGAHeader));
 
 
-	width = (int)header.width;
-	height = (int)header.height;
-	bpp = (int)header.bpp;
+	int idSize = (int)header.idSize;
+	int type = (int)header.type;
+	int width = (int)header.width;
+	int height = (int)header.height;
+	int bpp = (int)header.bpp;
+	int descriptor = (int)header.descriptor;
 
+	//いまのところはRGB形式のTGAイメージだけを扱う
+	if (type != 2 && type != 10) {
+		file.close();
+		return false;
+	}
+
+	//深度情報から色のフォーマットを決定
 	if (bpp == 32) {
 		numColor = 4;
 		glColorFormat = GL_RGBA;
@@ -29,14 +37,33 @@ bool ImageLoader::LoadTGAImage(const std::string& fileName, GLuint TextureID, un
 	}
 	else if (bpp == 24) {
 		numColor = 3;
-		glColorFormat = GL_RGB;
+		glColorFormat = GL_RGBA;
 		tgaColorFormat = GL_BGR;
 	}
+	else {
+		file.close();
+		return false;
+	}
 
-	imagesize = width * height * numColor;
+	//配列サイズと配列のデータを設定
+	int imagesize = width * height * numColor;
+	char* tgaPreImage = new char[imagesize];
+	char* tgaImage = new char[imagesize];
 
-	tgaImage = new char[imagesize];
-	file.read((char*)tgaImage, imagesize);
+	file.seekg(idSize, std::ios::cur);
+	file.read(tgaPreImage, imagesize);
+
+	//RLE圧縮RGBデータ
+	if (type == 10) {
+		//読み込んだデータをもとにデコードのデータでtgaPreImageのバッファを置き換える（元のデータはdelete）
+		char* temp = tgaPreImage;
+		tgaPreImage = new char[imagesize];
+		DecodeRLEImage(tgaPreImage, temp, width, height, numColor);
+		delete[] temp;
+	}
+
+	SetTgaData(tgaImage, tgaPreImage, width, height, numColor, descriptor & 0x10, descriptor & 0x20);
+
 	file.close();
 
 	returnWidth = width;
@@ -53,11 +80,106 @@ bool ImageLoader::LoadTGAImage(const std::string& fileName, GLuint TextureID, un
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
 	//ミップマップを作成
 	glGenerateMipmap(GL_TEXTURE_2D);
 
+	delete[] tgaPreImage;
 	delete[] tgaImage;
 	tgaImage = 0;
 
 	return true;
+}
+
+void ImageLoader::SetTgaData(char* data, char* src, int width, int height, int numColor, bool xReverse, bool yReverse) {
+	int count = 0;
+	//X:右から左　Y:下から上　を正の方向とする
+	//XYに反転なし
+	if (!(xReverse) && !(yReverse)) {
+		for (int y = 0; y < height; ++y) {
+			for (int x = 0; x < width; ++x) {
+				for (int i = 0; i < numColor; ++i) {
+					data[count] = src[(y * width + x) * numColor + i];
+					++count;
+				}
+			}
+		}
+	}
+	//Xのみ反転
+	if ((xReverse) && !(yReverse)) {
+		for (int y = 0; y < height; ++y) {
+			for (int x = width - 1; x >= 0; --x) {
+				for (int i = 0; i < numColor; ++i) {
+					data[count] = src[(y * width + x) * numColor + i];
+					++count;
+				}
+			}
+		}
+	}
+	//Yのみ反転
+	if (!(xReverse) && (yReverse)) {
+		for (int y = height - 1; y >= 0; --y) {
+			for (int x = 0; x < width; ++x) {
+				for (int i = 0; i < numColor; ++i) {
+					data[count] = src[(y * width + x) * numColor + i];
+					++count;
+				}
+			}
+		}
+	}
+	//両方反転
+	if ((xReverse) && (yReverse)) {
+		for (int y = height - 1; y >= 0; --y) {
+			for (int x = width - 1; x >= 0; --x) {
+				for (int i = 0; i < numColor; ++i) {
+					data[count] = src[(y * width + x) * numColor + i];
+					++count;
+				}
+			}
+		}
+	}
+}
+
+//RLE圧縮を解凍する
+void ImageLoader::DecodeRLEImage(char* data, char* src, int width, int height, int numColor) {
+	int imageSize = width * height * numColor;
+	char* colorData = new char[numColor];
+	int count = 0;
+	int srcOffset = 0;
+
+	while (count < imageSize) {
+		//生データかRLE圧縮データかを判別
+		int packet = src[srcOffset];
+		++srcOffset;
+
+		if (packet & 0x80) {
+			//RLE
+			for (int i = 0; i < numColor; ++i) {
+				colorData[i] = src[srcOffset];
+				++srcOffset;
+			}
+
+			int loopCount = (packet & 0x7F) + 1;
+			for (int i = 0; i < loopCount; ++i) {
+				for (int j = 0; j < numColor; ++j) {
+					data[count] = colorData[j];
+					++count;
+				}
+			}
+		}
+		else {
+			//生
+			int loopCount = (packet + 1) * numColor;
+			for (int i = 0; i < loopCount; ++i) {
+				data[count] = src[srcOffset];
+				++count;
+				++srcOffset;
+			}
+		}
+	}
+
+
+	delete[] colorData;
 }

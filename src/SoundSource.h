@@ -1,10 +1,12 @@
 #pragma once
 
-#include<OpenAL\al.h>
+#include<OpenAL\AL\al.h>
 #include<string>
 #include<thread>
 #include<mutex>
 #include<iostream>
+#include<vector>
+#include<list>
 
 
 #include"AudioDataFactory.h"
@@ -13,9 +15,16 @@
 //音源クラス。ループフラグが下りているときはファイル終端に到達した時点でストリーミングを終える
 class SoundSource {
 public:
-	SoundSource(const char* sourceName, const char* filePass, int numBuffer = 32);
+	enum LoadMode {
+		Streaming,
+		AllRead,
+	};
+
+public:
+	SoundSource(const char* sourceName, const char* filePass, LoadMode mode, int numBuffer = 32);
 	~SoundSource();
 	void Play(bool loop);
+	void PlayCopy();
 	void Pause();
 	void Stop();
 
@@ -26,28 +35,28 @@ public:
 
 private:
 	void StreamingThread();
-	void EndStreamingThread();
+	void AllReadThread();
+	void EndThread();
 	void FillBuffer();
-	int ReadBuffer(ALuint buffer, int maxReadSize);
+	int ReadBuffer(char* buffer, int maxReadSize);
 	int OggCommentValue(vorbis_comment* comment, const char* key);
 
 private:
 	const std::string name;
 	AudioData* audio;
+	LoadMode mode;
+	std::vector<char> allReadData;
+	//CopyPlay用の管理リスト
+	std::list<ALuint> copySources;
 
-	std::thread* streamingThread;
+	std::thread* thread;
 	std::recursive_mutex _mutex;
-
 
 	ALuint sourceID;
 	ALuint *bufferIDs;
-	const int numBuffer;
+	int numBuffer;
 
-	int loopStart;
-	int loopLength;
 	ALuint format;
-	ALint samplingRate;
-	int blockSize;
 
 	float volume;
 	float posX, posY, posZ;

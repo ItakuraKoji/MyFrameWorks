@@ -1,13 +1,13 @@
 #include"MyMathFanctions.h"
 
-float DegToRad(float deg) {
+float M::DegToRad(float deg) {
 	return deg * (float)M_PI / 180.0f;
 }
-float RadToDeg(float rad) {
+float M::RadToDeg(float rad) {
 	return rad * 180.0f / (float)M_PI;
 }
 
-void MatrixPerspectiveLH(Eigen::Matrix4f& result, float screenWidth, float screenHeight, float screenNear, float screenFar, float fieldOfView) {
+void M::MatrixPerspectiveLH(Eigen::Matrix4f& result, float screenWidth, float screenHeight, float screenNear, float screenFar, float fieldOfView) {
 	Eigen::Matrix4f mat;
 	mat(0) = screenHeight / (screenWidth * tanf(fieldOfView * 0.5f));
 	mat(1) = 0.0f;
@@ -31,10 +31,10 @@ void MatrixPerspectiveLH(Eigen::Matrix4f& result, float screenWidth, float scree
 	result = mat;
 }
 
-void MatrixPerspectiveRH(Eigen::Matrix4f& result, float screenWidth, float screenHeight, float screenNear, float screenFar, float fieldOfView) {
+void M::MatrixPerspectiveRH(Eigen::Matrix4f& result, float screenWidth, float screenHeight, float screenNear, float screenFar, float fieldOfView) {
 
 }
-void MatrixOrthoLH(Eigen::Matrix4f& result, float screenWidth, float screenHeight, float screenNear, float screenFar) {
+void M::MatrixOrthoLH(Eigen::Matrix4f& result, float screenWidth, float screenHeight, float screenNear, float screenFar) {
 	Eigen::Matrix4f mat;
 	mat(0) = 2.0f / screenWidth;
 	mat(1) = 0.0f;
@@ -58,10 +58,10 @@ void MatrixOrthoLH(Eigen::Matrix4f& result, float screenWidth, float screenHeigh
 
 	result = mat;
 }
-void MatrixOrthoRH(Eigen::Matrix4f& result, float screenWidth, float screenHeight, float screenNear, float screenFar) {
+void M::MatrixOrthoRH(Eigen::Matrix4f& result, float screenWidth, float screenHeight, float screenNear, float screenFar) {
 
 }
-void MatrixLookAt(Eigen::Matrix4f& result, Eigen::Vector3f& position, Eigen::Vector3f& lookAt, Eigen::Vector3f& up) {
+void M::MatrixLookAt(Eigen::Matrix4f& result, Eigen::Vector3f& position, Eigen::Vector3f& lookAt, Eigen::Vector3f& up) {
 	Eigen::Vector3f zAxis, xAxis, yAxis;
 
 	// zAxis = normal(lookAt - position)

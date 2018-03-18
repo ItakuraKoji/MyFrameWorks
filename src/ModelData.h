@@ -13,7 +13,8 @@
 using namespace Eigen;
 struct Material {
 	std::string materialName;
-	std::string textureName;
+	//std::string textureName;
+	Texture* texture;
 	int numFace;
 	Vector4f diffuse;
 	Vector4f ambient;
@@ -50,6 +51,7 @@ public:
 
 	void Add(std::vector<Material> material);
 	void SetTextureName(const std::string& textureName, int arrayIndex, int materialIndex);
+	void SetTexture(Texture* texture, int arrayIndex, int materialIndex);
 	Material& GetMaterial(int arrayIndex, int materialIndex);
 
 	int GetNumMaterial(int arrayIndex);
@@ -86,19 +88,22 @@ public:
 	~AnimationData();
 	bool Initialize();
 	void UpdateAnimation();
-	void SetSpeed(int speed);
+	void SetSpeed(float speed);
 	void Add(AnimType& animData);
-	void SetAnimation(const std::string& animName, FbxScene* fbxScene, bool playOnce, bool loop);
-	int GetCurrentAnimTime();
+	void SetAnimation(const std::string& animName, FbxScene* fbxScene, bool playOnce, bool isInterpolation, bool loop);
+	float GetCurrentAnimTime();
+
+	//BoneDataにStartInterPolation()を通知する用
+	bool IsStartInterpolation();
 
 private:
 	std::unordered_map<std::string, AnimType> animList;
-	int speed;
-	int currentAnimID;
-	int currentAnimTime;
-	int maxAnimTime;
-	bool isLoop;
-	bool isInterpolation;
+	float speed;
+	int   currentAnimID;
+	float currentAnimTime;
+	int   maxAnimTime;
+	bool  isLoop;
+	bool  isInterpolation;
 };
 
 //ボーン情報とFBXCluster
@@ -110,14 +115,17 @@ public:
 	void Add(std::vector<Bone>& boneData);
 	void SetClurrentBoneData(int arrayIndex, int time);
 	void SetMatrixTextureData(int arrayIndex, Texture* texture);
+	void StartInterporation(int frameCount);
 	int GetNumBone(int arrayIndex);
 
 private:
 	Matrix4f CalculateBoneMatrix(int arrayIndex, int boneIndex);
-	void BoneInterporation(int arrayIndex, float ratio);
+	void BoneInterporation(int arrayIndex, int boneIndex, float ratio);
 
 private:
 	std::vector<std::vector<Bone>> boneData;
+	float interporationCount;
+	float interporationMaxCount;
 };
 
 //本当は分離できたらよかったんだが、FBXの情報量が思ったよりも多いのでFBXManagerたちはそのまま持っておいたほうがいいかもしれない

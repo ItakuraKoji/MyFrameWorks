@@ -5,12 +5,13 @@
 //ターゲットから一定距離を保って動く
 class CameraMan : public GameObject {
 public:
-	bool Initialize(GameParameters* param);
+	bool Initialize(float distance, float height);
 	void Finalize();
 	void Run(GameParameters* param);
 	void Draw(GameParameters* param);
 
 	void SetParameter(GameObject* terget, CameraClass* camera);
+	void SetRotation(float degHorizontal, float degVertical);
 	float GetRotationH();
 	float GetRotationV();
 

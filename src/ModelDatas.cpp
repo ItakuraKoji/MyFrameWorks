@@ -1,26 +1,26 @@
 #include"ModelData.h"
 
 ModelDatas::ModelDatas() {
-	this->fbxData = 0;
-	this->vertexBuffer = 0;
-	this->material = 0;
-	this->bone = 0;
-	this->animation = 0;
+	this->fbxData = nullptr;
+	this->vertexBuffer = nullptr;
+	this->material = nullptr;
+	this->bone = nullptr;
+	this->animation = nullptr;
 }
 ModelDatas::~ModelDatas() {
-	if (this->fbxData) {
+	if (this->fbxData != nullptr) {
 		delete this->fbxData;
 	}
-	if (this->vertexBuffer) {
+	if (this->vertexBuffer != nullptr) {
 		delete this->vertexBuffer;
 	}
-	if (this->material) {
+	if (this->material != nullptr) {
 		delete this->material;
 	}
-	if (this->bone) {
+	if (this->bone != nullptr) {
 		delete this->bone;
 	}
-	if (this->animation) {
+	if (this->animation != nullptr) {
 		delete this->animation;
 	}
 }

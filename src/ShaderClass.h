@@ -29,6 +29,7 @@ public:
 	void SetValue(const std::string& uniformName, const Matrix4f& value);
 	void SetValue(const std::string& uniformName, const Vector4f& value);
 	void SetValue(const std::string& uniformName, const Vector3f& value);
+	void SetValue(const std::string& uniformName, const Vector2f& value);
 
 	//subroutineÇÃê›íË(vertex shader)
 	void SetVertexShaderSubroutine(const std::string& subroutineFunctionName);

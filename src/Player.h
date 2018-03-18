@@ -13,7 +13,11 @@ public:
 	void SetCameraMan(CameraClass* camera);
 
 private:
-	btRigidBody* characterCollision;
+
+private:
+	CollisionData* characterCollision;
+	CollisionData* characterFoot;
+
 	float speed;
 	float velocity;
 	//移動ベクトルの補正に使う専属のカメラマン

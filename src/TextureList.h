@@ -12,11 +12,11 @@ public:
 	void Initialize();
 	void Finalize();
 	Texture* GetTexture(const std::string& textureName);
-	bool LoadTexture(const std::string& textureName, const std::string& fileName);
+	bool LoadTexture(const std::string& textureName, const std::string& filePass);
 	bool AddEmptyTexture(const std::string& textureName, int textureWidth, int textureHeight);
+	void DeleteTexture(const std::string& textureName);
 
 private:
-	void Add(const std::string& textureName, Texture* texture);
 
 private:
 	std::unordered_map<std::string, Texture*> textureList;

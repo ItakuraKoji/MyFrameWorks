@@ -1,10 +1,13 @@
 #pragma once
 
+#define __EFFEKSEER_RENDERER_GL_GLEW__
+
 #include<Effekseer\Effekseer.h>
 #include<Effekseer\EffekseerRendererGL.h>
 #include<Effekseer\EffekseerSoundAL.h>
 #include<unordered_map>
 #include<string>
+#include<gl\GLU.h>
 
 #include"CameraClass.h"
 

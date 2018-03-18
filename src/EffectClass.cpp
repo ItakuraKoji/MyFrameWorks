@@ -23,7 +23,7 @@ EffectClass::EffectClass() {
 EffectClass::~EffectClass() {
 	this->manager->StopAllEffects();
 	for (auto i : this->effect) {
-		if (!i.second) {
+		if (i.second == nullptr) {
 			continue;
 		}
 		i.second->Release();
@@ -56,6 +56,7 @@ void EffectClass::Draw() {
 	this->renderer->SetCameraMatrix(view);
 	this->renderer->SetProjectionMatrix(projection);
 	
+	glEnable(GL_DEPTH_TEST);
 	this->renderer->BeginRendering();
 	this->manager->Draw();
 	this->renderer->EndRendering();
@@ -71,7 +72,7 @@ void EffectClass::AddEffectSource(const char* name, const char* filePass) {
 	Effekseer::ConvertUtf8ToUtf16((int16_t*)pass, 64, (const int8_t*)filePass);
 	Effekseer::Effect* efk = Effekseer::Effect::Create(this->manager, pass);
 	//Ž¸”s‚à‹–‚³‚È‚¢
-	if (!efk) {
+	if (efk == nullptr) {
 		return;
 	}
 	//‹–‚³‚ê‚½‚à‚Ì‚ÍƒŠƒXƒg‚Ö“o˜^
@@ -92,6 +93,7 @@ EffectHandle EffectClass::Play(const std::string& name, float posX, float posY, 
 	if (this->effect.find(name) == this->effect.end() || !this->effect[name]) {
 		return -1;
 	}
+	
 	return this->manager->Play(this->effect[name], posX, posY, posZ);
 }
 

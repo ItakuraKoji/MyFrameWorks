@@ -24,7 +24,7 @@ bulletDebugDraw::bulletDebugDraw() {
 
 	glBindVertexArray(0);
 
-	glLineWidth(2.0f);
+	glLineWidth(0.5f);
 
 }
 bulletDebugDraw::~bulletDebugDraw() {
@@ -82,7 +82,7 @@ void bulletDebugDraw::drawContactPoint(const btVector3& PointOnB, const btVector
 void bulletDebugDraw::reportErrorWarning(const char* warningString) {
 
 	/* åxçêï\é¶ */
-
+	printf("%s\n", warningString);
 }
 
 void bulletDebugDraw::draw3dText(const btVector3& location, const char* textString) {

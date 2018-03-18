@@ -20,6 +20,8 @@
 #pragma comment(lib, "EffekseerRendererGL.lib" )
 #pragma comment(lib, "EffekseerSoundAL.lib" )
 
+#pragma comment(lib, "freetype.lib" )
+
 #if defined(_DEBUG)
 #pragma comment(lib, "glew32d.lib")
 #pragma comment(lib, "glfw3d.lib")
@@ -41,7 +43,6 @@
 #include<GLFW/glfw3.h>
 #include<iostream>
 #include"MyApplication.h"
-#include"InputClass.h"
 
 
 //アプリケーションの動作を管理
@@ -59,7 +60,6 @@ private:
 	
 private:
 	int screenWidth, screenHeight;
-	float screenNeer, screenFar;
 	bool isFullScreen;
 	GLFWwindow* windowHandle;
 	MyApplication* application;

@@ -15,6 +15,7 @@ void CameraList::Initialize() {
 
 //パースペクティブ投影
 void CameraList::AddPerspectiveCamera(const std::string& name, Vector3f& position, Vector3f& target, int width, int height, float neer, float far, float fieldOfView) {
+	//名前被り
 	if (this->cameraList.find(name) != this->cameraList.end()) {
 		return;
 	}
@@ -28,6 +29,7 @@ void CameraList::AddPerspectiveCamera(const std::string& name, Vector3f& positio
 
 //平行投影
 void CameraList::AddOrthoCamera(const std::string& name, Vector3f& position, Vector3f& target, int width, int height, float neer, float far) {
+	//名前被り
 	if (this->cameraList.find(name) != this->cameraList.end()) {
 		return;
 	}

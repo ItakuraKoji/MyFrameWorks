@@ -8,7 +8,7 @@ class ShaderList {
 public:
 	ShaderList();
 	~ShaderList();
-	bool Initialize();
+	void Initialize();
 
 	ShaderClass* GetShader(const std::string& shaderName);
 	ShaderClass* UseShader(const std::string& shaderName);
@@ -16,7 +16,7 @@ public:
 	void LoadVertexShader(const std::string& fileName);
 	void LoadFragmentShader(const std::string& fileName);
 
-	bool CreateShaderProgram(const std::string& shaderName, const std::string& vertexShader, const std::string& fragmentShader);
+	void CreateShaderProgram(const std::string& shaderName, const std::string& vertexShader, const std::string& fragmentShader);
 
 private:
 	char* LoadTxtResource(const std::string& fileName);

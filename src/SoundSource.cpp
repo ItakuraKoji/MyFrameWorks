@@ -1,10 +1,12 @@
 #include"SoundSource.h"
 
-SoundSource::SoundSource(const char* sourceName, const char* filePass, int numBuffer) : name(sourceName), numBuffer(numBuffer) {
+SoundSource::SoundSource(const char* sourceName, const char* filePass, LoadMode mode, int numBuffer) : name(sourceName) {
 	this->bufferIDs = new ALuint[numBuffer];
 	this->isPlayed = false;
 	this->isLoop = false;
 	this->isEnd = false;
+	this->numBuffer = numBuffer;
+	this->mode = mode;
 
 
 	alGenSources(1, &this->sourceID);
@@ -14,37 +16,50 @@ SoundSource::SoundSource(const char* sourceName, const char* filePass, int numBu
 	AudioDataFactory factory;
 	this->audio = factory.Create(filePass);
 
-	this->loopStart = this->audio->GetLoopStart();
-	this->loopLength = this->audio->GetLoopLength();
-	this->samplingRate = this->audio->GetSamplingRate();
-	if (this->audio->GetFormat() == SoundFormat::Stereo16) {
+	if (this->audio->GetFormat() == AudioData::SoundFormat::Stereo16) {
 		this->format = AL_FORMAT_STEREO16;
-		this->blockSize = 4;
 	}
 	else {
 		this->format = AL_FORMAT_MONO16;
-		this->blockSize = 2;
 	}
-
 	//バッファ生成＆事前読み込み
-	for (int i = 0; i < this->numBuffer; ++i) {
-		alGenBuffers(1, &this->bufferIDs[i]);
-		ReadBuffer(this->bufferIDs[i], 4096);
+	switch(this->mode){
+	case LoadMode::Streaming:
+		//ストリーミングモードはバッファを作ってキューする
+		char buffer[4096];
+		for (int i = 0; i < this->numBuffer; ++i) {
+			alGenBuffers(1, &this->bufferIDs[i]);
+			int readSize = ReadBuffer(buffer, 4096);
+			alBufferData(this->bufferIDs[i], this->format, buffer, readSize, this->audio->GetSamplingRate());
+			alSourceQueueBuffers(this->sourceID, 1, &this->bufferIDs[i]);
+		}
+		//スレッド開始 (スレッドにメンバー関数を指定する際は第二引数にthisポインターを指定する)
+		this->thread = new std::thread(&SoundSource::StreamingThread, this);
+		break;
+
+	case LoadMode::AllRead:
+		//オールリードモードはすべて読んでバッファに突っ込む
+		int size = this->audio->GetLoopLength() * this->audio->GetBlockSize();
+		this->allReadData.resize(size);
+		int readSize = ReadBuffer(this->allReadData.data(), size);
+		alGenBuffers(1, &this->bufferIDs[0]);
+		alBufferData(this->bufferIDs[0], this->format, this->allReadData.data(), readSize, this->audio->GetSamplingRate());
+		alSourcei(this->sourceID, AL_BUFFER, this->bufferIDs[0]);
+		this->numBuffer = 1;
+		this->thread = new std::thread(&SoundSource::AllReadThread, this);
+		break;
 	}
-
-	//スレッド開始 (スレッドにメンバー関数を指定する際は第二引数にthisポインターを指定する)
-	this->streamingThread = new std::thread(&SoundSource::StreamingThread, this);
-
-	printf("%x\n", this->streamingThread->get_id());
 
 }
 
 SoundSource::~SoundSource() {
-	EndStreamingThread();
-	this->streamingThread->join();
+	EndThread();
 
-	//開放
-	delete this->streamingThread;
+	if (this->thread != nullptr) {
+		this->thread->join();
+		delete this->thread;
+		this->thread = nullptr;
+	}
 	delete this->audio;
 
 	alDeleteBuffers(this->numBuffer, this->bufferIDs);
@@ -55,54 +70,90 @@ SoundSource::~SoundSource() {
 
 
 void SoundSource::Play(bool loop) {
+	ALint state;
+	alGetSourcei(this->sourceID, AL_SOURCE_STATE, &state);
+	if (state == AL_PLAYING) {
+		return;
+	}
 	alSourcePlay(this->sourceID);
 	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
 	this->isPlayed = true;
 	this->isLoop = loop;
 }
 
-void SoundSource::Pause() {
-	alSourceStop(this->sourceID);
-	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
-	this->isPlayed = false;
+void SoundSource::PlayCopy() {
+	//ストリーミングモードでは利用できない
+	if (this->mode == LoadMode::Streaming) {
+		return;
+	}
+	ALuint source;
+	{
+		std::lock_guard<std::recursive_mutex> lock(this->_mutex);
+		this->isPlayed = true;
+		this->isLoop = false;
+		alGenSources(1, &source);
+		alSourcei(source, AL_BUFFER, this->bufferIDs[0]);
+		this->copySources.push_back(source);
+	}
+	alSourcePlay(source);
 }
 
-void SoundSource::Stop() {
+
+void SoundSource::Pause() {
 	alSourceStop(this->sourceID);
 	{
 		std::lock_guard<std::recursive_mutex> lock(this->_mutex);
 		this->isPlayed = false;
 	}
+}
+
+void SoundSource::Stop() {
+	{
+		std::lock_guard<std::recursive_mutex> lock(this->_mutex);
+		this->isPlayed = false;
+	}
 	//バッファを初期化
-	this->audio->Seek(0);
 	int num;
 	ALuint soundBuffer;
 	while (alGetSourcei(this->sourceID, AL_BUFFERS_PROCESSED, &num), num > 0) {
 		alSourceUnqueueBuffers(this->sourceID, 1, &soundBuffer);
 	}
+
+	alSourceStop(this->sourceID);
+
+	this->audio->Seek(0);
+	char buffer[4096];
 	for (int i = 0; i < this->numBuffer; ++i) {
-		ReadBuffer(this->bufferIDs[i], 4096);
+		int readSize = ReadBuffer(buffer, 4096);
+		alBufferData(this->bufferIDs[i], this->format, buffer, readSize, this->audio->GetSamplingRate());
+		alSourceQueueBuffers(this->sourceID, 1, &this->bufferIDs[i]);
 	}
 }
 
 void SoundSource::SetVolume(float volume) {
 	alSourcef(this->sourceID, AL_MAX_GAIN, volume);
-	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
-	this->volume = volume;
+	{
+		std::lock_guard<std::recursive_mutex> lock(this->_mutex);
+		this->volume = volume;
+	}
 }
 void SoundSource::SetPosition(float x, float y, float z) {
 	alSource3f(this->sourceID, AL_POSITION, x, y, z);
-	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
-	this->posX = x;
-	this->posY = y;
-	this->posZ = z;
+	{
+		std::lock_guard<std::recursive_mutex> lock(this->_mutex);
+		this->posX = x;
+		this->posY = y;
+		this->posZ = z;
+	}
 }
 void SoundSource::SetVelocity(float x, float y, float z) {
 	alSource3f(this->sourceID, AL_VELOCITY, x, y, z);
-	std::lock_guard<std::recursive_mutex> lock(this->_mutex);
-	this->velocityX = x;
-	this->velocityY = y;
-	this->velocityZ = z;
+	{
+		std::lock_guard<std::recursive_mutex> lock(this->_mutex);
+		this->velocityX = x;
+		this->velocityY = y;
+		this->velocityZ = z;
+	}
 }
 
 bool SoundSource::IsPlay() {
@@ -118,7 +169,8 @@ bool SoundSource::IsPlay() {
 void SoundSource::StreamingThread() {
 	while (!this->isEnd) {
 		if (!this->isPlayed) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(600));
+			//スリープはだいたい1フレーム分のウェイト
+			std::this_thread::sleep_for(std::chrono::milliseconds(16));
 			continue;
 		}
 
@@ -134,8 +186,36 @@ void SoundSource::StreamingThread() {
 	}
 }
 
+//AllReadの場合は、生成したソースのコピーの管理を行う
+void SoundSource::AllReadThread() {
+
+	//再生終了したら削除
+	while (!this->isEnd) {
+		//大体1秒に一回でも行けそうではあるが、とりあえず60FPS相当のウェイト
+		std::this_thread::sleep_for(std::chrono::milliseconds(16));
+
+		std::lock_guard<std::recursive_mutex> lock(this->_mutex);
+		for (auto it = this->copySources.begin(); it != this->copySources.end();) {
+			ALint state;
+			alGetSourcei((*it), AL_SOURCE_STATE, &state);
+
+			if (state != AL_PLAYING) {
+				alDeleteSources(1, &(*it));
+				it = this->copySources.erase(it);
+				continue;
+			}
+			++it;
+		}
+	}
+
+	for (auto i : this->copySources) {
+		alDeleteSources(1, &i);
+	}
+}
+
+
 //フラグを立ててスレッドを終わらせる
-void SoundSource::EndStreamingThread() {
+void SoundSource::EndThread() {
 	alSourceStop(this->sourceID);
 	alSourcei(this->sourceID, AL_BUFFER, AL_NONE);
 
@@ -167,13 +247,14 @@ int SoundSource::OggCommentValue(vorbis_comment* comment, const char* key) {
 void SoundSource::FillBuffer() {
 	int size = 0;
 
+	char buffer[4096];
 	int fillSize = 4096;
 	int offset = this->audio->GetPcmOffset();
-	int loopEnd = this->loopStart + this->loopLength;
+	int loopEnd = this->audio->GetLoopStart() + this->audio->GetLoopLength();
 
 	//4096バイトよりループ終端までの距離が短いときはそっちを読み込み量とする
-	if (fillSize > (loopEnd - offset) * this->blockSize) {
-		fillSize = (loopEnd - offset) * this->blockSize;
+	if (fillSize > (loopEnd - offset) * this->audio->GetBlockSize()) {
+		fillSize = (loopEnd - offset) * this->audio->GetBlockSize();
 	}
 
 	//処理済みキューがない場合はそのまま帰る予定
@@ -189,14 +270,16 @@ void SoundSource::FillBuffer() {
 		ALuint soundBuffer;
 		alSourceUnqueueBuffers(this->sourceID, 1, &soundBuffer);
 
-		int readSize = ReadBuffer(soundBuffer, fillSize - size);
+		int readSize = ReadBuffer(buffer, fillSize - size);
+		alBufferData(soundBuffer, this->format, buffer, readSize, this->audio->GetSamplingRate());
+		alSourceQueueBuffers(this->sourceID, 1, &soundBuffer);
 
 		offset = this->audio->GetPcmOffset();
 		if (readSize == 0 || offset == loopEnd) {
 			//ループしない場合は終端に達したらストリーミングを停止
 			if (this->isLoop) {
-				this->audio->Seek(this->loopStart);
-				offset = this->loopStart;
+				this->audio->Seek(this->audio->GetLoopStart());
+				offset = this->audio->GetLoopStart();
 				//std::cout << "Loop!" << std::endl;
 			}
 			else {
@@ -214,30 +297,27 @@ void SoundSource::FillBuffer() {
 }
 
 //bufferに最大maxReadSize分だけ読んでキューする、実際の読み込みサイズが返る
-int SoundSource::ReadBuffer(ALuint buffer, int maxReadSize) {
-	if (maxReadSize > 4096) {
-		return 0;
-	}
-
+int SoundSource::ReadBuffer(char* buffer, int maxReadSize) {
 	//readBufferが埋まるまで読みこむ
 	int readSize = 0;
-	char readBuffer[4096];
 	while (readSize != maxReadSize) {
 		char tmp[4096];
-		int singleReadSize = this->audio->Read(tmp, maxReadSize - readSize);
+		int size = maxReadSize - readSize;
+		if (size > 4096) {
+			size = 4096;
+		}
+		int singleReadSize = this->audio->Read(tmp, size);
 		if (singleReadSize <= 0) {
 			break;
 		}
 		for (int i = 0; i < singleReadSize; ++i) {
-			readBuffer[i + readSize] = tmp[i];
+			buffer[i + readSize] = tmp[i];
 		}
 		readSize += singleReadSize;
 	}
 	if (readSize == 0) {
 		return 0;
 	}
-	alBufferData(buffer, this->format, readBuffer, readSize, this->samplingRate);
-	alSourceQueueBuffers(this->sourceID, 1, &buffer);
 
 	return readSize;
 }

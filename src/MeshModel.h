@@ -14,11 +14,12 @@ public:
 
 	bool Initialize(ModelDatas* data);
 	void Finalize();
-	void BindVAO();
-	void UnBindVAO();
-	void SetAnimation(const std::string& animationName, bool isLoop, bool isInterporation, bool playOnce);
-	void SetTexture(const std::string& textureName, int arrayIndex, int materialIndex);
-	void SetSpeed(int speed);
+	void SetAnimation(const std::string& animationName, bool playOnce, bool isLoop, bool isInterporation, int interpolationFrames);
+	void SetTexture(Texture* texture, int arrayIndex, int materialIndex);
+	void SetSpeed(float speed);
+
+	std::string& SetTextureName(int arrayIndex, int materialIndex);
+
 
 	void UpdateAnimation();
 	void Draw(GameParameters* param);
@@ -31,6 +32,7 @@ private:
 private:
 	ModelDatas* data;
 	Texture*  boneTexture;
+	bool isBoneProcessed;
 
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW

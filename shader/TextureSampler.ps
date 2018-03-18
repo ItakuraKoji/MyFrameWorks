@@ -3,38 +3,51 @@
 //input
 in vec2 outTexCoord;
 in vec3 outNormal;
+in vec4 outPosition;
+in vec3 outEyeVector;
 
 //output
 out vec4 resultColor;
 
 //uniform
 uniform sampler2D sampler;
-uniform vec3 lightDir;
-uniform vec4 lightColor;
-uniform float lightPower;
+
+uniform vec3 directionalDir;
+uniform vec4 directionalColor;
+uniform float directionalPower;
+
+uniform vec4 specularColor;
+uniform float specularLength;
+uniform float specularPower;
+
 uniform vec4 ambientColor;
 uniform float ambientPower;
 
 //Subroutine
-subroutine vec4 Lighting(void);
-subroutine uniform Lighting lightingFunc;
 
 
-subroutine(Lighting)
-vec4 None(void){
-	return vec4(1.0, 1.0, 1.0, 1.0);
-}
-subroutine(Lighting)
-vec4 CalcLight(void)
-{
+
+vec4 diffuse(void){
 	vec4 result;
 
-	result = lightPower * lightColor * dot(outNormal, -lightDir);
+	float p = dot(outNormal, -directionalDir);
+	p = p * 0.5 + 0.5;
+	p = p * p;
+
+	result = directionalPower * directionalColor * p;
 	result = clamp(result, 0.0f, 1.0f);
 	result += ambientPower * ambientColor;
 	result = clamp(result, 0.0f, 1.0f);
 	result.a = 1.0f;
 
+	return result;
+}
+vec4 specular(){
+	vec4 result;
+	vec3 halfVec = normalize(normalize(-directionalDir) + normalize(outEyeVector));
+	float specular = pow(max(0.0, dot(outNormal, halfVec)), specularLength);
+	result = specular * specularColor;
+	result.a = 0.0f;
 	return result;
 }
 
@@ -44,6 +57,10 @@ void main(void)
 {
 	resultColor = texture2D(sampler, outTexCoord);
 
-	vec4 light = lightingFunc();
-	resultColor *= light;
+	resultColor = resultColor * diffuse() + specular();
+
+	vec4 fogColor = vec4(0.5, 0.7, 0.9, 1.0);
+	float fogRatio = (outPosition.z / 1000.0);
+	fogRatio = clamp(fogRatio, 0.0, 1.0);
+	resultColor = resultColor * (1 - fogRatio) + fogColor * fogRatio;
 }

@@ -1,7 +1,9 @@
+
+//#pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"")
+
+
 #include"SystemClass.h"
 #include<iostream>
-
-
 
 //メモリリーク検知用
 #ifdef _DEBUG
@@ -12,7 +14,6 @@
 
 int main() {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-
 
 	try
 	{
@@ -27,7 +28,4 @@ int main() {
 	{
 		system("pause");
 	}
-
-
-
 }

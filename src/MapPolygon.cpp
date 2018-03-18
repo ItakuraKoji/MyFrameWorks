@@ -24,8 +24,11 @@ void MapPolygon::Finalize() {
 		delete[](*it).polygon;
 	}
 
-	if (this->mfbx_manager) {
+	if (this->mfbx_manager != nullptr) {
 		this->mfbx_manager->Destroy();
+	}
+	if (this->collisionMesh != nullptr) {
+		delete collisionMesh;
 	}
 }
 
@@ -48,20 +51,17 @@ int MapPolygon::GetNumFace() {
 
 //bulletに地形の三角メッシュを剛体として追加
 void MapPolygon::setCollisionWorld(BulletPhysics *physics) {
+	std::vector<btVector3> vectices;
 	for (int i = 0; i < this->m_numFace; ++i) {
-		btScalar point[3 * 3];
 		for (int k = 0; k < 3; ++k) {
-			point[k * 3 + 0] = m_polygonStack[0].polygon[i].point[k].x();
-			point[k * 3 + 1] = m_polygonStack[0].polygon[i].point[k].y();
-			point[k * 3 + 2] = m_polygonStack[0].polygon[i].point[k].z();
+			vectices.push_back(m_polygonStack[0].polygon[i].point[k]);
 		}
-		btVector3 p1 = m_polygonStack[0].polygon[i].point[0];
-		btVector3 p2 = m_polygonStack[0].polygon[i].point[1];
-		btVector3 p3 = m_polygonStack[0].polygon[i].point[2];
-
-		btCollisionShape* collision = physics->CreateTriangleShape(p1, p2, p3);
-		btRigidBody* rigid = physics->CreateRigidBody(collision, 0.0f, 1, 1, btVector3(0.0f, 0.0f, 0.0f));
 	}
+
+	this->collisionMesh = physics->CreateTriangleMesh(vectices.data(), this->m_numFace);
+	btCollisionShape* collision = physics->CreateTriangleMeshShape(this->collisionMesh);
+	physics->CreateRigidBody(collision, 0.0f, 1, btVector3(0.0f, 0.0f, 0.0f));
+	//btCollisionObject* rigid = physics->CreateCollisionObject(collision, false, 1, btVector3(0.0f, 0.0f, 0.0f));
 }
 
 
@@ -72,15 +72,15 @@ void MapPolygon::setCollisionWorld(BulletPhysics *physics) {
 bool MapPolygon::InitializeFBX(const char* filename) {
 	FbxImporter *importer;
 	mfbx_manager = FbxManager::Create();
-	if (!mfbx_manager) {
+	if (mfbx_manager == nullptr) {
 		return false;
 	}
 	importer = FbxImporter::Create(mfbx_manager, "");
-	if (!importer) {
+	if (importer == nullptr) {
 		return false;
 	}
 	mfbx_scene = FbxScene::Create(mfbx_manager, "");
-	if (!mfbx_scene) {
+	if (mfbx_scene == nullptr) {
 		return false;
 	}
 	if (!importer->Initialize(filename)) {

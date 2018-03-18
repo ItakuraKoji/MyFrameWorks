@@ -1,15 +1,23 @@
 #include"MeshObject.h"
 
-MeshObject::MeshObject(MeshModel* model) {
+MeshObject::MeshObject(MeshModel* model){
+	if (model == nullptr) {
+		throw("modelData is nullptr");
+	}
 	this->drawModel = model;
 }
 MeshObject::~MeshObject() {
-	if (this->drawModel) {
+	if (this->drawModel != nullptr) {
 		delete this->drawModel;
+		this->drawModel = nullptr;
 	}
 }
-void MeshObject::SetTexture(const std::string& textureName, int arrayIndex, int materialIndex) {
-	this->drawModel->SetTexture(textureName, arrayIndex, materialIndex);
+
+void MeshObject::SetBoneAnimation(const std::string& animationName, bool playOnce, bool isLoop, bool isInterporation, int interpolationFrames) {
+	this->drawModel->SetAnimation(animationName, playOnce, isLoop, isInterporation, interpolationFrames);
+}
+void MeshObject::SetSpeed(float speed) {
+	this->drawModel->SetSpeed(speed);
 }
 
 void MeshObject::UpdateAnimation() {
@@ -35,9 +43,9 @@ void MeshObject::SetMatrix(GameParameters* param, Vector3f& position, Vector3f& 
 	//âÒì]èáÇÕYXZ
 	Quaternionf rot;
 	rot = AngleAxisf(0, Vector3f::Zero());
-	rot = AngleAxisf(rotation.y(), Vector3f::UnitY()) * rot;
-	rot = AngleAxisf(rotation.x(), Vector3f::UnitX()) * rot;
-	rot = AngleAxisf(rotation.z(), Vector3f::UnitZ()) * rot;
+	rot = rot * AngleAxisf(rotation.y(), Vector3f::UnitY());
+	rot = rot * AngleAxisf(rotation.x(), Vector3f::UnitX());
+	rot = rot * AngleAxisf(rotation.z(), Vector3f::UnitZ());
 	//ÉXÉPÅ[Éã
 	DiagonalMatrix<float, 3> scale = DiagonalMatrix<float, 3>(Vector3f(-scaling.x(), scaling.y(), scaling.z()));
 

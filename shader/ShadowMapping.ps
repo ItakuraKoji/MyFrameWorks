@@ -9,6 +9,7 @@ out vec4 resultColor;
 
 //uniform
 uniform sampler2D depthMap;
+uniform float addVisible;
 
 
 //FragmentShader
@@ -25,21 +26,22 @@ void main(void)
 	float texDepth4 = texture(depthMap, suv.xy + vec2(0.0, -samp) / fix).x;
 
 	float depth = outLightDepth.z / outLightDepth.w;
-	float visible = 1.0;
+	float visible = 1.0 + addVisible;
 
 	float bias = 0.002;
 	if(texDepth1 < depth - bias){
-		visible -= 0.2;
+		visible -= 0.1;
 	}
 	if(texDepth2 < depth - bias){
-		visible -= 0.2;
+		visible -= 0.1;
 	}
 	if(texDepth3 < depth - bias){
-		visible -= 0.2;
+		visible -= 0.1;
 	}
 	if(texDepth4 < depth - bias){
-		visible -= 0.2;
+		visible -= 0.1;
 	}
+	visible = clamp(visible, 0.0, 1.0);
 
 	resultColor = vec4(visible, visible, visible, 1.0);
 }

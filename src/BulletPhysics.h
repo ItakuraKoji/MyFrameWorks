@@ -1,60 +1,79 @@
 #pragma once
-
 #include<bullet\btBulletDynamicsCommon.h>
+#include<bullet\BulletCollision\CollisionDispatch\btInternalEdgeUtility.h>
+#include<bullet\BulletCollision\CollisionDispatch\btGhostObject.h>
 #include"ShaderClass.h"
+#include"CameraClass.h"
 #include"bulletDebugDraw.h"
 
 #include<iostream>
 #include<vector>
 
+
+
+//衝突時に返すタグ情報
+struct CollisionTag {
+	std::string tagName;
+	int tagIndex;
+	void* userData;
+};
+struct CollisionData {
+	CollisionData(btCollisionObject* obj, CollisionTag tag) : collision(obj), tag(tag) {}
+
+	btCollisionObject* const collision;
+	CollisionTag tag;
+};
+
 //bulletのワールドを管理するクラス
 class BulletPhysics {
+public:
+
 public:
 	BulletPhysics();
 	~BulletPhysics();
 	bool Initialize();
 	void Finalize();
 	void Run();
-	void DebugDraw(ShaderClass* shader, Matrix4f& world, Matrix4f& view, Matrix4f& projection);
+	void DebugDraw(ShaderClass* shader, CameraClass* camera, Matrix4f& trans);
 
 
-	btCollisionShape* CreateTriangleShape(btVector3& point1, btVector3& point2, btVector3& point3);
+	btCollisionShape* CreateTriangleHullShape(btVector3& point1, btVector3& point2, btVector3& point3);
+	btTriangleMesh* CreateTriangleMesh(btVector3* vectice, int numFace);
+	btCollisionShape* CreateTriangleMeshShape(btTriangleMesh* mesh);
 	btCollisionShape* CreateSphereShape(float radius);
 	btCollisionShape* CreateCapsuleShape(float radius, float height);
 	btCollisionShape* CreateBoxShape(float halfWidth, float halfHeight, float halfDepth);
 
 
-	//CreateRigidBody()
 	//・剛体オブジェクトを作成し、ポインタを返す
 	//・形状、質量、位置、回転の順
 	//・衝突フィルタのクループとビットマスク
 	//・位置と回転は省略可(省略時すべて０)
-	btRigidBody* CreateRigidBody(btCollisionShape* shape, btScalar mass, int group, int mask, btVector3& pos = btVector3(0, 0, 0), btVector3& rot = btVector3(0, 0, 0));
+	CollisionData* CreateRigidBody(btCollisionShape* shape, btScalar mass, int mask, btVector3& pos = btVector3(0, 0, 0), btVector3& rot = btVector3(0, 0, 0));
+	//物理演算で衝突するコリジョンを生成、ghostをtrueにすると物理演算はこのオブジェクトには働かない
+	CollisionData* CreateCollisionObject(btCollisionShape* shape, bool ghost, int mask, btVector3& pos = btVector3(0, 0, 0), btVector3& rot = btVector3(0, 0, 0));
 
 	//明示的に世界に登録している剛体を世界から外してからポインタをdelete
-	//この関数を呼ばなくても、このクラスのデストラクタで全て開放している
-	void RemoveRigidBody(btRigidBody* rigidbody);
+	//このクラスのデストラクタにてこの関数によって全て開放している
+	void RemoveCollisionObject(btCollisionObject* rigidbody);
 
 	//明示的にリストに存在するbtCollisionShapeをリストから外してdelete
 	//この関数を呼ばなくても、このクラスのデストラクタで全て開放している
 	void RemoveCollisionShape(btCollisionShape* shape);
 
-	//MoveCharacterObject()
-	//・操作性を意識したコリジョンの移動、壁判定も行う（主にプレイヤー用）
+	//・操作性を意識したコリジョンの移動、壁判定も行う(重いが正確)
 	//引数
 	//・移動するコリジョンオブジェクト
 	//・移動ベクトル
-	void MoveCharacterObject(btCollisionObject* obj, btVector3& hMove, btVector3& vMove);
+	void MoveCharacter(btCollisionObject* obj, btVector3& hMove, btVector3& vMove);
 
-	//DiscreteMoveObject()
-	//・離散的なコリジョンの移動、判定がプレイヤー用よりも大雑把（主にNPC用）
+	//・離散的なコリジョンの移動、判定が MoveCharacter よりも大雑把(ただし軽い)
 	//引数
 	//・移動するコリジョンオブジェクト
 	//・移動ベクトル
-	void DiscreteMoveObject(btCollisionObject* obj, btVector3& hMove, btVector3& vMove);
+	void MoveCharacterDiscrete(btCollisionObject* obj, btVector3& hMove, btVector3& vMove);
 
 
-	//FindConfrictionObjects()
 	//・現在の物理世界での特定のオブジェクトに対する衝突のチェック
 	//戻り値
 	//・衝突の有無
@@ -62,12 +81,18 @@ public:
 	//・結果として返ってくるオブジェクトのvector
 	//・衝突をチェックしたいオブジェクト
 	//・衝突時に使用するビットマスク（BulletBitMask）
-	bool FindConfrictionObjects(std::vector<btCollisionObject*>& result, btCollisionObject* myself);
+	std::vector<CollisionTag>& FindConfrictionObjects(btCollisionObject* myself);
 
 private:
-	btVector3 MoveConvexObject(btCollisionObject* obj, btVector3& moveVector, float limitAngle);
-	btVector3 MoveSimulation(btCollisionObject* obj, btVector3& moveVector);
+	//コリジョンを移動
+	void MoveCollisionObject(btCollisionObject* obj, btVector3& moveVector);
+	//指定方向に移動（壁ずり付き）
+	btVector3 MoveSmooth(btCollisionObject* obj, btVector3& moveVector, float limitAngle);
+	//移動部分をまとめ
+	btVector3 MoveBySweep(btCollisionObject* obj, btVector3& moveVector, float allowDistance = 0.1f);
 private:
+	std::vector<CollisionTag> confrictResult;
+
 	btDiscreteDynamicsWorld*                bulletWorld;
 	btDefaultCollisionConfiguration*        config;
 	btCollisionDispatcher*                  dispatcher;
@@ -78,7 +103,7 @@ private:
 };
 
 
-//sweepTestのコールバックを定義
+////自身と衝突しないsweepTestのコールバック
 struct SweepTestCallBack : public btCollisionWorld::ClosestConvexResultCallback {
 public:
 	SweepTestCallBack(btCollisionObject *myself);
@@ -91,7 +116,7 @@ public:
 
 };
 
-//contactTestのコールバック定義
+//めり込み最大の法線ベクトルを見つけるコールバック
 struct FixContactCallBack : public btCollisionWorld::ContactResultCallback {
 public:
 	FixContactCallBack(btCollisionObject* obj);
@@ -103,9 +128,23 @@ public:
 public:
 	//押し出すオブジェクト
 	btCollisionObject* obj;
-	//無限ループ防止
+	//距離の最大値とその方向
+	float maxDistance;
+	btVector3 fixVec;
+
 	int count;
-	//結果
+	bool isLoop;
+};
+
+//すべての衝突を記録する
+struct CollectCollisionCallBack : public btCollisionWorld::ContactResultCallback {
+public:
+	CollectCollisionCallBack(std::vector<CollisionTag>& tagList);
+	virtual btScalar addSingleResult(btManifoldPoint& cp, const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0, const btCollisionObjectWrapper* colObj1Wrap, int partId1, int index1);
+
+public:
+	btCollisionObject* obj;
+	std::vector<CollisionTag>& result;
 	bool isHit;
 };
 

@@ -1,7 +1,9 @@
 #include"WavData.h"
 
 WavData::WavData(const char* filePass) {
-	LoadFile(filePass);
+	if (!LoadFile(filePass)) {
+		throw("wavData Initialize Failed : " + std::string(filePass));
+	}
 }
 
 WavData::~WavData() {
@@ -10,8 +12,9 @@ WavData::~WavData() {
 
 void WavData::Seek(int offset) {
 	//ファイルの先頭からPCMまでの位置まで移動させたあとに (offset * blockSize) バイト分移動
+	PcmSeek(offset);
 	this->pcmOffset = offset;
-	PcmSeek(this->pcmOffset);
+
 	//終端を超えたら終端位置にシーク
 	if (this->loopLength < this->pcmOffset) {
 		this->pcmOffset = this->loopLength;
@@ -25,20 +28,20 @@ int WavData::Read(char* buffer, int maxSize) {
 	if (maxSize % this->blockSize != 0) {
 		return 0;
 	}
+	int readSize = maxSize;
+	//終端を超えないようにサイズ調整
+	if (this->loopStart + this->loopLength < this->pcmOffset + readSize / this->blockSize) {
+		readSize = (this->loopLength - this->pcmOffset) * this->blockSize;
+	}
 
-	int prevOffset = this->pcmOffset;
-	this->waveFile.read(buffer, maxSize);
-	this->pcmOffset += maxSize / this->blockSize;
-
-	if (this->waveFile.eof()) {
+	if (readSize == 0) {
 		return 0;
 	}
 
-	//終端を超えたら終端位置にシーク
-	if (this->loopLength < this->pcmOffset) {
-		this->pcmOffset = this->loopLength;
-		PcmSeek(this->loopLength);
-	}
+	int prevOffset = this->pcmOffset;
+	this->waveFile.read(buffer, readSize);
+	this->pcmOffset += readSize / this->blockSize;
+
 	//実際に読み込んだサイズを求めて返す
 	return (this->pcmOffset - prevOffset) * this->blockSize;
 }

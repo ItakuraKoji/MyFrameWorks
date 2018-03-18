@@ -5,7 +5,9 @@
 ////
 
 OggData::OggData(const char* filePass) {
-	LoadFile(filePass);
+	if (!LoadFile(filePass)) {
+		throw("Audio Load Error");
+	}
 }
 
 OggData::~OggData() {
@@ -27,6 +29,7 @@ bool OggData::LoadFile(const char* filePass) {
 
 
 	if (error != 0) {
+		//ÉGÉâÅ[è⁄ç◊ÇÕñ¢é¿ëï
 		switch (error) {
 		case OV_EREAD:       break;
 		case OV_ENOTVORBIS:  break;

@@ -1,6 +1,7 @@
 #pragma once
-#pragma comment(lib, "winmm.lib")
-#include<windows.h>
+
+#include<Windows.h>
+#include<GLFW\glfw3.h>
 #include<math.h>
 #include<iostream>
 #include<Eigen\Core>
@@ -13,7 +14,7 @@ using namespace Eigen;
 #define BUTTON_ANALOG_NEUTRAL 32768.f//家のXBoxコントローラー
 
 //接続したゲームパッドのボタンと軸
-enum BUTTON_BITS{
+enum BUTTON_BITS {
 	PAD_BUTTON_0 = 1,
 	PAD_BUTTON_1 = 2,
 	PAD_BUTTON_2 = 4,
@@ -40,7 +41,7 @@ enum BUTTON_BITS{
 //十字キー
 //6軸のアナログ情報（0～1のfloat）
 //上記のアナログ情報二つを、横方向と縦方向として持つスティック２本（右と左を想定）
-enum ButtonID{
+enum ButtonID {
 	VPAD_BUTTON_A,
 	VPAD_BUTTON_B,
 	VPAD_BUTTON_X,
@@ -103,17 +104,17 @@ public:
 		return sqrtf(powf(x->pos, 2) + powf(y->pos, 2));
 	}
 private:
-	JoyStickAxis* x;
+	JoyStickAxis * x;
 	JoyStickAxis* y;
 };
 
 
 
-class InputClass {
+class InputGLFW {
 public:
-	InputClass(UINT joyID);
-	~InputClass();
-	bool Initialize(UINT joyID);
+	InputGLFW(unsigned int joyID, GLFWwindow* handle);
+	~InputGLFW();
+	bool Initialize(unsigned int joyID, GLFWwindow* handle);
 	void Run();
 	//押された瞬間
 	bool isPressButton(ButtonID buttonID);
@@ -135,13 +136,13 @@ private:
 
 
 private:
+	GLFWwindow* window;
 	//コントローラーIDとJOYINFOEX構造体
-	UINT joyID;
-	JOYINFOEX joyInfo;
+	unsigned int joyID;
 
 	//仮想コントローラーのボタン対応と入力情報の配列
 	JoyButtonState vpadState[10] = {};
-	
+
 
 	//スティックの状態
 	JoyStickState vpadStickState[2] = {};

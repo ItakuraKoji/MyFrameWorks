@@ -1,7 +1,7 @@
 #pragma once
 
 #include"AudioData.h"
-#include<vorbis\vorbisfile.h>
+#include<libOggVorbis\vorbis\vorbisfile.h>
 #include<string>
 
 //Ogg‚Ì“Ç‚İ‚İ‚Æƒf[ƒ^•Û‚ğ’S“–‚·‚é

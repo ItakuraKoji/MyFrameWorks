@@ -11,12 +11,15 @@ layout(location = 4)in vec4 inputIndex;
 out vec2 outTexCoord;
 out vec3 outNormal;
 out vec4 outPosition;
+out vec3 outEyeVector;
 
 //uniform
 uniform mat4 matrixWVP;
 uniform mat4 worldMatrix;
 uniform sampler2D boneTex;
 uniform int numBone;
+uniform vec3 cameraPos;
+
 
 //skined
 vec4 finalPos;
@@ -32,24 +35,23 @@ mat4 GetBoneData(int boneIndex)
 	vec4 m;
 	vec2 uv;
 
-	uv.y = 0.5f;
+	uv.y = 0.5;
 
-	uv.x = (boneIndex * 4.0f + 0.5f) / (numBone * 4.0f);
+	uv.x = (boneIndex * 4.0 + 0.5) / (numBone * 4.0);
 	m = texture2D(boneTex, uv);
 	vec4 m1 = m;
 
-	uv.x = (boneIndex * 4.0f + 1.5f) / (numBone * 4.0f);
+	uv.x = (boneIndex * 4.0 + 1.5) / (numBone * 4.0);
 	m = texture2D(boneTex, uv);
 	vec4 m2 = m;
 	
-	uv.x = (boneIndex * 4.0f + 2.5f) / (numBone * 4.0f);
+	uv.x = (boneIndex * 4.0 + 2.5) / (numBone * 4.0);
 	m = texture2D(boneTex, uv);
 	vec4 m3 = m;
 	
-	uv.x = (boneIndex * 4.0f + 3.5f) / (numBone * 4.0f);
+	uv.x = (boneIndex * 4.0 + 3.5) / (numBone * 4.0);
 	m = texture2D(boneTex, uv);
 	vec4 m4 = m;
-
 
 	return mat4(m1, m2, m3, m4);
 }
@@ -60,21 +62,19 @@ void CalcBoneMat(vec3 vertexPos, vec3 vertexNormal)
 	vec4 pos = vec4(vertexPos, 1.0f);
 	mat4 mat = mat4(0);
 
-	mat += GetBoneData(int(inputIndex.w)) * inputWeight.w;
-	mat += GetBoneData(int(inputIndex.z)) * inputWeight.z;
-	mat += GetBoneData(int(inputIndex.y)) * inputWeight.y;
 	mat += GetBoneData(int(inputIndex.x)) * inputWeight.x;
+	mat += GetBoneData(int(inputIndex.y)) * inputWeight.y;
+	mat += GetBoneData(int(inputIndex.z)) * inputWeight.z;
+	mat += GetBoneData(int(inputIndex.w)) * inputWeight.w;
 
-	
 	finalPos = mat * pos;
 	finalNormal = mat3(mat) * vertexNormal;
-
 }
 
 subroutine(Skinning)
 void NotSkinning(vec3 vertexPos, vec3 vertexNormal)
 {
-	finalPos = vec4(vertexPos, 1.0f);
+	finalPos = vec4(vertexPos, 1.0);
 	finalNormal = vertexNormal;
 }
 
@@ -89,4 +89,5 @@ void main(void)
 	outPosition = gl_Position;
 	outNormal = finalNormal;
 	outTexCoord = inputTexCoord;
+	outEyeVector = cameraPos - outPosition.xyz;
 }

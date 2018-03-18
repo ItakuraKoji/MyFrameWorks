@@ -8,12 +8,19 @@
 class ImageLoader {
 private:
 	struct TGAHeader {
-		char data1[12];
-		short width;
-		short height;
-		char bpp;
-		char data2;
+		char idSize;//画像サイズ前のIDのサイズ
+		char data1[1];//パディング
+		char type;//画像タイプ
+		char data2[9];//パディング
+		short width;//画像幅
+		short height;//画像高さ
+		char bpp;//画像深度
+		char descriptor;//画像デスクリプタ
 	};
 public:
 	bool LoadTGAImage(const std::string& fileName, GLuint TextureID, unsigned int &returnWidth, unsigned int &returnHeight);
+
+private:
+	void SetTgaData(char* data, char* src, int width, int height, int pixelDepth, bool xReverse, bool yReverse);
+	void DecodeRLEImage(char* data, char* src, int width, int height, int pixelDepth);
 };

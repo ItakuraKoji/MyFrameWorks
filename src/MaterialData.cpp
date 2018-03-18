@@ -24,7 +24,17 @@ void MaterialData::SetTextureName(const std::string& textureName, int arrayIndex
 	if (this->materialArray[arrayIndex].size() < materialIndex) {
 		return;
 	}
-	this->materialArray[arrayIndex][materialIndex].textureName = textureName;
+	//this->materialArray[arrayIndex][materialIndex].textureName = textureName;
+}
+
+void MaterialData::SetTexture(Texture* texture, int arrayIndex, int materialIndex) {
+	if (this->materialArray.size() < arrayIndex) {
+		return;
+	}
+	if (this->materialArray[arrayIndex].size() < materialIndex) {
+		return;
+	}
+	this->materialArray[arrayIndex][materialIndex].texture = texture;
 }
 
 Material& MaterialData::GetMaterial(int arrayIndex, int materialIndex) {

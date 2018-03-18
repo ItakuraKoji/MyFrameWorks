@@ -1,4 +1,5 @@
 #include"MyApplication.h"
+#include<Windows.h>
 
 Vector3f pos(0.0f, 10.6f, 0.0f);
 float rotation = 0.0f;
@@ -14,68 +15,68 @@ MyApplication::~MyApplication() {
 	Finalize();
 }
 
-bool MyApplication::Initialize(int width, int height) {
+unsigned MemoryUsageMegaBytes(void)
+{
+	MEMORYSTATUSEX m = { sizeof m };
+	GlobalMemoryStatusEx(&m);
+	return (unsigned)(((512 * 1024) + (m.ullTotalVirtual - m.ullAvailVirtual)) / (1024 * 1024));
+}
+void testPrint() {
+	printf("現在のメモリ使用量：%u MB\n", MemoryUsageMegaBytes());
+	system("pause");
+}
+
+bool MyApplication::Initialize(GLFWwindow* window, int width, int height) {
 	try {
-		this->param = new GameParameters;
-		this->param->Initialize(width, height);
+		//Parameters;
+		this->param = new GameParameters(window, width, height);
 
 		ShaderList* shaderList = this->param->GetShaderList();
 		shaderList->LoadVertexShader("Shader/VertexShader.vs");
 		shaderList->LoadVertexShader("Shader/ShadowMapping.vs");
+		shaderList->LoadVertexShader("Shader/SpriteShader.vs");
+		shaderList->LoadVertexShader("Shader/SimpleShader.vs");
 		shaderList->LoadFragmentShader("Shader/TextureSampler.ps");
 		shaderList->LoadFragmentShader("Shader/DepthShader.ps");
 		shaderList->LoadFragmentShader("Shader/ShadowMapping.ps");
 		shaderList->LoadFragmentShader("Shader/MultipleTexture.ps");
-
-		if (!shaderList->CreateShaderProgram("standard", "Shader/VertexShader.vs", "Shader/TextureSampler.ps")) {
-			return false;
-		}
-		if (!shaderList->CreateShaderProgram("depth", "Shader/VertexShader.vs", "Shader/DepthShader.ps")) {
-			return false;
-		}
-		if (!shaderList->CreateShaderProgram("shadowMap", "Shader/ShadowMapping.vs", "Shader/ShadowMapping.ps")) {
-			return false;
-		}
-		if (!shaderList->CreateShaderProgram("shadow", "Shader/VertexShader.vs", "Shader/MultipleTexture.ps")) {
-			return false;
-		}
-
-		shaderList->LoadVertexShader("Shader/StaticShader.vs");
-		shaderList->LoadVertexShader("Shader/SimpleShader.vs");
-
-		shaderList->LoadFragmentShader("Shader/StaticShader.ps");
+		shaderList->LoadFragmentShader("Shader/SpriteShader.ps");
 		shaderList->LoadFragmentShader("Shader/SimpleShader.ps");
 
-		if (!shaderList->CreateShaderProgram("static", "Shader/StaticShader.vs", "Shader/StaticShader.ps")) {
-			return false;
-		}
-		if (!shaderList->CreateShaderProgram("simple", "Shader/SimpleShader.vs", "Shader/SimpleShader.ps")) {
-			return false;
-		}
+		shaderList->CreateShaderProgram("standard", "Shader/VertexShader.vs", "Shader/TextureSampler.ps");
+		shaderList->CreateShaderProgram("depth", "Shader/VertexShader.vs", "Shader/DepthShader.ps");
+		shaderList->CreateShaderProgram("shadowMap", "Shader/ShadowMapping.vs", "Shader/ShadowMapping.ps");
+		shaderList->CreateShaderProgram("shadow", "Shader/VertexShader.vs", "Shader/MultipleTexture.ps");
+		shaderList->CreateShaderProgram("sprite", "Shader/SpriteShader.vs", "Shader/SpriteShader.ps");
+		shaderList->CreateShaderProgram("simple", "Shader/SimpleShader.vs", "Shader/SimpleShader.ps");
 
 		CameraList* cameraList = this->param->GetCameraList();
-		cameraList->AddPerspectiveCamera("mainCamera", Vector3f(0, 0, -1), Vector3f(0, 0, 0), this->param->screenWidth, this->param->screenHeight, 0.1f, 1000.0f, DegToRad(45.0f));
+		cameraList->AddPerspectiveCamera("mainCamera", Vector3f(0, 0, -1), Vector3f(0, 0, 0), this->param->screenWidth, this->param->screenHeight, 0.1f, 2000.0f, M::DegToRad(45.0f));
 		cameraList->AddOrthoCamera      ("lightCamera", Vector3f(0, 50, -50), Vector3f(0, 0, 0), 230.0f, 230.0f, 10.0f, 500.0f);
 		cameraList->AddOrthoCamera      ("2DCamera", Vector3f(0, 0, -1), Vector3f(0, 0, 0), this->param->screenWidth, this->param->screenHeight, 10.0f, 500.0f);
 
-
-		this->buffer = new Framebuffer(this->param->GetTextureList(), "frameBuffer", this->param->screenWidth, this->param->screenHeight);
-		this->shadowMap = new Framebuffer(this->param->GetTextureList(), "shadowMap", this->param->screenWidth, this->param->screenHeight);
-		this->lightDepthMap = new Framebuffer(this->param->GetTextureList(), "lightDepth", 2048, 2048);
+		this->frameBuffer = new FrameBufferList(this->param->GetTextureList());
+		this->frameBuffer->CreateFrameBuffer("result", this->param->screenWidth, this->param->screenHeight);
+		this->frameBuffer->CreateFrameBuffer("geometry", this->param->screenWidth, this->param->screenHeight);
+		this->frameBuffer->CreateFrameBuffer("shadowMap", "geometry", this->param->screenWidth, this->param->screenHeight);
+		this->frameBuffer->CreateFrameBuffer("effect", "geometry", this->param->screenWidth, this->param->screenHeight);
+		this->frameBuffer->CreateFrameBuffer("lightDepth", 2048, 2048);
 
 		ModelDataFactory factory;
-		this->square    = new MeshObject(new MeshModel(factory.CreateSquareModel(this->param->screenWidth, this->param->screenHeight, "frameBuffer", this->param)));
-		this->mapModel  = new MeshObject(new MeshModel(factory.LoadFBXModel("Map.fbx", this->param)));
-		this->skinModel = new MeshObject(new MeshModel(factory.LoadFBXModel("KaminariChan.fbx", this->param)));
+		this->square    = new MeshObject(new MeshModel(factory.CreateSquareModel(this->param->screenWidth, this->param->screenHeight, this->param->GetTextureList()->GetTexture("frameBuffer"))));
+		this->skinModel = new MeshObject(new MeshModel(factory.LoadFBXModel("kaminariNewWear.fbx", this->param->GetTextureList())));
 
-		this->player = new Player();
+		//this->skinModel = new MeshObject(new MeshModel(factory.LoadFBXModel("kaminariChan.fbx", this->param)));
+		this->mapModel  = new MeshObject(new MeshModel(factory.LoadFBXModel("TestStage.fbx", this->param->GetTextureList())));
+
+		this->player = new Player;
 		this->player->SetDrawModel(this->skinModel);
-		this->player->SetPosition(0.0f, 10.6f, 0.0f);
 		this->player->Initialize(this->param);
 		this->player->SetCameraMan(this->param->GetCameraList()->GetCamera("mainCamera"));
+		this->player->SetPosition(0.0f, 20.6f, 0.0f);
 
 		this->map = new MapPolygon;
-		this->map->LoadModel("Map.fbx");
+		this->map->LoadModel("TestStage.fbx");
 		this->map->setCollisionWorld(this->param->GetPhysics());
 
 		this->mapObj = new StaticObject;
@@ -83,122 +84,108 @@ bool MyApplication::Initialize(int width, int height) {
 		this->mapObj->Initialize(this->param);
 		this->mapObj->SetMapCollision(this->map);
 
-		//this->model = new Emitter;
-		//if (!this->model->Initialize(this->param)) {
-		//	return false;
-		//}
-
-		//
-
-
 		LightList* lightList = this->param->GetLightList();
 		lightList->AddAmbient("ambient", 0.4f, Vector4f(0.5f, 1.0f, 1.0f, 1.0f));
-		lightList->AddDirectional("directional", 1.0f, Vector4f(0.7f, 1.0f, 1.0f, 1.0f), Vector3f(0.0f, -1.0f, 1.0f));
+		lightList->AddDirectional("directional", 1.0f, Vector4f(0.5f, 1.0f, 1.0f, 1.0f), Vector3f(0.0f, -1.0f, 1.0f));
 
-		this->param->GetAudioList()->CreateSource("bgm", "PerituneMaterial_Prairie_loop.ogg");
-		this->param->GetAudioList()->GetSource("bgm")->SetVolume(0.2f);
-		this->param->GetAudioList()->GetSource("bgm")->Play(true);
+		this->param->GetAudioList()->CreateSource("se", "hono.wav", SoundSource::LoadMode::AllRead);
+		this->param->GetAudioList()->CreateSource("bgm", "Banbado.ogg", SoundSource::LoadMode::Streaming);
+		this->param->GetAudioList()->GetSource("bgm")->SetVolume(0.1f);
+		//this->param->GetAudioList()->GetSource("bgm")->Play(true);
 
 		this->param->GetEffects()->SetMatrix(this->param->GetCameraList()->GetCamera("mainCamera"));
-		this->param->GetEffects()->AddEffectSource("test", "test2.efk");
+		this->param->GetEffects()->AddEffectSource("test", "test3.efk");
+
+		this->testSprite = new SpriteObject(nullptr);
+		
+		this->fontRenderer = new FontRenderer("onryou.TTF");
 	}
-	catch (char* eText) {
+	catch (std::string& errorMessage) {
+		std::cout << errorMessage << std::endl;
+		system("pause");
 		return false;
 	}
 	return true;
 }
 
 void MyApplication::Finalize() {
-	if (this->param) {
-		this->param->Finalize();
-		delete this->param;
-		this->param = NULL;
-	}
-	//if (this->model) {
-	//	delete this->model;
-	//	this->model = NULL;
-	//}
-	if (this->player) {
+
+	if (this->player != nullptr) {
 		this->player->Finalize();
 		delete this->player;
-		this->player = NULL;
+		this->player = nullptr;
 	}
-	if (this->mapObj) {
+	if (this->mapObj != nullptr) {
 		this->mapObj->Finalize();
 		delete this->mapObj;
+		this->mapObj = nullptr;
+	}
+	if (this->square != nullptr) {
+		delete this->square;
+		this->square = nullptr;
+	}
+	if (this->testSprite != nullptr) {
+		delete this->testSprite;
+		this->testSprite = nullptr;
 	}
 
-	if (this->buffer) {
-		delete this->buffer;
+	if (this->frameBuffer != nullptr) {
+		delete this->frameBuffer;
+		this->frameBuffer = nullptr;
 	}
-	if (this->shadowMap) {
-		delete this->shadowMap;
+
+	if (this->fontRenderer != nullptr) {
+		delete this->fontRenderer;
+		this->fontRenderer = nullptr;
 	}
-	if (this->lightDepthMap) {
-		delete this->lightDepthMap;
-	}
-	if (this->square) {
-		delete this->square;
+
+	if (this->param != nullptr) {
+		this->param->Finalize();
+		delete this->param;
+		this->param = nullptr;
 	}
 }
 
-
-
 void MyApplication::Run() {
-
-
 	this->player->Run(this->param);
 	this->param->Run();
-
-	//this->model->Run();
 }
 
 void MyApplication::Draw() {
-	//MatrixPerspectiveLH(this->projectionMat, this->param.screenWidth, this->param.screenHeight, 10.0f, 100.0f, this->param.screenFov);
 	DrawPass0();
-	DrawPass1();
 }
 
 ////////
 //private
 ////
 
+
+
 //描画パス
 void MyApplication::DrawPass0() {
 	//深度マップ
-	this->lightDepthMap->Bind();
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	glViewport(0, 0, this->lightDepthMap->GetWidth(), this->lightDepthMap->GetHeight());
-
-	this->param->UseCamera("lightCamera");
-
+	this->frameBuffer->BeginDraw("lightDepth", 1.0f, 1.0f, 1.0f);
 
 	//深度描画
 	param->UseShader("depth");
+	this->param->UseCamera("lightCamera");
 
-	param->currentShader->SetVertexShaderSubroutine("CalcBoneMat");
-	param->currentShader->SetFragmentShaderSubroutine("CalcLight");
+	param->currentShader->SetFragmentShaderSubroutine("NoneDiffuse");
 	this->player->Draw(this->param);
 
-	param->currentShader->SetVertexShaderSubroutine("NotSkinning");
-	param->currentShader->SetFragmentShaderSubroutine("CalcLight");
+	param->currentShader->SetFragmentShaderSubroutine("NoneDiffuse");
 	this->mapObj->Draw(this->param);
-	this->lightDepthMap->UnBind();
-}
+	this->frameBuffer->EndDraw();
 
-void MyApplication::DrawPass1() {
 	//シャドウのみ描画
 	{
-		this->shadowMap->Bind();
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		glViewport(0, 0, this->shadowMap->GetWidth(), this->shadowMap->GetHeight());
+		this->frameBuffer->BeginDraw("shadowMap", 1.0f, 1.0f, 1.0f);
 
 		this->param->UseCamera("mainCamera");
 		this->param->currentCamera->Draw();
 
 		param->UseShader("shadowMap");
+		param->currentShader->SetFragmentShaderSubroutine("NoneDiffuse");
 		param->UseCamera("lightCamera");
 		Matrix4f matVP = param->currentCamera->GetProjectionMatrix() * param->currentCamera->GetViewMatrix();
 		param->currentShader->SetTexture("depthMap", 2, param->GetTextureList()->GetTexture("lightDepth")->GetTextureID());
@@ -207,87 +194,71 @@ void MyApplication::DrawPass1() {
 		param->UseCamera("mainCamera");
 
 		//プレイヤー
-		param->currentShader->SetVertexShaderSubroutine("CalcBoneMat");
-		param->currentShader->SetFragmentShaderSubroutine("CalcLight");
+		this->param->currentShader->SetValue("addVisible", 100.0f);
 		this->player->Draw(this->param);
 		//マップ
-		param->currentShader->SetVertexShaderSubroutine("NotSkinning");
-		param->currentShader->SetFragmentShaderSubroutine("CalcLight");
+		this->param->currentShader->SetValue("addVisible", 0.0f);
 		this->mapObj->Draw(this->param);
-		//エフェクト描画
-		this->param->GetEffects()->Draw();
-		this->buffer->UnBind();
-		this->shadowMap->UnBind();
+		this->frameBuffer->EndDraw();
 	}
+
 	//通常描画
 	{
-		this->buffer->Bind();
-		glClearColor(0.5f, 0.5f, 0.6f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		glViewport(0, 0, this->param->screenWidth, this->param->screenHeight);
+		this->frameBuffer->BeginDraw("geometry", 0.5f, 0.7f, 0.9f);
+
+		this->param->UseCamera("mainCamera");
+		this->param->currentCamera->Draw();
 
 		param->UseShader("standard");
+		param->currentShader->SetFragmentShaderSubroutine("CalcDiffuse");
+		param->currentShader->SetFragmentShaderSubroutine("CalcSpecular");
 		param->UseAmbient("ambient");
 		param->UseDirectional("directional");
 		param->UseCamera("mainCamera");
 
 		//プレイヤー
-		param->currentShader->SetVertexShaderSubroutine("CalcBoneMat");
-		param->currentShader->SetFragmentShaderSubroutine("CalcLight");
 		this->player->Draw(this->param);
 		//マップ
-		param->currentShader->SetVertexShaderSubroutine("NotSkinning");
-		param->currentShader->SetFragmentShaderSubroutine("CalcLight");
 		this->mapObj->Draw(this->param);
+
+		//デバッグ用コリジョン描画
+		Matrix4f world = Matrix4f::Identity();
+		//this->param->GetPhysics()->DebugDraw(this->param->GetShaderList()->GetShader("simple"), this->param->currentCamera, world);
+
+	}
+
+
+	//エフェクト（深度使いまわし）
+	{
+		this->frameBuffer->BeginDraw("effect", 0.0f, 0.0f, 0.0f, true);
+
+		param->UseShader("standard");
+		this->param->UseCamera("mainCamera");
+		this->param->currentCamera->Draw();
 
 		//エフェクト描画
 		this->param->GetEffects()->Draw();
-		this->buffer->UnBind();
+		this->frameBuffer->EndDraw();
 	}
 
 	//レンダリング結果のテクスチャ描画
-	this->param->UseCamera("2DCamera");
-
-	glClearColor(0.5f, 0.5f, 0.6f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	glViewport(0, 0, this->param->screenWidth, this->param->screenHeight);
+	this->frameBuffer->BeginDraw(this->param->screenWidth, this->param->screenHeight, 0.0f, 0.0f, 0.0f);
 	param->UseShader("shadow");
-	param->currentShader->SetVertexShaderSubroutine("NotSkinning");
-	param->currentShader->SetFragmentShaderSubroutine("None");
-	param->currentShader->SetTexture("sampler2", 2, param->GetTextureList()->GetTexture("shadowMap")->GetTextureID());
-	this->square->SetTexture("frameBuffer", 0, 0);
-	this->square->Draw(this->param, Vector3f(0, 0, 10), Vector3f(0, 0, 0), Vector3f(-1, 1, 1));
+	this->param->UseCamera("2DCamera");
+	param->currentShader->SetFragmentShaderSubroutine("NoneDiffuse");
+	param->currentShader->SetTexture("geometry", 1, param->GetTextureList()->GetTexture("geometry")->GetTextureID());
+	param->currentShader->SetTexture("shadow", 2, param->GetTextureList()->GetTexture("shadowMap")->GetTextureID());
+	param->currentShader->SetTexture("effect", 3, param->GetTextureList()->GetTexture("effect")->GetTextureID());
+	//this->square->Draw(this->param, Vector3f(0, 0, 10), Vector3f(0, 0, 0), Vector3f(-1, 1, 1));
 
-	//Matrix3f cameraInv = this->camera->GetCameraMatrix().block(0, 0, 3, 3);
-	//world = Matrix4f::Identity();
-	//trans = Translation<float, 3>(0, 0.0f, 0.0f);
-	//scale = DiagonalMatrix<float, 3>(1.0f, 1.0f, 1.0f);
-	//rot = AngleAxisf(DegToRad(0.0f), Vector3f::UnitX());
-	//mat = trans * cameraInv * rot * scale;
-	//shader = this->param.shaderList->UseShader("static");
-	//this->model->SetMatrix(mat.matrix(), view, projectionMat);
+	testSprite->Draw(this->param, M::Box2D(0, 0, this->param->screenWidth, this->param->screenHeight), M::Box2D(0, 0, this->param->screenWidth, this->param->screenHeight));
 
-	//glDepthMask(GL_FALSE);
-	//glEnable(GL_BLEND);
-	//glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
-	//this->model->Draw(this->param);
-	//glDisable(GL_BLEND);
-	//glDepthMask(GL_TRUE);
+	param->UseShader("sprite");
+	this->fontRenderer->DrawString(this->param, "Location.「霧の森」", 32, 300, 200);
+}
 
-	//デバッグ用コリジョン描画
-	Matrix4f projection = this->param->currentCamera->GetProjectionMatrix();
-	Matrix4f view = this->param->currentCamera->GetViewMatrix();
-	Matrix4f world;
-	Translation<float, 3> trans;
-	DiagonalMatrix<float, 3> scale;
-	Quaternionf rot;
-	Affine3f mat;
-	world = Matrix4f::Identity();
-	trans = Translation<float, 3>(0, 0, 0);
-	scale = DiagonalMatrix<float, 3>(1.0f, 1.0f, 1.0f);
-	rot = AngleAxisf(DegToRad(0.0f), Vector3f::UnitX());
-	mat = trans * rot * scale;
-	//this->param->GetPhysics()->DebugDraw(this->param->GetShaderList()->GetShader("simple"), mat.matrix(), view, projection);
+void MyApplication::DrawPass1() {
+
 }
 
 void MyApplication::DrawPass2() {

@@ -55,4 +55,6 @@ private:
 	int m_numFace;
 	FbxManager *mfbx_manager;
 	FbxScene *mfbx_scene;
+
+	btTriangleMesh* collisionMesh;
 };

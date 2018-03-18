@@ -8,14 +8,16 @@ in vec3 outNormal;
 out vec4 resultColor;
 
 //uniform
-uniform sampler2D sampler;
-uniform sampler2D sampler2;
+uniform sampler2D geometry;
+uniform sampler2D shadow;
+uniform sampler2D effect;
 
 
 //FragmentShader
 void main(void)
 {
-	vec4 c1 = texture2D(sampler, outTexCoord);
-	vec4 c2 = texture2D(sampler2, outTexCoord);
-	resultColor = c1 * c2;
+	vec4 c1 = texture2D(geometry, outTexCoord);
+	vec4 c2 = texture2D(shadow, outTexCoord);
+	vec4 c3 = texture2D(effect, outTexCoord);
+	resultColor = c1 * c2 + c3;
 }

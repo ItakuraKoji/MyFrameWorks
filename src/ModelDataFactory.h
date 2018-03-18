@@ -1,6 +1,6 @@
 #pragma once
 #include<string>
-#include"GameParameters.h"
+#include"TextureList.h"
 #include"ModelData.h"
 #include"FbxModelLoader.h"
 
@@ -9,6 +9,6 @@
 //・基本図形(板ポリゴンなど)
 class ModelDataFactory {
 public:
-	ModelDatas* LoadFBXModel(const std::string& fileName, GameParameters* param);
-	ModelDatas* CreateSquareModel(float width, float height, const std::string& textureName, GameParameters* param);
+	ModelDatas* LoadFBXModel(const std::string& fileName, TextureList* textureList);
+	ModelDatas* CreateSquareModel(float width, float height, Texture* texture, bool isCenter = true);
 };

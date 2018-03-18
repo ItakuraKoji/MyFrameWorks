@@ -6,7 +6,7 @@
 AnimationData::AnimationData() {
 	this->speed = 1;
 	this->currentAnimID = 0;
-	this->currentAnimTime = 0;
+	this->currentAnimTime = 0.0f;
 	this->isLoop = false;
 	this->isInterpolation = false;
 }
@@ -20,24 +20,25 @@ bool AnimationData::Initialize() {
 }
 
 void AnimationData::UpdateAnimation() {
-	this->currentAnimTime += this->speed * 2;
+	this->currentAnimTime += this->speed * 2.0f;
 	if (this->currentAnimTime > this->maxAnimTime) {
 		if (this->isLoop) {
-			this->currentAnimTime = 0;
+			this->currentAnimTime = 0.0f;
 		}
 	}
+	this->isInterpolation = false;
 }
 
 void AnimationData::Add(AnimType &animData) {
 	this->animList[animData.animName] = animData;
 }
 
-void AnimationData::SetSpeed(int speed) {
+void AnimationData::SetSpeed(float speed) {
 	this->speed = speed;
 }
 
 //アニメーションをセット
-void AnimationData::SetAnimation(const std::string& animName, FbxScene *fbxScene, bool playOnce, bool loop) {
+void AnimationData::SetAnimation(const std::string& animName, FbxScene *fbxScene, bool playOnce, bool isInterpolation, bool loop) {
 	//キーが存在しないなら帰る
 	if (this->animList.find(animName) == this->animList.end()) {
 		return;
@@ -55,9 +56,13 @@ void AnimationData::SetAnimation(const std::string& animName, FbxScene *fbxScene
 	fbxScene->SetCurrentAnimationStack(pStack);
 
 	this->isLoop = loop;
-	this->isInterpolation = true;
+	this->isInterpolation = isInterpolation;
 }
 
-int AnimationData::GetCurrentAnimTime() {
+float AnimationData::GetCurrentAnimTime() {
 	return this->currentAnimTime;
+}
+
+bool AnimationData::IsStartInterpolation() {
+	return this->isInterpolation;
 }

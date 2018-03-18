@@ -1,16 +1,22 @@
 #include"SoundClass.h"
 
 SoundClass::SoundClass() {
+	this->device = nullptr;
+	this->context = nullptr;
+
 	this->device = alcOpenDevice(nullptr);
-	if (!this->device) {
-		return;
+	if (this->device == nullptr) {
+		throw("OpenAL Initialize Failed : device");
 	}
 	this->context = alcCreateContext(this->device, nullptr);
-	if (!this->context) {
-		return;
+	if (this->context == nullptr) {
+		alcCloseDevice(this->device); 
+		throw("OpenAL Initialize Failed : context");
 	}
 	if (alcMakeContextCurrent(this->context) == ALC_FALSE) {
-		return;
+		alcDestroyContext(this->context);
+		alcCloseDevice(this->device); 
+		throw("OpenAL Initialize Failed : alcMakeContextCullent() Failed");
 	}
 }
 SoundClass::~SoundClass() {
@@ -22,24 +28,13 @@ SoundClass::~SoundClass() {
 	alcCloseDevice(this->device);
 }
 
-void SoundClass::Run() {
-	//ALenum a = alcGetError(this->device);
-	//if (a != ALC_NO_ERROR) {
-	//	std::cout << "error" << std::endl;
-	//}
-	//ALenum b = alGetError();
-	//if (b != AL_NO_ERROR) {
-	//	std::cout << "error" << std::endl;
-	//}
-}
 
-
-bool SoundClass::CreateSource(const char* sourceName, const char* filePass) {
+bool SoundClass::CreateSource(const char* sourceName, const char* filePass, SoundSource::LoadMode mode) {
 	//ソース名の重複は許さない
 	if (this->source.find(sourceName) != this->source.end()) {
 		return false;
 	}
-	SoundSource* audioSource = new SoundSource(sourceName, filePass);
+	SoundSource* audioSource = new SoundSource(sourceName, filePass, mode);
 	if (!audioSource) {
 		return false;
 	}

@@ -1,20 +1,25 @@
 #include"SystemClass.h"
 
+
+void GLFWKeyEvent(GLFWwindow* window, int key, int scanCode, int action, int mods) {
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	}
+}
+
 ////////
 //public
 ////
 SystemClass::SystemClass() {
-	this->screenWidth = 600;
-	this->screenHeight = 600;
-	this->screenNeer = 0.1f;
-	this->screenFar = 1000.0f;
+	this->screenWidth = 1920 / 2;
+	this->screenHeight = 1080 / 2;
 	this->isFullScreen = false;
-	this->windowHandle = NULL;
+	this->windowHandle = nullptr;
 }
 SystemClass::~SystemClass() {
-	if (this->application) {
+	if (this->application != nullptr) {
 		delete this->application;
-		this->application = NULL;
+		this->application = nullptr;
 	}
 
 
@@ -43,6 +48,11 @@ void SystemClass::Run() {
 	while (!glfwWindowShouldClose(this->windowHandle))
 	{
 		glfwPollEvents();
+		//ウィンドウフォーカス時のみゲームを処理する
+		if (!glfwGetWindowAttrib(this->windowHandle, GLFW_FOCUSED)) {
+			continue;
+		}
+
 		application->Run();
 		application->Draw();
 		glfwSwapBuffers(this->windowHandle);
@@ -70,7 +80,13 @@ bool SystemClass::CreateAppricationWindow(const char* windowName, int width, int
 		return false;
 	}
 
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+	GLFWmonitor *monitor = nullptr;
+	//フルスクリーンの際はプライマリーモニターに出力する
+	if (fullScreen) {
+		monitor = glfwGetPrimaryMonitor();
+	}
+
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 	glfwWindowHint(GLFW_RED_BITS, 8);
@@ -79,16 +95,18 @@ bool SystemClass::CreateAppricationWindow(const char* windowName, int width, int
 	glfwWindowHint(GLFW_ALPHA_BITS, 8);
 	glfwWindowHint(GLFW_DEPTH_BITS, 24);
 	glfwWindowHint(GLFW_STENCIL_BITS, 8);
-	//フルスクリーンの際はプライマリーモニターに出力する
-	GLFWmonitor *monitor = NULL;
-	if (fullScreen) {
-		monitor = glfwGetPrimaryMonitor();
-	}
 
-	this->windowHandle = glfwCreateWindow(width, height, windowName, monitor, NULL);
-	if (!this->windowHandle) {
+
+	this->windowHandle = glfwCreateWindow(width, height, windowName, monitor, nullptr);
+	if (this->windowHandle == nullptr) {
 		return false;
 	}
+	glfwGetFramebufferSize(this->windowHandle, &this->screenWidth, &this->screenHeight);
+	glfwSetInputMode(this->windowHandle, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+	glfwSetKeyCallback(this->windowHandle, GLFWKeyEvent);
+
+	//ウィンドウサイズ変更を禁止
+	glfwSetWindowSizeLimits(this->windowHandle, width, height, width, height);
 
 	glfwMakeContextCurrent(this->windowHandle);
 	glfwSwapInterval(1);
@@ -100,7 +118,7 @@ bool SystemClass::InitializeOpenGL() {
 	if (glewInit() != GLEW_OK) {
 		return false;
 	}
-
+	
 	//OpenGLの描画設定を初期化
 	glFrontFace(GL_CCW);
 	glEnable(GL_CULL_FACE);
@@ -115,12 +133,14 @@ bool SystemClass::InitializeOpenGL() {
 
 bool SystemClass::InitializeApplication() {
 	this->application = new MyApplication;
-	if (!this->application) {
+	if (this->application == nullptr) {
 		return false;
 	}
-	if (!this->application->Initialize(this->screenWidth, this->screenHeight)) {
+	if (!this->application->Initialize(this->windowHandle, this->screenWidth, this->screenHeight)) {
 		return false;
 	}
 	return true;
 }
+
+
 

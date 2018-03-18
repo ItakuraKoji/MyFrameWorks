@@ -7,7 +7,7 @@ ShaderClass::ShaderClass(GLuint vertexShader, GLuint fragmentShader) {
 	this->shaderProgram = 0;
 	if (!Initialize(vertexShader, fragmentShader)) {
 		Finalize();
-		throw "シェーダー読み込み失敗";
+		throw;
 	}
 }
 ShaderClass::~ShaderClass() {
@@ -32,9 +32,7 @@ bool ShaderClass::Initialize(GLuint vertexShader, GLuint fragmentShader) {
 	GLint status;
 	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &status);
 	if (status != GL_TRUE) {
-		std::cout << "Program Link Error" << std::endl;
 		ShowLinkErrors(shaderProgram);
-		system("pause");
 		return false;
 	}
 	glUseProgram(shaderProgram);
@@ -72,9 +70,9 @@ void ShaderClass::SetTexture(const std::string& uniformName, GLuint textureLayer
 }
 //ディレクショナルライト
 void ShaderClass::SetDirectionalLight(float power, const Vector4f& color, const Vector3f& direction) {
-	SetValue("lightPower", power);
-	SetValue("lightColor", color);
-	SetValue("lightDir", direction);
+	SetValue("directionalPower", power);
+	SetValue("directionalColor", color);
+	SetValue("directionalDir", direction);
 }
 //環境光
 void ShaderClass::SetAmbientLight(float power, const Vector4f& color) {
@@ -116,6 +114,13 @@ void ShaderClass::SetValue(const std::string& uniformName, const Vector3f& value
 	location = glGetUniformLocation(this->shaderProgram, uniformName.data());
 	if (location != -1) {
 		glUniform3fv(location, 1, value.data());
+	}
+}
+void ShaderClass::SetValue(const std::string& uniformName, const Vector2f& value) {
+	GLuint location;
+	location = glGetUniformLocation(this->shaderProgram, uniformName.data());
+	if (location != -1) {
+		glUniform2fv(location, 1, value.data());
 	}
 }
 
@@ -160,7 +165,7 @@ char* ShaderClass::LoadTxtResource(const std::string& fileName) {
 	fin.close();
 
 	returnSource = new char[fileSize + 1];
-	if (!returnSource) {
+	if (returnSource == nullptr) {
 		return 0;
 	}
 

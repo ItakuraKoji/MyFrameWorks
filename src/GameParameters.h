@@ -3,11 +3,12 @@
 #include"ShaderList.h"
 #include"LightList.h"
 #include"CameraList.h"
-#include"InputClass.h"
+#include"InputGLFW.h"
 #include"BulletPhysics.h"
 
 #include"SoundClass.h"
 #include"EffectClass.h"
+
 
 //描画世界パラメーター
 //・いい加減、すべてのオブジェクトに共通なデータを個別に渡すのがアホらしくなってきたのでまとめる
@@ -15,9 +16,9 @@
 //・ただし、これ、循環参照には気をつけてな
 class GameParameters {
 public:
-	GameParameters();
+	GameParameters(GLFWwindow* window, int screenWidth, int screenHeight);
 	~GameParameters();
-	bool Initialize(int screenWidth, int screenHeight);
+	bool Initialize(GLFWwindow* window, int screenWidth, int screenHeight);
 	void Finalize();
 	void Run();
 
@@ -27,7 +28,7 @@ public:
 	void UseCamera(const std::string& name);
 
 
-	InputClass*    GetInput();
+	InputGLFW*    GetInput();
 	BulletPhysics* GetPhysics();
 	TextureList*   GetTextureList();
 	ShaderList*    GetShaderList();
@@ -37,7 +38,7 @@ public:
 	EffectClass*   GetEffects();
 
 private:
-	InputClass*    input;
+	InputGLFW *    input;
 	BulletPhysics* physicsSystem;
 	TextureList*   textureList;
 	ShaderList*    shaderList;
@@ -45,7 +46,6 @@ private:
 	CameraList*    cameraList;
 	SoundClass*    audioPlayer;
 	EffectClass*   effectSystem;
-
 public:
 	CameraClass*   currentCamera;
 	ShaderClass*   currentShader;

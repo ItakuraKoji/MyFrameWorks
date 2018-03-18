@@ -8,6 +8,9 @@ DirectionalLight::DirectionalLight() {
 
 void DirectionalLight::SetLight(ShaderClass* shader) {
 	shader->SetDirectionalLight(this->power, this->color, this->direction);
+	shader->SetValue("specularColor", Vector4f(1, 1, 1, 1));
+	shader->SetValue("specularPower", 1.0f);
+	shader->SetValue("specularLength", 20.0f);
 }
 
 void DirectionalLight::SetPower(float power) {

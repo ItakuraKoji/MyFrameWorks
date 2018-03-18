@@ -1,54 +1,63 @@
 #include"GameParameters.h"
 
-GameParameters::GameParameters() {
-
+GameParameters::GameParameters(GLFWwindow* window, int screenWidth, int screenHeight) {
+	if (!Initialize(window, screenWidth, screenHeight)) {
+		Finalize();
+		throw;
+	}
 }
 GameParameters::~GameParameters() {
-
+	Finalize();
 }
-bool GameParameters::Initialize(int screenWidth, int screenHeight) {
-	this->screenWidth   = screenWidth;
-	this->screenHeight  = screenHeight;
-	this->physicsSystem = new BulletPhysics;
-	this->input         = new InputClass(0);
-	this->textureList   = new TextureList;
-	this->shaderList    = new ShaderList;
-	this->cameraList    = new CameraList;
-	this->lightList     = new LightList;
-	this->audioPlayer   = new SoundClass;
-	this->effectSystem  = new EffectClass;
+bool GameParameters::Initialize(GLFWwindow* window, int screenWidth, int screenHeight) {
+	Finalize();
+	try {
+		this->screenWidth = screenWidth;
+		this->screenHeight = screenHeight;
+		this->physicsSystem = new BulletPhysics;
+		this->input = new InputGLFW(0, window);
+		this->textureList = new TextureList;
+		this->shaderList = new ShaderList;
+		this->cameraList = new CameraList;
+		this->lightList = new LightList;
+		this->audioPlayer = new SoundClass;
+		this->effectSystem = new EffectClass;
+	}
+	catch(...){
+		return false;
+	}
 	return true;
 }
 void GameParameters::Finalize() {
-	if (this->input) {
+	if (this->input != nullptr) {
 		delete this->input;
 		this->input = nullptr;
 	}
-	if (this->physicsSystem) {
+	if (this->physicsSystem != nullptr) {
 		delete this->physicsSystem;
 		this->physicsSystem = nullptr;
 	}
-	if (this->textureList) {
+	if (this->textureList != nullptr) {
 		delete this->textureList;
 		this->textureList = nullptr;
 	}
-	if (this->shaderList) {
+	if (this->shaderList != nullptr) {
 		delete this->shaderList;
 		this->shaderList = nullptr;
 	}
-	if (this->lightList) {
+	if (this->lightList != nullptr) {
 		delete this->lightList;
 		this->lightList = nullptr;
 	}
-	if (this->cameraList) {
+	if (this->cameraList != nullptr) {
 		delete this->cameraList;
 		this->cameraList = nullptr;
 	}
-	if (this->audioPlayer) {
+	if (this->audioPlayer != nullptr) {
 		delete this->audioPlayer;
 		this->audioPlayer = nullptr;
 	}
-	if (this->effectSystem) {
+	if (this->effectSystem != nullptr) {
 		delete this->effectSystem;
 		this->effectSystem = nullptr;
 	}
@@ -56,7 +65,6 @@ void GameParameters::Finalize() {
 void GameParameters::Run() {
 	this->input->Run();
 	this->physicsSystem->Run();
-	this->audioPlayer->Run();
 	this->effectSystem->Run();
 }
 
@@ -71,9 +79,12 @@ void GameParameters::UseShader(const std::string& name) {
 }
 void GameParameters::UseCamera(const std::string& name) {
 	this->currentCamera = this->cameraList->GetCamera(name);
+	if (this->currentShader) {
+		this->currentShader->SetValue("cameraPos", this->currentCamera->GetPosition());
+	}
 }
 
-InputClass* GameParameters::GetInput() {
+InputGLFW* GameParameters::GetInput() {
 	return this->input;
 }
 BulletPhysics* GameParameters::GetPhysics() {

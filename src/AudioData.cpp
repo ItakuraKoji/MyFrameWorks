@@ -27,7 +27,7 @@ int AudioData::GetBlockSize() {
 	return this->blockSize;
 }
 
-SoundFormat AudioData::GetFormat() {
+AudioData::SoundFormat AudioData::GetFormat() {
 	return this->format;
 }
 

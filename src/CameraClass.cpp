@@ -51,6 +51,22 @@ const Vector3f& CameraClass::GetPosition() {
 	return this->position;
 }
 
+int CameraClass::GetScreenWidth() {
+	return this->screenWidth;
+}
+int CameraClass::GetScreenHeight() {
+	return this->screenHeight;
+}
+float CameraClass::GetScreenNear() {
+	return this->screenNear;
+}
+float CameraClass::GetScreenFar() {
+	return screenFar;
+}
+float CameraClass::GetFieldOfView() {
+	return this->fieldOfView;
+}
+
 //注視点を与えてビュー行列を作成
 void CameraClass::Draw() {
 	Vector3f up;
@@ -58,7 +74,7 @@ void CameraClass::Draw() {
 	up.x() = 0.0f;
 	up.y() = 1.0f;
 	up.z() = 0.0f;
-	MatrixLookAt(this->viewMatrix, this->position, this->target, up);
+	M::MatrixLookAt(this->viewMatrix, this->position, this->target, up);
 
 	//逆行列（カメラ行列）も保持
 	this->cameraMatrix = this->viewMatrix;
@@ -72,9 +88,9 @@ void CameraClass::Draw() {
 
 	//プロジェクション行列を作成
 	if (this->projectionType == CameraType::Perspective) {
-		MatrixPerspectiveLH(this->projectionMatrix, this->screenWidth, this->screenHeight, this->screenNear, this->screenFar, this->fieldOfView);
+		M::MatrixPerspectiveLH(this->projectionMatrix, this->screenWidth, this->screenHeight, this->screenNear, this->screenFar, this->fieldOfView);
 	}
 	else {
-		MatrixOrthoLH(this->projectionMatrix, this->screenWidth, this->screenHeight, this->screenNear, this->screenFar);
+		M::MatrixOrthoLH(this->projectionMatrix, this->screenWidth, this->screenHeight, this->screenNear, this->screenFar);
 	}
 }

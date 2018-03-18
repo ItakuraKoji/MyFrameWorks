@@ -1,14 +1,15 @@
 #pragma once
 
-enum SoundFormat {
-	Mono8,
-	Mono16,
-	Stereo8,
-	Stereo16,
-};
 
 //音声ファイル読み込みの基底クラス
 class AudioData {
+public:
+	enum SoundFormat {
+		Mono8,
+		Mono16,
+		Stereo8,
+		Stereo16,
+	};
 public:
 	AudioData();
 	virtual ~AudioData();
@@ -16,7 +17,6 @@ public:
 	virtual bool LoadFile(const char* filePass) = 0;
 	virtual int Read(char* buffer, int maxSize) = 0;
 	virtual void Seek(int pcmOffset) = 0;
-
 
 	virtual int GetPcmOffset();
 	virtual int GetLoopStart();

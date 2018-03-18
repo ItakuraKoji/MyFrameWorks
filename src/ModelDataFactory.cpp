@@ -1,12 +1,12 @@
 #include"ModelDataFactory.h"
 
-ModelDatas* ModelDataFactory::LoadFBXModel(const std::string& fileName, GameParameters* param) {
-	ModelDatas* data = new ModelDatas;
+ModelDatas* ModelDataFactory::LoadFBXModel(const std::string& fileName, TextureList* textureList) {
 	FbxModelLoader loader;
-	if(!loader.LoadFBX(fileName, param->GetTextureList())) {
-		//要素は全部NULL
-		return data;
+	if(!loader.LoadFBX(fileName, textureList)) {
+		throw("FBX Load Failed : " + fileName);
 	}
+
+	ModelDatas* data = new ModelDatas;
 
 	//アニメーション情報は存在しない場合がある（NULL）
 	data->fbxData      = loader.PassFbxData();
@@ -18,7 +18,7 @@ ModelDatas* ModelDataFactory::LoadFBXModel(const std::string& fileName, GamePara
 	return data;
 }
 
-ModelDatas* ModelDataFactory::CreateSquareModel(float width, float height, const std::string& textureName, GameParameters* param) {
+ModelDatas* ModelDataFactory::CreateSquareModel(float width, float height, Texture* texture, bool isCenter) {
 	struct Vertex {
 		Vector3f pos;
 		Vector2f uv;
@@ -28,29 +28,36 @@ ModelDatas* ModelDataFactory::CreateSquareModel(float width, float height, const
 	data->vertexBuffer = new VertexData;
 	data->material = new MaterialData;
 
-	float right = -width * 0.5f;
-	float left  = width * 0.5f;
-	float up    = -height * 0.5f;
-	float down  = height * 0.5f;
-
 	Vertex vertex[4];
-	vertex[0].pos << right, down, 0.0f;
-	vertex[1].pos << left, down, 0.0f;
-	vertex[2].pos << left, up, 0.0f;
-	vertex[3].pos << right, up, 0.0f;
+	if (isCenter) {
+		float right = width * 0.5f;
+		float left = -width * 0.5f;
+		float up = height * 0.5f;
+		float down = -height * 0.5f;
+		vertex[0].pos << left, down, 0.0f;
+		vertex[1].pos << right, down, 0.0f;
+		vertex[2].pos << right, up, 0.0f;
+		vertex[3].pos << left, up, 0.0f;
+	}
+	else {
+		vertex[0].pos << 0.0f, -height, 0.0f;
+		vertex[1].pos << width, -height, 0.0f;
+		vertex[2].pos << width, 0.0f, 0.0f;
+		vertex[3].pos << 0.0f, 0.0f, 0.0f;
+	}
 
-	vertex[0].uv << 0.0f, 1.0f;
-	vertex[1].uv << 1.0f, 1.0f;
-	vertex[2].uv << 1.0f, 0.0f;
-	vertex[3].uv << 0.0f , 0.0f;
+	vertex[0].uv << 0.0f, 0.0f;
+	vertex[1].uv << 1.0f, 0.0f;
+	vertex[2].uv << 1.0f, 1.0f;
+	vertex[3].uv << 0.0f, 1.0f;
 
 	unsigned int index[6];
 	index[0] = 0;
-	index[1] = 3;
-	index[2] = 2;
+	index[1] = 2;
+	index[2] = 3;
 	index[3] = 0;
-	index[4] = 2;
-	index[5] = 1;
+	index[4] = 1;
+	index[5] = 2;
 
 	GLuint VAO;
 	glGenVertexArrays(1, &VAO);
@@ -97,7 +104,8 @@ ModelDatas* ModelDataFactory::CreateSquareModel(float width, float height, const
 	material[0].power = 0.0f;
 	material[0].numFace = 6;
 
-	material[0].textureName = textureName;
+	//material[0].textureName = textureName;
+	material[0].texture = texture;
 
 	data->material->Add(material);
 	return data;

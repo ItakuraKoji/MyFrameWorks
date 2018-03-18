@@ -16,9 +16,9 @@ using namespace Eigen;
 class FbxModelLoader {
 private:
 	struct Vertex {
-		Vector3f position;
-		Vector2f texcoord;
-		Vector3f normal;
+		Vector3f position = Vector3f::Zero();
+		Vector2f texcoord = Vector2f::Zero();
+		Vector3f normal = Vector3f::Zero();
 		Vector4f boneWeight = Vector4f::Zero();
 		Vector4i boneIndex = Vector4i::Zero();
 	};
@@ -44,14 +44,13 @@ public:
 
 
 private:
+	void          Finalize();
 	bool          InitializeFBX(const std::string& fileName);
 	bool          RecursiveNode(FbxNode* node);
 	bool          LoadFbxMesh(FbxMesh* mesh);
 	void          LoadVertex(FbxMesh* mesh, Vertex* vertex);
 	void          LoadMaterial(FbxMesh* mesh, std::vector<Material>& material, std::vector<GLuint>& IBOs);
 	bool          LoadBones(FbxMesh* mesh, Vertex* vertex, PolygonTable *table);
-	PolygonTable* CreatePolygonTable(FbxMesh *mesh, int numVertex, int numFace);
-
 
 private:
 	bool loaded;
@@ -64,4 +63,8 @@ private:
 
 	//クラス内でアクセスするためのもの。deleteする責任はない
 	TextureList *textureList;
+
+	int numVertex;
+	int numUV;
+	int numFace;
 };

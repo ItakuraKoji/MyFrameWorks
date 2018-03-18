@@ -19,7 +19,7 @@ void TextureList::Finalize() {
 
 Texture* TextureList::GetTexture(const std::string& textureName) {
 	if (this->textureList.find(textureName) == this->textureList.end()) {
-		return NULL;
+		return nullptr;
 	}
 	return this->textureList[textureName];
 }
@@ -36,7 +36,7 @@ bool TextureList::LoadTexture(const std::string& textureName, const std::string&
 		return false;
 	}
 
-	Add(textureName, texture);
+	this->textureList[textureName] = texture;
 	return true;
 }
 bool TextureList::AddEmptyTexture(const std::string& textureName, int textureWidth, int textureHeight) {
@@ -47,16 +47,24 @@ bool TextureList::AddEmptyTexture(const std::string& textureName, int textureWid
 
 	Texture* texture = new Texture;
 	texture->Initialize();
-	texture->SetImageData(NULL, textureWidth, textureHeight);
+	texture->SetImageData(NULL, textureWidth, textureHeight, TextureType::Unsigned_Byte, TextureColorType::RGBA32F, TextureColorType::RGBA);
 
-	Add(textureName, texture);
+	this->textureList[textureName] = texture;
 	return true;
 }
+
+void TextureList::DeleteTexture(const std::string& textureName) {
+	//–³‚¢•¨‚Ííœ‚Å‚«‚È‚¢
+	if (this->textureList.find(textureName) == this->textureList.end()) {
+		return;
+	}
+
+	delete this->textureList[textureName];
+	this->textureList.erase(textureName);
+}
+
 
 ////////
 //private
 ////
 
-void TextureList::Add(const std::string& textureName, Texture* texture) {
-	this->textureList[textureName] = texture;
-}

@@ -1,24 +1,29 @@
 #pragma once
 
 #include<GLEW\glew.h>
-#include"TextureList.h"
+#include"Texture.h"
 
-//テスト用。オフスクリーンレンダリングのためのフレームバッファクラス(テクスチャ)
+//オフスクリーンレンダリングのためのフレームバッファクラス(テクスチャ)
 class Framebuffer {
 public:
-	Framebuffer(TextureList* list, const std::string& name, int width, int height);
+	Framebuffer(Texture* texture, const std::string& name);
+	Framebuffer(Texture* texture, const std::string& name, GLuint depthBuffer);
 	~Framebuffer();
-	void Initialize(TextureList* list, const std::string& name, int width, int height);
+	bool Initialize(Texture* texture, const std::string& name, GLuint depthBuffer);
 	void Finalize();
 	void Bind();
-	void UnBind();
 	int GetWidth();
 	int GetHeight();
+	int GetFrameBufferHandle();
+	int GetDepthBufferHandle();
+
+private:
 
 private:
 	std::string TextureName;
 	int textureWidth;
 	int textureHeight;
 	GLuint frameBuffer;
-	GLuint renderBuffer;
+	GLuint depthBuffer;
+	bool reUseDepth;
 };
