@@ -137,7 +137,8 @@ bool FontGenerator::ExistFont(wchar_t character, int fontSize) {
 void FontGenerator::CreateNewTexture(int fontSize) {
 	Texture* texture = new Texture;
 	texture->Initialize();
-	texture->SetImageData(NULL, 0, 0, TextureType::Unsigned_Byte, TextureColorType::RED, TextureColorType::RED);
+	texture->SetImageData(nullptr, 0, 0, TextureType::Unsigned_Byte, TextureColorType::RED, TextureColorType::RED);
+
 	FontAtlas atlas;
 	atlas.texture = texture;
 	atlas.buffer = nullptr;
@@ -218,6 +219,7 @@ void FontGenerator::CreateNewFontAtlas(wchar_t character, int fontSize) {
 
 	//テクスチャサイズ変更 & 新規画像を格納
 	atlas->texture->SetImageData(atlas->buffer, atlas->textureWidth, atlas->textureHeight, TextureType::Unsigned_Byte, TextureColorType::RED, TextureColorType::RED);
+	atlas->texture->SetFilter(true);
 	delete[] textBuffer;
 }
 

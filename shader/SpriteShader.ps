@@ -12,7 +12,7 @@ uniform sampler2D sampler;
 void main(){
 	outColor = texture2D(sampler, outTexCoord);
 	outColor = vec4(1.0, 1.0, 1.0, outColor.r);
-	if(outColor.a == 0.0){
+	if(outColor.a < 0.005){
 		discard;
 	}
 }

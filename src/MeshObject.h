@@ -12,10 +12,10 @@ public:
 	
 	void UpdateAnimation();
 
-	void Draw(GameParameters* param, Vector3f& position, Vector3f& rotation, Vector3f& scale);
-	void InstanceDraw(GameParameters* param, int numDraw, Vector3f& position, Vector3f& rotation, Vector3f& scale);
+	void Draw(CameraClass* camera, ShaderClass* shader, Vector3f& position, Vector3f& rotation, Vector3f& scale);
+	void InstanceDraw(CameraClass* camera, ShaderClass* shader, int numDraw, Vector3f& position, Vector3f& rotation, Vector3f& scale);
 
 protected:
-	void SetMatrix(GameParameters* param, Vector3f& position, Vector3f& rotation, Vector3f& scale);
+	void SetMatrix(CameraClass* camera, ShaderClass* shader, Vector3f& position, Vector3f& rotation, Vector3f& scale);
 	MeshModel* drawModel;
 };

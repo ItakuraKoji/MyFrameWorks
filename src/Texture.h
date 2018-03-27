@@ -27,6 +27,7 @@ public:
 	bool Initialize();
 	bool LoadImage(const std::string& fileName);
 	void SetImageData(void *data, int width, int height, TextureType bType, TextureColorType textureColor, TextureColorType dataColor);
+	void SetFilter(bool isFiltering);
 	GLuint GetTextureID();
 	unsigned int GetWidth();
 	unsigned int GetHeight();

@@ -17,9 +17,15 @@ struct CollisionTag {
 	int tagIndex;
 	void* userData;
 };
-struct CollisionData {
-	CollisionData(btCollisionObject* obj, CollisionTag tag) : collision(obj), tag(tag) {}
 
+//bulletのコリジョン情報を扱いやすくしたクラス
+class CollisionData {
+public:
+	CollisionData(btCollisionObject* obj, CollisionTag tag);
+	void SetCollisionPosition(btVector3& position);
+	btVector3 GetCollisionPosition();
+
+public:
 	btCollisionObject* const collision;
 	CollisionTag tag;
 };
@@ -65,14 +71,13 @@ public:
 	//引数
 	//・移動するコリジョンオブジェクト
 	//・移動ベクトル
-	void MoveCharacter(btCollisionObject* obj, btVector3& hMove, btVector3& vMove);
+	void MoveCharacter(btCollisionObject* obj, btVector3& move);
 
 	//・離散的なコリジョンの移動、判定が MoveCharacter よりも大雑把(ただし軽い)
 	//引数
 	//・移動するコリジョンオブジェクト
 	//・移動ベクトル
 	void MoveCharacterDiscrete(btCollisionObject* obj, btVector3& hMove, btVector3& vMove);
-
 
 	//・現在の物理世界での特定のオブジェクトに対する衝突のチェック
 	//戻り値
@@ -83,15 +88,21 @@ public:
 	//・衝突時に使用するビットマスク（BulletBitMask）
 	std::vector<CollisionTag>& FindConfrictionObjects(btCollisionObject* myself);
 
+
+	void SetSkyVector(btVector3& vector);
 private:
 	//コリジョンを移動
 	void MoveCollisionObject(btCollisionObject* obj, btVector3& moveVector);
-	//指定方向に移動（壁ずり付き）
-	btVector3 MoveSmooth(btCollisionObject* obj, btVector3& moveVector, float limitAngle);
+	//指定方向に移動（離散判定）
+	void MoveDiscrete(btCollisionObject* obj, btVector3& moveVector, bool limitDirection);
+	//指定方向に移動（Sweep使用）
+	btVector3 MoveSmooth(btCollisionObject* obj, btVector3& moveVector, float limitAngle, bool limitDirection);
 	//移動部分をまとめ
-	btVector3 MoveBySweep(btCollisionObject* obj, btVector3& moveVector, float allowDistance = 0.1f);
+	btVector3 MoveBySweep(btCollisionObject* obj, btVector3& moveVector, bool limitDirection, float allowDistance = 0.2f);
 private:
 	std::vector<CollisionTag> confrictResult;
+	//空への単位ベクトル、あたり判定で使用
+	btVector3 toSkyVector;
 
 	btDiscreteDynamicsWorld*                bulletWorld;
 	btDefaultCollisionConfiguration*        config;

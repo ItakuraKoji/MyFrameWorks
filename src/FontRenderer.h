@@ -1,22 +1,48 @@
 #pragma once
 #include"FontGenerator.h"
 #include"SpriteObject.h"
-#include"GameParameters.h"
 
 //フォントを生成し、描画するクラス(ワイド文字列)
 class FontRenderer {
+private:
+	struct FontDrawData{
+		wchar_t* buffer;//出力する文字列
+		int fontSize;//サイズ
+		float posX;//X座標
+		float posY;//Y座標
+		float posZ;//Z座標（3D描画に利用）
+	};
+
 public:
-	FontRenderer(const char* text);
+	FontRenderer();
 	~FontRenderer();
-	//指定座標からテキストを描画
-	void DrawString(GameParameters* param, const std::string& text, int size, int screenX, int screenY);
-	//フォント描画に利用しているテクスチャを削除してメモリを解放(デストラクタで行っている)
-	void ClearFontTexture();
+	//事前に呼ばれた描画命令をここで行う
+	void Draw(CameraClass* camera, ShaderClass* shader);
+
+	//FontGeneratorを初期化
+	bool LoadFont(const char* fontName, const char* filePass);
+	//使用するフォントを設定、失敗するとfalseを返し、セットされない
+	bool SetCullentFont(const char* fontName);
+
+	//指定座標からテキストを描画（位置はスクリーンの座標）
+	void DrawString2D(const std::string& text, int fontSize, int posX, int posY);
+	//指定座標からテキストを描画（位置は空間の座標）
+	void DrawString3D(const std::string& text, int fontSize, float posX, float posY, float posZ);
+
+	//フォント描画に利用しているテクスチャを削除する
+	void ClearFontTexture(int size);
+	//フォント描画に利用しているテクスチャをすべて削除する
+	void ClearAllFontTexture();
 
 private:
-
+	bool CreateFontBuffer(wchar_t* result, const char* src, int numChar);
 
 private:
-	FontGenerator* generator;
+	FontGenerator * cullentFont;
+	std::unordered_map<std::string, FontGenerator*> generators;
 	SpriteObject* sprite;
+
+	//呼ばれた描画命令に必要な情報を格納しておいて、Draw()の時に使用
+	std::vector<FontDrawData> drawData2D;
+	std::vector<FontDrawData> drawData3D;
 };

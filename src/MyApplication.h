@@ -55,6 +55,5 @@ private:
 	MapPolygon* map;
 
 	FrameBufferList* frameBuffer;
-	FontRenderer* fontRenderer;
 };
 

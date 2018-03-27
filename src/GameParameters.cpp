@@ -22,6 +22,7 @@ bool GameParameters::Initialize(GLFWwindow* window, int screenWidth, int screenH
 		this->lightList = new LightList;
 		this->audioPlayer = new SoundClass;
 		this->effectSystem = new EffectClass;
+		this->fontRenderer = new FontRenderer;
 	}
 	catch(...){
 		return false;
@@ -60,6 +61,10 @@ void GameParameters::Finalize() {
 	if (this->effectSystem != nullptr) {
 		delete this->effectSystem;
 		this->effectSystem = nullptr;
+	}
+	if (this->fontRenderer != nullptr) {
+		delete this->fontRenderer;
+		this->fontRenderer = nullptr;
 	}
 }
 void GameParameters::Run() {
@@ -108,5 +113,9 @@ SoundClass* GameParameters::GetAudioList() {
 EffectClass* GameParameters::GetEffects() {
 	return this->effectSystem;
 }
+FontRenderer* GameParameters::GetFontRenderer() {
+	return this->fontRenderer;
+}
+
 
 

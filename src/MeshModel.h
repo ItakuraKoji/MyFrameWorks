@@ -2,7 +2,7 @@
 
 #include"FbxModelLoader.h"
 #include"ModelData.h"
-#include"GameParameters.h"
+#include"CameraClass.h"
 #include"ShaderClass.h"
 
 //モデルクラス。ファクトリーから生産されたモデルデータを受け取って初期化
@@ -18,16 +18,15 @@ public:
 	void SetTexture(Texture* texture, int arrayIndex, int materialIndex);
 	void SetSpeed(float speed);
 
-	std::string& SetTextureName(int arrayIndex, int materialIndex);
 
 
 	void UpdateAnimation();
-	void Draw(GameParameters* param);
-	void InstanceDraw(int numInstance, GameParameters* param);
+	void Draw(ShaderClass* shader);
+	void InstanceDraw(int numInstance, ShaderClass* shader);
 
 private:
-	void SetBone    (int arrayIndex, GameParameters* param);
-	void DrawBuffers(int arrayIndex, GameParameters* param);
+	void SetBone    (int arrayIndex, ShaderClass* shader);
+	void DrawBuffers(int arrayIndex, ShaderClass* shader);
 
 private:
 	ModelDatas* data;

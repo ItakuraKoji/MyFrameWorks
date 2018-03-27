@@ -32,7 +32,7 @@ bool BulletPhysics::Initialize() {
 		this->bulletWorld->setDebugDrawer(&this->debugDrawer);
 
 		this->bulletWorld->setGravity(btVector3(0.0f, -10.0f, 0.0f));
-
+		this->toSkyVector = btVector3(0.0f, 1.0f, 0.0f);
 	}
 	catch(...){
 		//何もしない
@@ -211,45 +211,68 @@ std::vector<CollisionTag>& BulletPhysics::FindConfrictionObjects(btCollisionObje
 }
 
 //新型衝突シミュレーション
-void BulletPhysics::MoveCharacter(btCollisionObject *obj, btVector3& hMove, btVector3& vMove) {
+void BulletPhysics::MoveCharacter(btCollisionObject *obj, btVector3& move) {
 	//凹形状とは判定できない
 	if (!obj->getCollisionShape()->isConvex()) {
 		return;
 	}
 
-	//移動は縦と横で分離
-	btVector3 normal;
-	btTransform prevTrans = obj->getWorldTransform();
-	//まず法線を取得してみる
-	normal = MoveSmooth(obj, vMove, 40.0f);
+	////移動は縦と横で分離
+	//btVector3 normal;
+	//btTransform prevTrans = obj->getWorldTransform();
+	////まず法線を取得してみる
+	//normal = MoveSmooth(obj, vMove, 90.0f, false);
 
-	if (normal.norm() >= 0.001f) {
-		//床基準の方向軸
-		if (normal.dot(vMove) > 0) {
-			vMove = vMove.norm() * normal;
-			if (hMove.norm() > 0.01f) {
-				btVector3 x = hMove.cross(normal);
-				hMove = hMove.norm() * (x.cross(vMove)).normalized();
-			}
-		}
-		else if (normal.dot(vMove) < 0) {
-			vMove = -vMove.norm() * normal;
-			if (hMove.norm() > 0.01f) {
-				btVector3 x = hMove.cross(normal);
-				hMove = hMove.norm() * (x.cross(vMove)).normalized();
-			}
-		}
+	//if (normal.norm() >= 0.001f) {
+	//	//床基準の方向軸
+	//	if (normal.dot(vMove) > 0) {
+	//		vMove = vMove.norm() * normal;
+	//		if (hMove.norm() > 0.01f) {
+	//			btVector3 x = hMove.cross(normal);
+	//			hMove = hMove.norm() * (x.cross(vMove)).normalized();
+	//		}
+	//	}
+	//	else if (normal.dot(vMove) < 0) {
+	//		vMove = -vMove.norm() * normal;
+	//		if (hMove.norm() > 0.01f) {
+	//			btVector3 x = hMove.cross(normal);
+	//			hMove = hMove.norm() * (x.cross(vMove)).normalized();
+	//		}
+	//	}
 
+	//}
+	//obj->setWorldTransform(prevTrans);
+	
+	btVector3 vMove;
+	btVector3 hMove;
+	btVector3 yAxis = this->toSkyVector;
+	btVector3 xAxis = yAxis.cross(move);
+	if (xAxis.norm() > 0.001f) {
+		xAxis.normalize();
+		btVector3 zAxis = xAxis.cross(yAxis).normalized();
+		vMove = yAxis * yAxis.dot(move);
+		hMove = move - vMove;
 	}
-	obj->setWorldTransform(prevTrans);
+	else {
+		vMove = move;
+		hMove = btVector3(0.0f, 0.0f, 0.0f);
+	}
+
+
 	//縦
 	btVector3 virtical = vMove;
-	MoveSmooth(obj, virtical, 40.0f);
+	MoveSmooth(obj, virtical, 40.0f, true);
 
 	//横
-	btVector3 horizontal = hMove;
-	MoveSmooth(obj, hMove, 0.0f);
+	//btTransform trans = obj->getWorldTransform();
+	//trans.setOrigin(trans.getOrigin() + this->toSkyVector * 0.15f);
+	//obj->setWorldTransform(trans);
+	MoveDiscrete(obj, this->toSkyVector * 0.15f, true);
 
+	btVector3 horizontal = hMove;
+	MoveSmooth(obj, hMove, 0.0f, false);
+
+	MoveDiscrete(obj, -this->toSkyVector * 0.15f, true);
 }
 
 //処理が　軽いほう
@@ -287,8 +310,14 @@ void BulletPhysics::MoveCharacterDiscrete(btCollisionObject *obj, btVector3& hMo
 			this->bulletWorld->contactTest(obj, contact_cb);
 		} while (contact_cb.isLoop);
 		//押し出し
-		MoveCollisionObject(obj, contact_cb.fixVec * -contact_cb.maxDistance);
+		//垂直成分はそのベクトルにしか押し出さない（坂を滑るので）
+		//MoveCollisionObject(obj, contact_cb.fixVec * -contact_cb.maxDistance);
+		MoveCollisionObject(obj, vMove.normalized() * contact_cb.maxDistance);
 	}
+}
+
+void BulletPhysics::SetSkyVector(btVector3& vector) {
+	this->toSkyVector = vector;
 }
 
 
@@ -304,8 +333,35 @@ void BulletPhysics::MoveCollisionObject(btCollisionObject* obj, btVector3& moveV
 	obj->setWorldTransform(trans);
 }
 
+void BulletPhysics::MoveDiscrete(btCollisionObject* obj, btVector3& moveVector, bool limitDirection) {
+	int numFix = 10;
+	btVector3 goVec = moveVector / (float)numFix;
+	//移動
+	for (int i = 0; i < numFix; ++i) {
+		btTransform to = obj->getWorldTransform();
+		to.setOrigin(to.getOrigin() + goVec);
+		obj->setWorldTransform(to);
+		//一番深くめり込んだものの法線方向へ押し出し
+		FixContactCallBack contact_cb(obj);
+		do {
+			this->bulletWorld->contactTest(obj, contact_cb);
+		} while (contact_cb.isLoop);
+		//押し出し
+		if (!contact_cb.maxDistance) {
+			continue;
+		}
 
-btVector3 BulletPhysics::MoveSmooth(btCollisionObject *obj, btVector3 &moveVector, float limitAngle) {
+		if (limitDirection) {
+			MoveCollisionObject(obj, moveVector * contact_cb.maxDistance);
+		}
+		else {
+			MoveCollisionObject(obj, contact_cb.fixVec * -contact_cb.maxDistance);
+		}
+	}
+
+}
+
+btVector3 BulletPhysics::MoveSmooth(btCollisionObject *obj, btVector3 &moveVector, float limitAngle, bool limitDirection) {
 	if (moveVector.norm() < 0.001f) {
 		return btVector3(0, 0, 0);
 	}
@@ -316,7 +372,7 @@ btVector3 BulletPhysics::MoveSmooth(btCollisionObject *obj, btVector3 &moveVecto
 
 	//移動一回目
 	btVector3 prevPos = obj->getWorldTransform().getOrigin();
-	normal = MoveBySweep(obj, moveVector);
+	normal = MoveBySweep(obj, moveVector, limitDirection);
 	hitFraction = (obj->getWorldTransform().getOrigin() - prevPos).norm() / moveVector.norm();
 
 	//壁ずりを作る角度かを確認
@@ -325,10 +381,11 @@ btVector3 BulletPhysics::MoveSmooth(btCollisionObject *obj, btVector3 &moveVecto
 	if (abs(angle_cos - limit_cos) < 0.0001f) {
 		angle_cos = limit_cos;
 	}
+	//壁ずりを作らない場合は法線を返す
 	if (angle_cos > limit_cos || normal.norm() < 0.001f) {
 		return normal;
 	}
-
+	
 	//壁ずりを作る
 	btVector3 goVec;
 	goVec.setZero();
@@ -340,15 +397,16 @@ btVector3 BulletPhysics::MoveSmooth(btCollisionObject *obj, btVector3 &moveVecto
 	}
 
 	//移動二回目
-	MoveBySweep(obj, goVec);
+	MoveBySweep(obj, goVec, limitDirection);
 
 
 	//壁ずり時は衝突法線を返さない
 	return btVector3(0, 0, 0);
 }
 
-btVector3 BulletPhysics::MoveBySweep(btCollisionObject *obj, btVector3 &moveVector, float allowDistance){
+btVector3 BulletPhysics::MoveBySweep(btCollisionObject *obj, btVector3 &moveVector, bool limitDirection, float allowDistance){
 	btConvexShape* shape = (btConvexShape*)obj->getCollisionShape();
+
 
 	btTransform from = obj->getWorldTransform();
 	btTransform to = from;
@@ -364,6 +422,7 @@ btVector3 BulletPhysics::MoveBySweep(btCollisionObject *obj, btVector3 &moveVect
 		objPos.setZero();
 		obj->setWorldTransform(to);
 		objPos.setInterpolate3(from.getOrigin(), to.getOrigin(), convex_cb.m_closestHitFraction);
+		objPos -= moveVector.normalized() * allowDistance;
 		to.setOrigin(objPos);
 	}
 	obj->setWorldTransform(to);
@@ -371,28 +430,44 @@ btVector3 BulletPhysics::MoveBySweep(btCollisionObject *obj, btVector3 &moveVect
 	//指定回数押し出す(今は十回)
 	//一番深くめり込んだものの法線方向へ押し出し
 	btVector3 prevPos = obj->getWorldTransform().getOrigin();
-	for (int i = 0; i < 10; ++i) {
+	btVector3 resultPos = prevPos;
+
+	for (int i = 0; i < 15; ++i) {
 		FixContactCallBack contact_cb(obj);
 		do {
 			this->bulletWorld->contactTest(obj, contact_cb);
 		} while (contact_cb.isLoop);
 		//押し出し
-		MoveCollisionObject(obj, contact_cb.fixVec * -contact_cb.maxDistance);
+		if (!contact_cb.maxDistance) {
+			continue;
+		}
+
+		if (limitDirection) {
+			MoveCollisionObject(obj, moveVector * contact_cb.maxDistance);
+		}
+		else {
+			MoveCollisionObject(obj, contact_cb.fixVec * -contact_cb.maxDistance);
+		}
+		resultPos += contact_cb.fixVec * -contact_cb.maxDistance;
 	}
 
 	//小数点第四位以下を切り捨て
-	btVector3 normal = obj->getWorldTransform().getOrigin() - prevPos;
+	btVector3 normal = btVector3(0.0f, 0.0f, 0.0f);
+	//normal = obj->getWorldTransform().getOrigin() - prevPos;
+	normal = resultPos - prevPos;
 	normal.setX((int)(normal.x() * 1000.0f) / 1000.0f);
 	normal.setY((int)(normal.y() * 1000.0f) / 1000.0f);
 	normal.setZ((int)(normal.z() * 1000.0f) / 1000.0f);
+	//normal = convex_cb.m_hitNormalWorld;
 
 	if (normal.norm() < 0.001f) {
-		return btVector3(0, 0, 0);
+		normal = btVector3(0, 0, 0);
 	}
 	else {
 		normal.normalize();
 	}
 
+	//押し出した方向を法線とする
 	return normal;
 }
 

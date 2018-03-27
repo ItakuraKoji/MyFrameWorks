@@ -30,6 +30,7 @@ bool MyApplication::Initialize(GLFWwindow* window, int width, int height) {
 	try {
 		//Parameters;
 		this->param = new GameParameters(window, width, height);
+		this->param->GetFontRenderer()->LoadFont("onryou", "onryou.TTF");
 
 		ShaderList* shaderList = this->param->GetShaderList();
 		shaderList->LoadVertexShader("Shader/VertexShader.vs");
@@ -73,7 +74,7 @@ bool MyApplication::Initialize(GLFWwindow* window, int width, int height) {
 		this->player->SetDrawModel(this->skinModel);
 		this->player->Initialize(this->param);
 		this->player->SetCameraMan(this->param->GetCameraList()->GetCamera("mainCamera"));
-		this->player->SetPosition(0.0f, 20.6f, 0.0f);
+		this->player->SetPosition(0.0f, 30.0f, -600.0f);
 
 		this->map = new MapPolygon;
 		this->map->LoadModel("TestStage.fbx");
@@ -98,7 +99,6 @@ bool MyApplication::Initialize(GLFWwindow* window, int width, int height) {
 
 		this->testSprite = new SpriteObject(nullptr);
 		
-		this->fontRenderer = new FontRenderer("onryou.TTF");
 	}
 	catch (std::string& errorMessage) {
 		std::cout << errorMessage << std::endl;
@@ -134,11 +134,6 @@ void MyApplication::Finalize() {
 		this->frameBuffer = nullptr;
 	}
 
-	if (this->fontRenderer != nullptr) {
-		delete this->fontRenderer;
-		this->fontRenderer = nullptr;
-	}
-
 	if (this->param != nullptr) {
 		this->param->Finalize();
 		delete this->param;
@@ -147,6 +142,10 @@ void MyApplication::Finalize() {
 }
 
 void MyApplication::Run() {
+	if (glGetError() != GL_NO_ERROR) {
+		printf("%s\n", glewGetErrorString(glGetError()));
+	}
+
 	this->player->Run(this->param);
 	this->param->Run();
 }
@@ -224,7 +223,8 @@ void MyApplication::DrawPass0() {
 		//デバッグ用コリジョン描画
 		Matrix4f world = Matrix4f::Identity();
 		//this->param->GetPhysics()->DebugDraw(this->param->GetShaderList()->GetShader("simple"), this->param->currentCamera, world);
-
+		param->UseShader("sprite");
+		this->param->GetFontRenderer()->Draw(this->param->currentCamera, this->param->currentShader);
 	}
 
 
@@ -251,10 +251,9 @@ void MyApplication::DrawPass0() {
 	param->currentShader->SetTexture("effect", 3, param->GetTextureList()->GetTexture("effect")->GetTextureID());
 	//this->square->Draw(this->param, Vector3f(0, 0, 10), Vector3f(0, 0, 0), Vector3f(-1, 1, 1));
 
-	testSprite->Draw(this->param, M::Box2D(0, 0, this->param->screenWidth, this->param->screenHeight), M::Box2D(0, 0, this->param->screenWidth, this->param->screenHeight));
+	testSprite->Draw2D(this->param->currentCamera, this->param->currentShader, M::Box2D(0, 0, this->param->screenWidth, this->param->screenHeight), M::Box2D(0, 0, this->param->screenWidth, this->param->screenHeight));
 
-	param->UseShader("sprite");
-	this->fontRenderer->DrawString(this->param, "Location.「霧の森」", 32, 300, 200);
+
 }
 
 void MyApplication::DrawPass1() {

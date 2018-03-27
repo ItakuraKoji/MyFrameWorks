@@ -20,6 +20,9 @@ void Player::Finalize() {
 	delete this->camera;
 }
 void Player::Run(GameParameters* param) {
+	this->characterCollision->SetCollisionPosition(btVector3(this->position.x(), this->position.y(), this->position.z()) + btVector3(0.0f, collitionFix, 0.0f));
+	this->characterFoot->SetCollisionPosition(this->characterCollision->GetCollisionPosition() + btVector3(0.0f, -1.1f, 0.0f));
+
 	//足元の着地判定
 	bool isGround = false;
 	std::vector<CollisionTag>& tags = param->GetPhysics()->FindConfrictionObjects(this->characterFoot->collision);
@@ -61,9 +64,9 @@ void Player::Run(GameParameters* param) {
 
 
 
-	if (param->GetInput()->isPressButton(VPAD_BUTTON_A) && isGround) {
+	if (param->GetInput()->isPressButton(VPAD_BUTTON_A)) {
 		this->velocity = 1.0f;
-		this->GetModel()->SetBoneAnimation("Jump", false, false, false);
+		this->GetModel()->SetBoneAnimation("Jump", false, false, true, 3);
 		this->GetModel()->SetSpeed(0.8f);
 		isGround = false;
 	}
@@ -75,22 +78,20 @@ void Player::Run(GameParameters* param) {
 
 	this->velocity -= 0.03f;
 	if (this->velocity < -1.0f) {
-		this->velocity = -1.0f;
+		//this->velocity = -1.0f;
 	}
 	if (isGround) {
-		this->velocity = 0.001f;
+		this->velocity = -0.1f;
 	}
-
 	direction.y() += this->velocity;
-
-
 
 
 	//移動ベクトルを指定したカメラの軸に合わせる
 	Vector3f goVec = AngleAxisf(this->camera->GetRotationH(), Vector3f(0.0f, 1.0f, 0.0f)) * direction;
 
-	param->GetPhysics()->MoveCharacter(this->characterCollision->collision, btVector3(goVec.x(), 0.0f, goVec.z()), btVector3(0.0f, goVec.y(), 0.0f));
-	//param->GetPhysics()->MoveCharacterDiscrete(this->characterCollision, btVector3(goVec.x(), 0.0f, goVec.z()), btVector3(0.0f, goVec.y(), 0.0f));
+	param->GetPhysics()->MoveCharacter(this->characterCollision->collision, btVector3(goVec.x(), goVec.y(), goVec.z()));
+	//param->GetPhysics()->MoveCharacter(this->characterCollision->collision, btVector3(goVec.x(), 0.0f, goVec.z()), btVector3(0.0f, goVec.y(), 0.0f));
+	//param->GetPhysics()->MoveCharacterDiscrete(this->characterCollision->collision, btVector3(goVec.x(), 0.0f, goVec.z()), btVector3(0.0f, goVec.y(), 0.0f));
 	
 	btTransform trans = this->characterCollision->collision->getWorldTransform();
 	this->position.x() = trans.getOrigin().x();
@@ -105,10 +106,14 @@ void Player::Run(GameParameters* param) {
 	//アニメーション更新
 	this->GetModel()->UpdateAnimation();
 	//system("pause");
+	
+	param->GetFontRenderer()->DrawString3D("X : " + std::to_string(this->position.x()), 32, this->position.x(), this->position.y(), this->position.z());
+	param->GetFontRenderer()->DrawString3D("Y : " + std::to_string(this->position.y()), 32, this->position.x(), this->position.y() + 32 * 0.05f, this->position.z());
+	param->GetFontRenderer()->DrawString3D("Z : " + std::to_string(this->position.z()), 32, this->position.x(), this->position.y() + 64 * 0.05f, this->position.z());
 }
 
 void Player::Draw(GameParameters* param) {
-	this->GetModel()->Draw(param, this->position, this->rotation, this->scale);
+	this->GetModel()->Draw(param->currentCamera, param->currentShader, this->position, this->rotation, this->scale);
 }
 
 void Player::SetCameraMan(CameraClass* camera) {

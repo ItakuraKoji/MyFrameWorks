@@ -5,6 +5,7 @@
 #include"CameraList.h"
 #include"InputGLFW.h"
 #include"BulletPhysics.h"
+#include"FontRenderer.h"
 
 #include"SoundClass.h"
 #include"EffectClass.h"
@@ -36,6 +37,7 @@ public:
 	CameraList*    GetCameraList();
 	SoundClass*    GetAudioList();
 	EffectClass*   GetEffects();
+	FontRenderer*  GetFontRenderer();
 
 private:
 	InputGLFW *    input;
@@ -46,6 +48,8 @@ private:
 	CameraList*    cameraList;
 	SoundClass*    audioPlayer;
 	EffectClass*   effectSystem;
+	FontRenderer*  fontRenderer;
+
 public:
 	CameraClass*   currentCamera;
 	ShaderClass*   currentShader;

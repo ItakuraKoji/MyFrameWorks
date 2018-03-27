@@ -12,13 +12,14 @@ public:
 	~SpriteObject();
 
 	bool SetTexture(Texture* texture);
-	void Draw(GameParameters* param, M::Box2D& draw, M::Box2D& src, float rotation = 0.0f);
+	void Draw2D(CameraClass* camera, ShaderClass* shader, M::Box2D& src, M::Box2D& draw, float rotation = 0.0f);
+	void Draw3D(CameraClass* camera, ShaderClass* shader, M::Box2D& src, Vector3f& position, Vector3f& rotation, Vector3f& scale);
 
 public:
 	Vector2f controlPoint;
 protected:
 	MeshModel* drawModel;
-	void SetMatrix(GameParameters* param, Vector3f& position, Vector3f& rotation, Vector3f& scale);
+	void SetMatrix(CameraClass* camera, ShaderClass* shader, Vector3f& position, Vector3f& rotation, Vector3f& scale);
 	Texture* cullentTexture;
 };
 

@@ -24,20 +24,20 @@ void MeshObject::UpdateAnimation() {
 	this->drawModel->UpdateAnimation();
 }
 
-void MeshObject::Draw(GameParameters* param, Vector3f& position, Vector3f& rotation, Vector3f& scale) {
-	SetMatrix(param, position, rotation, scale);
-	this->drawModel->Draw(param);
+void MeshObject::Draw(CameraClass* camera, ShaderClass* shader, Vector3f& position, Vector3f& rotation, Vector3f& scale) {
+	SetMatrix(camera, shader, position, rotation, scale);
+	this->drawModel->Draw(shader);
 }
-void MeshObject::InstanceDraw(GameParameters* param, int numDraw, Vector3f& position, Vector3f& rotation, Vector3f& scale) {
-	SetMatrix(param, position, rotation, scale);
-	this->drawModel->InstanceDraw(numDraw, param);
+void MeshObject::InstanceDraw(CameraClass* camera, ShaderClass* shader, int numDraw, Vector3f& position, Vector3f& rotation, Vector3f& scale) {
+	SetMatrix(camera, shader, position, rotation, scale);
+	this->drawModel->InstanceDraw(numDraw, shader);
 }
 
 ////////
 //protected
 ////
 
-void MeshObject::SetMatrix(GameParameters* param, Vector3f& position, Vector3f& rotation, Vector3f& scaling) {
+void MeshObject::SetMatrix(CameraClass* camera, ShaderClass* shader, Vector3f& position, Vector3f& rotation, Vector3f& scaling) {
 	//ˆÚ“®
 	Translation<float, 3> trans = Translation<float, 3>(position);
 	//‰ñ“]‡‚ÍYXZ
@@ -51,9 +51,9 @@ void MeshObject::SetMatrix(GameParameters* param, Vector3f& position, Vector3f& 
 
 
 	Affine3f world = trans * rot * scale;
-	Matrix4f view = param->currentCamera->GetViewMatrix();
-	Matrix4f projection = param->currentCamera->GetProjectionMatrix();
+	Matrix4f view = camera->GetViewMatrix();
+	Matrix4f projection = camera->GetProjectionMatrix();
 
-	param->currentShader->SetMatrix(projection * view * world.matrix());
-	param->currentShader->SetWorldMatrix(world.matrix());
+	shader->SetMatrix(projection * view * world.matrix());
+	shader->SetWorldMatrix(world.matrix());
 }

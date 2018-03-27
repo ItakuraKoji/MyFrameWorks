@@ -49,6 +49,21 @@ void Texture::SetImageData(void *data, int width, int height, TextureType bType,
 	this->height = height;
 }
 
+void Texture::SetFilter(bool isFiltering) {
+	if (isFiltering) {
+		//Šg‘åk¬Žž‚Ì•âŠ®
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		//ƒ~ƒbƒvƒ}ƒbƒv‚ðì¬
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else {
+		//Šg‘åk¬Žž‚Ì•âŠ®‚É‚Â‚¢‚ÄÝ’è
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	}
+}
+
 
 GLuint Texture::GetTextureID() {
 	return this->textureID;
