@@ -1,6 +1,6 @@
 #include"SystemClass.h"
 
-
+//Escキーでアプリ終了
 void GLFWKeyEvent(GLFWwindow* window, int key, int scanCode, int action, int mods) {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
