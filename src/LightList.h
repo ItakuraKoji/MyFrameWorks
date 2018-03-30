@@ -2,23 +2,27 @@
 
 #include<unordered_map>
 #include"Light.h"
+#include"MyMathFanctions.h"
 
-//光源情報をまとめたクラス、複数光源はコストが高いので数を絞る
-//アンビエント：１つ
-//その他：４つ（まだ予定）
-class LightList {
-public:
-	LightList();
-	~LightList();
-	void Initialize();
+namespace K_Graphics {
 
-	void SetAmbient(const std::string& lightName, ShaderClass* shader);
-	void SetDirectional(const std::string& lightName, ShaderClass* shader);
+	//光源情報をまとめたクラス、複数光源はコストが高いので数を絞る
+	//アンビエント：１つ
+	//その他：４つ（まだ予定）
+	class LightList {
+	public:
+		LightList();
+		~LightList();
+		void Initialize();
 
-	void AddAmbient(const std::string& lightName, float power, Vector4f& color);
-	void AddDirectional(const std::string& lightName, float power, Vector4f& color, Vector3f& direction);
+		void SetAmbient(const std::string& lightName, ShaderClass* shader);
+		void SetDirectional(const std::string& lightName, ShaderClass* shader);
 
-private:
-	std::unordered_map<std::string, AmbientLight> ambient;
-	std::unordered_map<std::string, DirectionalLight> directional;
-};
+		void AddAmbient(const std::string& lightName, float power, K_Math::Vector4& color);
+		void AddDirectional(const std::string& lightName, float power, K_Math::Vector4& color, K_Math::Vector3& direction);
+
+	private:
+		std::unordered_map<std::string, AmbientLight> ambient;
+		std::unordered_map<std::string, DirectionalLight> directional;
+	};
+}

@@ -5,20 +5,23 @@
 #include<unordered_map>
 #include"SoundSource.h"
 
-//OpenALをラッピングしたクラス
-class SoundClass {
-public:
-	SoundClass();
-	~SoundClass();
+namespace K_Audio {
 
-	bool CreateSource(const char* sourceName, const char* filePass, SoundSource::LoadMode mode);
-	void DeleteSource(const char* sourceName);
+	//OpenALをラッピングしたクラス
+	class SoundClass {
+	public:
+		SoundClass();
+		~SoundClass();
 
-	SoundSource* GetSource(const char* sourceName);
+		bool CreateSource(const char* sourceName, const char* filePass, SoundSource::LoadMode mode);
+		void DeleteSource(const char* sourceName);
 
-private:
-	ALCdevice* device;
-	ALCcontext* context;
+		SoundSource* GetSource(const char* sourceName);
 
-	std::unordered_map<std::string, SoundSource*> source;
-};
+	private:
+		ALCdevice * device;
+		ALCcontext* context;
+
+		std::unordered_map<std::string, SoundSource*> source;
+	};
+}

@@ -1,36 +1,43 @@
 #include"AudioData.h"
 
-AudioData::AudioData() {
+namespace K_Audio {
 
-}
-AudioData::~AudioData() {
+	////////
+	//public
+	////
+	AudioData::AudioData() {
 
-}
+	}
+	AudioData::~AudioData() {
 
-int AudioData::GetPcmOffset() {
-	return this->pcmOffset;
-}
+	}
 
-int AudioData::GetLoopLength() {
-	return this->loopLength;
-}
+	int AudioData::GetPcmOffset() {
+		return this->pcmOffset;
+	}
 
-int AudioData::GetLoopStart() {
-	return this->loopStart;
-}
+	int AudioData::GetLoopLength() {
+		return this->loopLength;
+	}
 
-int AudioData::GetPcmSize() {
-	return this->pcmSize;
-}
+	int AudioData::GetLoopStart() {
+		return this->loopStart;
+	}
 
-int AudioData::GetBlockSize() {
-	return this->blockSize;
-}
+	int AudioData::GetPcmSize() {
+		return this->pcmSize;
+	}
 
-AudioData::SoundFormat AudioData::GetFormat() {
-	return this->format;
-}
+	int AudioData::GetBlockSize() {
+		return this->blockSize;
+	}
 
-int AudioData::GetSamplingRate() {
-	return this->samplingRate;
+	AudioData::SoundFormat AudioData::GetFormat() {
+		return this->format;
+	}
+
+	int AudioData::GetSamplingRate() {
+		return this->samplingRate;
+	}
+
 }

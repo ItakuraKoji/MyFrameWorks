@@ -1,59 +1,67 @@
-#include"MeshObject.h"
+#include"MeshModel.h"
 
-MeshObject::MeshObject(MeshModel* model){
-	if (model == nullptr) {
-		throw("modelData is nullptr");
+namespace K_Graphics {
+
+	////////
+	//public
+	////
+
+	MeshObject::MeshObject(MeshModel* model) {
+		if (model == nullptr) {
+			throw("modelData is nullptr");
+		}
+		this->drawModel = model;
 	}
-	this->drawModel = model;
-}
-MeshObject::~MeshObject() {
-	if (this->drawModel != nullptr) {
-		delete this->drawModel;
-		this->drawModel = nullptr;
+	MeshObject::~MeshObject() {
+		if (this->drawModel != nullptr) {
+			delete this->drawModel;
+			this->drawModel = nullptr;
+		}
 	}
-}
 
-void MeshObject::SetBoneAnimation(const std::string& animationName, bool playOnce, bool isLoop, bool isInterporation, int interpolationFrames) {
-	this->drawModel->SetAnimation(animationName, playOnce, isLoop, isInterporation, interpolationFrames);
-}
-void MeshObject::SetSpeed(float speed) {
-	this->drawModel->SetSpeed(speed);
-}
+	void MeshObject::SetBoneAnimation(const std::string& animationName, bool playOnce, bool isLoop, bool isInterporation, int interpolationFrames) {
+		this->drawModel->SetAnimation(animationName, playOnce, isLoop, isInterporation, interpolationFrames);
+	}
+	void MeshObject::SetSpeed(float speed) {
+		this->drawModel->SetSpeed(speed);
+	}
 
-void MeshObject::UpdateAnimation() {
-	this->drawModel->UpdateAnimation();
-}
+	void MeshObject::UpdateAnimation() {
+		this->drawModel->UpdateAnimation();
+	}
 
-void MeshObject::Draw(CameraClass* camera, ShaderClass* shader, Vector3f& position, Vector3f& rotation, Vector3f& scale) {
-	SetMatrix(camera, shader, position, rotation, scale);
-	this->drawModel->Draw(shader);
-}
-void MeshObject::InstanceDraw(CameraClass* camera, ShaderClass* shader, int numDraw, Vector3f& position, Vector3f& rotation, Vector3f& scale) {
-	SetMatrix(camera, shader, position, rotation, scale);
-	this->drawModel->InstanceDraw(numDraw, shader);
-}
+	void MeshObject::Draw(CameraClass* camera, ShaderClass* shader, K_Math::Vector3& position, K_Math::Vector3& rotation, K_Math::Vector3& scale) {
+		SetMatrix(camera, shader, position, rotation, scale);
+		this->drawModel->Draw(shader);
+	}
+	void MeshObject::InstanceDraw(CameraClass* camera, ShaderClass* shader, int numDraw, K_Math::Vector3& position, K_Math::Vector3& rotation, K_Math::Vector3& scale) {
+		SetMatrix(camera, shader, position, rotation, scale);
+		this->drawModel->InstanceDraw(numDraw, shader);
+	}
 
-////////
-//protected
-////
+	////////
+	//protected
+	////
 
-void MeshObject::SetMatrix(CameraClass* camera, ShaderClass* shader, Vector3f& position, Vector3f& rotation, Vector3f& scaling) {
-	//移動
-	Translation<float, 3> trans = Translation<float, 3>(position);
-	//回転順はYXZ
-	Quaternionf rot;
-	rot = AngleAxisf(0, Vector3f::Zero());
-	rot = rot * AngleAxisf(rotation.y(), Vector3f::UnitY());
-	rot = rot * AngleAxisf(rotation.x(), Vector3f::UnitX());
-	rot = rot * AngleAxisf(rotation.z(), Vector3f::UnitZ());
-	//スケール
-	DiagonalMatrix<float, 3> scale = DiagonalMatrix<float, 3>(Vector3f(-scaling.x(), scaling.y(), scaling.z()));
+	void MeshObject::SetMatrix(CameraClass* camera, ShaderClass* shader, K_Math::Vector3& position, K_Math::Vector3& rotation, K_Math::Vector3& scaling) {
+		//移動
+		K_Math::Translation trans = K_Math::Translation(position);
+		//回転順はYXZ
+		K_Math::Quaternion rot;
+		rot = K_Math::AngleAxis(0, K_Math::Vector3::Zero());
+		rot = rot * K_Math::AngleAxis(rotation.y(), K_Math::Vector3::UnitY());
+		rot = rot * K_Math::AngleAxis(rotation.x(), K_Math::Vector3::UnitX());
+		rot = rot * K_Math::AngleAxis(rotation.z(), K_Math::Vector3::UnitZ());
+		//スケール
+		K_Math::DiagonalMatrix scale = K_Math::DiagonalMatrix(K_Math::Vector3(-scaling.x(), scaling.y(), scaling.z()));
 
 
-	Affine3f world = trans * rot * scale;
-	Matrix4f view = camera->GetViewMatrix();
-	Matrix4f projection = camera->GetProjectionMatrix();
+		K_Math::Affine3 world = trans * rot * scale;
+		K_Math::Matrix4x4 view = camera->GetViewMatrix();
+		K_Math::Matrix4x4 projection = camera->GetProjectionMatrix();
 
-	shader->SetMatrix(projection * view * world.matrix());
-	shader->SetWorldMatrix(world.matrix());
+		shader->SetMatrix(projection * view * world.matrix());
+		shader->SetWorldMatrix(world.matrix());
+	}
+
 }

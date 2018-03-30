@@ -5,8 +5,7 @@
 #include<string>
 #include<uchar.h>
 
-#include"MeshObject.h"
-#include"SpriteObject.h"
+#include"MeshModel.h"
 #include"ModelDataFactory.h"
 
 #include"MapPolygon.h"
@@ -45,15 +44,15 @@ private:
 private:
 	GameParameters* param;
 
-	MeshObject *square;
-	MeshObject *skinModel;
-	MeshObject *mapModel;
-	SpriteObject* testSprite;
+	K_Graphics::MeshObject *square;
+	K_Graphics::MeshObject *skinModel;
+	K_Graphics::MeshObject *mapModel;
+	K_Graphics::SpriteObject* testSprite;
 	Player* player;
 	StaticObject* mapObj;
 
-	MapPolygon* map;
+	K_Physics::MapPolygon* map;
 
-	FrameBufferList* frameBuffer;
+	K_Graphics::FrameBufferList* frameBuffer;
 };
 

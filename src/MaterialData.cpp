@@ -1,50 +1,43 @@
 #include"ModelData.h"
 
-////////
-//public
-////
-MaterialData::MaterialData() {
+namespace K_Graphics {
 
-}
-MaterialData::~MaterialData() {
-}
+	////////
+	//public
+	////
+	MaterialData::MaterialData() {
 
-bool MaterialData::Initialize() {
-	return true;
-}
-
-void MaterialData::Add(std::vector<Material> material) {
-	this->materialArray.push_back(material);
-}
-
-void MaterialData::SetTextureName(const std::string& textureName, int arrayIndex, int materialIndex) {
-	if (this->materialArray.size() < arrayIndex) {
-		return;
 	}
-	if (this->materialArray[arrayIndex].size() < materialIndex) {
-		return;
+	MaterialData::~MaterialData() {
 	}
-	//this->materialArray[arrayIndex][materialIndex].textureName = textureName;
-}
 
-void MaterialData::SetTexture(Texture* texture, int arrayIndex, int materialIndex) {
-	if (this->materialArray.size() < arrayIndex) {
-		return;
+	bool MaterialData::Initialize() {
+		return true;
 	}
-	if (this->materialArray[arrayIndex].size() < materialIndex) {
-		return;
+
+	void MaterialData::Add(std::vector<Material> material) {
+		this->materialArray.push_back(material);
 	}
-	this->materialArray[arrayIndex][materialIndex].texture = texture;
-}
 
-Material& MaterialData::GetMaterial(int arrayIndex, int materialIndex) {
-	return this->materialArray[arrayIndex][materialIndex];
-}
+	void MaterialData::SetTexture(Texture* texture, int arrayIndex, int materialIndex) {
+		if (this->materialArray.size() < arrayIndex) {
+			return;
+		}
+		if (this->materialArray[arrayIndex].size() < materialIndex) {
+			return;
+		}
+		this->materialArray[arrayIndex][materialIndex].texture = texture;
+	}
 
-int MaterialData::GetNumMaterial(int arrayIndex) {
-	return (int)this->materialArray[arrayIndex].size();
-}
-int MaterialData::GetNumFace(int arrayIndex, int materialIndex) {
-	return this->materialArray[arrayIndex][materialIndex].numFace;
-}
+	Material& MaterialData::GetMaterial(int arrayIndex, int materialIndex) {
+		return this->materialArray[arrayIndex][materialIndex];
+	}
 
+	int MaterialData::GetNumMaterial(int arrayIndex) {
+		return (int)this->materialArray[arrayIndex].size();
+	}
+	int MaterialData::GetNumFace(int arrayIndex, int materialIndex) {
+		return this->materialArray[arrayIndex][materialIndex].numFace;
+	}
+
+}

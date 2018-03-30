@@ -36,8 +36,6 @@
 #pragma comment(lib, "LinearMath.lib")
 #endif
 
-
-
 #include<Windows.h>
 #include<GLEW/glew.h>
 #include<GLFW/glfw3.h>

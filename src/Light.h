@@ -2,42 +2,46 @@
 
 #include<Eigen\Core>
 #include"ShaderClass.h"
+#include"MyMathFanctions.h"
 
-using namespace Eigen;
+namespace K_Graphics {
 
-class AmbientLight{
-public:
-	AmbientLight();
-	void SetLight(ShaderClass* shader);
+	//ライトの設定を記録するクラス群、正直同じクラスにまとめたほうがよさそう。環境光がないライトとかありえないし。
 
-	void SetPower(float power);
-	void SetColor(float r, float g, float b, float a);
+	class AmbientLight {
+	public:
+		AmbientLight();
+		void SetLight(ShaderClass* shader);
 
-	float GetPower();
-	const Vector4f& GetColor();
+		void SetPower(float power);
+		void SetColor(float r, float g, float b, float a);
 
-protected:
-	float    power;
-	Vector4f color;
-};
+		float GetPower();
+		const K_Math::Vector4& GetColor();
 
-class DirectionalLight{
-public:
-	DirectionalLight();
-	void SetLight(ShaderClass* shader);
+	protected:
+		float    power;
+		K_Math::Vector4 color;
+	};
 
-	void SetPower(float power);
-	void SetColor(float r, float g, float b, float a);
+	class DirectionalLight {
+	public:
+		DirectionalLight();
+		void SetLight(ShaderClass* shader);
 
-	float GetPower();
-	const Vector4f& GetColor();
+		void SetPower(float power);
+		void SetColor(float r, float g, float b, float a);
 
-	void  SetDirection(float x, float y, float z);
-	const Vector3f& GetDirection();
+		float GetPower();
+		const K_Math::Vector4& GetColor();
 
-protected:
-	float    power;
-	Vector4f color;
-	Vector3f direction;
-};
+		void  SetDirection(float x, float y, float z);
+		const K_Math::Vector3& GetDirection();
+
+	protected:
+		float    power;
+		K_Math::Vector4 color;
+		K_Math::Vector3 direction;
+	};
+}
 

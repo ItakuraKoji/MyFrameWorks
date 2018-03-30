@@ -1,14 +1,12 @@
 #pragma once
 
-#include"MeshObject.h"
+#include"MeshModel.h"
 #include"GameParameters.h"
 #include"MyMathFanctions.h"
 
 #include<Eigen\Core>
 #include<Eigen\Geometry>
 #include<string>
-
-using namespace Eigen;
 
 //ゲームにおける物体基底クラス、派生させてキャラクタの挙動を実現させる
 //黒子を作ることも原理上は可能
@@ -22,24 +20,24 @@ public:
 	virtual void Run(GameParameters* param) = 0;
 	virtual void Draw(GameParameters* param) = 0;
 
-	void SetDrawModel(MeshObject* model);
+	void SetDrawModel(K_Graphics::MeshObject* model);
 	void SetPosition(float x, float y, float z);
 	void SetRotation(float x, float y, float z);
 	void SetScale(float x, float y, float z);
 
-	Vector3f GetPosition();
-	Vector3f GetRotation();
-	Vector3f GetScale();
+	K_Math::Vector3 GetPosition();
+	K_Math::Vector3 GetRotation();
+	K_Math::Vector3 GetScale();
 
 protected:
-	MeshObject* GetModel();
+	K_Graphics::MeshObject* GetModel();
 	void LoadModel(GameParameters& param);
 
 protected:
-	Vector3f        position;
-	Vector3f        rotation;
-	Vector3f        scale;
+	K_Math::Vector3        position;
+	K_Math::Vector3        rotation;
+	K_Math::Vector3        scale;
 private:
 	//危ないので触らせない方針で
-	MeshObject*      drawModel;
+	K_Graphics::MeshObject*      drawModel;
 };

@@ -12,7 +12,7 @@ GameObject::~GameObject() {
 	}
 }
 
-void GameObject::SetDrawModel(MeshObject* model) {
+void GameObject::SetDrawModel(K_Graphics::MeshObject* model) {
 	if (this->drawModel) {
 		delete this->drawModel;
 	}
@@ -28,13 +28,13 @@ void GameObject::SetScale(float x, float y, float z) {
 	this->scale << x, y, z;
 }
 
-Vector3f GameObject::GetPosition() {
+K_Math::Vector3 GameObject::GetPosition() {
 	return this->position;
 }
-Vector3f GameObject::GetRotation() {
+K_Math::Vector3 GameObject::GetRotation() {
 	return this->rotation;
 }
-Vector3f GameObject::GetScale() {
+K_Math::Vector3 GameObject::GetScale() {
 	return this->scale;
 }
 
@@ -42,6 +42,6 @@ Vector3f GameObject::GetScale() {
 //protected
 ////
 
-MeshObject* GameObject::GetModel() {
+K_Graphics::MeshObject* GameObject::GetModel() {
 	return this->drawModel;
 }

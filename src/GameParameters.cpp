@@ -14,15 +14,15 @@ bool GameParameters::Initialize(GLFWwindow* window, int screenWidth, int screenH
 	try {
 		this->screenWidth = screenWidth;
 		this->screenHeight = screenHeight;
-		this->physicsSystem = new BulletPhysics;
-		this->input = new InputGLFW(0, window);
-		this->textureList = new TextureList;
-		this->shaderList = new ShaderList;
-		this->cameraList = new CameraList;
-		this->lightList = new LightList;
-		this->audioPlayer = new SoundClass;
-		this->effectSystem = new EffectClass;
-		this->fontRenderer = new FontRenderer;
+		this->physicsSystem = new K_Physics::BulletPhysics;
+		this->input = new K_Input::InputGLFW(0, window);
+		this->textureList = new K_Graphics::TextureList;
+		this->shaderList = new K_Graphics::ShaderList;
+		this->cameraList = new K_Graphics::CameraList;
+		this->lightList = new K_Graphics::LightList;
+		this->audioPlayer = new K_Audio::SoundClass;
+		this->effectSystem = new K_Graphics::EffectClass;
+		this->fontRenderer = new K_Graphics::FontRenderer;
 	}
 	catch(...){
 		return false;
@@ -89,31 +89,31 @@ void GameParameters::UseCamera(const std::string& name) {
 	}
 }
 
-InputGLFW* GameParameters::GetInput() {
+K_Input::InputGLFW* GameParameters::GetInput() {
 	return this->input;
 }
-BulletPhysics* GameParameters::GetPhysics() {
+K_Physics::BulletPhysics* GameParameters::GetPhysics() {
 	return this->physicsSystem;
 }
-TextureList* GameParameters::GetTextureList() {
+K_Graphics::TextureList* GameParameters::GetTextureList() {
 	return this->textureList;
 }
-ShaderList* GameParameters::GetShaderList() {
+K_Graphics::ShaderList* GameParameters::GetShaderList() {
 	return this->shaderList;
 }
-LightList* GameParameters::GetLightList() {
+K_Graphics::LightList* GameParameters::GetLightList() {
 	return this->lightList;
 }
-CameraList* GameParameters::GetCameraList() {
+K_Graphics::CameraList* GameParameters::GetCameraList() {
 	return this->cameraList;
 }
-SoundClass* GameParameters::GetAudioList() {
+K_Audio::SoundClass* GameParameters::GetAudioList() {
 	return this->audioPlayer;
 }
-EffectClass* GameParameters::GetEffects() {
+K_Graphics::EffectClass* GameParameters::GetEffects() {
 	return this->effectSystem;
 }
-FontRenderer* GameParameters::GetFontRenderer() {
+K_Graphics::FontRenderer* GameParameters::GetFontRenderer() {
 	return this->fontRenderer;
 }
 

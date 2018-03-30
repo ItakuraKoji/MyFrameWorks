@@ -25,17 +25,17 @@ void Player::Run(GameParameters* param) {
 
 	//足元の着地判定
 	bool isGround = false;
-	std::vector<CollisionTag>& tags = param->GetPhysics()->FindConfrictionObjects(this->characterFoot->collision);
+	std::vector<K_Physics::CollisionTag>& tags = param->GetPhysics()->FindConfrictionObjects(this->characterFoot->collision);
 	if (tags.size()) {
 		isGround = true;
 	}
 
-	float slRotation = param->GetInput()->GetStickRotation(VPAD_STICK_L);
-	float slPower    = param->GetInput()->GetStickPower(VPAD_STICK_L);
+	float slRotation = param->GetInput()->GetStickRotation(K_Input::VPAD_STICK_L);
+	float slPower    = param->GetInput()->GetStickPower(K_Input::VPAD_STICK_L);
 
 	//アナログが倒されている方向 カメラの回転 に対応したキャラの向き
 	if (slPower) {
-		this->rotation.y() = -slRotation + M::DegToRad(-90.0f) + this->camera->GetRotationH();
+		this->rotation.y() = -slRotation + K_Math::DegToRad(-90.0f) + this->camera->GetRotationH();
 		if (slPower > 0.65f) {
 			if (isGround) {
 				this->GetModel()->SetBoneAnimation("Dash", true, true, true, 10);
@@ -58,20 +58,20 @@ void Player::Run(GameParameters* param) {
 		}
 	}
 
-	Vector3f direction(0.0f, 0.0f, 0.0f);
+	K_Math::Vector3 direction(0.0f, 0.0f, 0.0f);
 	direction.x() += this->speed * slPower * cosf(slRotation);
 	direction.z() += this->speed * slPower * sinf(slRotation);
 
 
 
-	if (param->GetInput()->isPressButton(VPAD_BUTTON_A)) {
+	if (param->GetInput()->isPressButton(K_Input::VPAD_BUTTON_A)) {
 		this->velocity = 1.0f;
 		this->GetModel()->SetBoneAnimation("Jump", false, false, true, 3);
 		this->GetModel()->SetSpeed(0.8f);
 		isGround = false;
 	}
 
-	if (param->GetInput()->isPressButton(VPAD_BUTTON_B)) {
+	if (param->GetInput()->isPressButton(K_Input::VPAD_BUTTON_B)) {
 		param->GetEffects()->Play("test", this->position.x(), this->position.y(), this->position.z());
 		//param->GetAudioList()->GetSource("se")->PlayCopy();
 	}
@@ -87,7 +87,7 @@ void Player::Run(GameParameters* param) {
 
 
 	//移動ベクトルを指定したカメラの軸に合わせる
-	Vector3f goVec = AngleAxisf(this->camera->GetRotationH(), Vector3f(0.0f, 1.0f, 0.0f)) * direction;
+	K_Math::Vector3 goVec = K_Math::AngleAxis(this->camera->GetRotationH(), K_Math::Vector3(0.0f, 1.0f, 0.0f)) * direction;
 
 	param->GetPhysics()->MoveCharacter(this->characterCollision->collision, btVector3(goVec.x(), goVec.y(), goVec.z()));
 	//param->GetPhysics()->MoveCharacter(this->characterCollision->collision, btVector3(goVec.x(), 0.0f, goVec.z()), btVector3(0.0f, goVec.y(), 0.0f));
@@ -107,16 +107,19 @@ void Player::Run(GameParameters* param) {
 	this->GetModel()->UpdateAnimation();
 	//system("pause");
 	
-	param->GetFontRenderer()->DrawString3D("X : " + std::to_string(this->position.x()), 32, this->position.x(), this->position.y(), this->position.z());
-	param->GetFontRenderer()->DrawString3D("Y : " + std::to_string(this->position.y()), 32, this->position.x(), this->position.y() + 32 * 0.05f, this->position.z());
-	param->GetFontRenderer()->DrawString3D("Z : " + std::to_string(this->position.z()), 32, this->position.x(), this->position.y() + 64 * 0.05f, this->position.z());
+	//param->GetFontRenderer()->DrawString3D("X : " + std::to_string(this->position.x()), 32, this->position.x(), this->position.y(), this->position.z());
+	//param->GetFontRenderer()->DrawString3D("Y : " + std::to_string(this->position.y()), 32, this->position.x(), this->position.y() + 32 * 0.05f, this->position.z());
+	//param->GetFontRenderer()->DrawString3D("Z : " + std::to_string(this->position.z()), 32, this->position.x(), this->position.y() + 64 * 0.05f, this->position.z());
+	param->GetFontRenderer()->DrawString3D("X : " + std::to_string(this->position.x()), 32, 0.0f, 0.0f, -600.0f);
+	param->GetFontRenderer()->DrawString3D("Y : " + std::to_string(this->position.y()), 32, 0.0f, 0.0f + 32 * 0.05f, -600.0f);
+	param->GetFontRenderer()->DrawString3D("Z : " + std::to_string(this->position.z()), 32, 0.0f, 0.0f + 64 * 0.05f, -600.0f);
 }
 
 void Player::Draw(GameParameters* param) {
 	this->GetModel()->Draw(param->currentCamera, param->currentShader, this->position, this->rotation, this->scale);
 }
 
-void Player::SetCameraMan(CameraClass* camera) {
+void Player::SetCameraMan(K_Graphics::CameraClass* camera) {
 	this->camera = new CameraMan;
 	this->camera->Initialize(20.0f, 5.0f);
 	this->camera->SetRotation(-180, 0);

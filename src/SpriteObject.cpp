@@ -1,95 +1,107 @@
-#include"SpriteObject.h"
+#include"MeshModel.h"
 
+namespace K_Graphics {
 
-SpriteObject::SpriteObject(Texture* texture, float controlPointX, float controlPointY) {
-	if (!this->drawModel) {
-		ModelDataFactory factory;
-		MeshModel* model = new MeshModel(factory.CreateSquareModel(1.0f, 1.0f, texture, false));
-		if (model == nullptr) {
-			throw("SpriteObjectError ModelData Initialize Failed");
+	////////
+	//public
+	////
+
+	SpriteObject::SpriteObject(Texture* texture, float controlPointX, float controlPointY) {
+		if (!this->drawModel) {
+			ModelDataFactory factory;
+			MeshModel* model = new MeshModel(factory.CreateSquareModel(1.0f, 1.0f, texture, false));
+			if (model == nullptr) {
+				throw("SpriteObjectError ModelData Initialize Failed");
+			}
+			this->drawModel = model;
 		}
-		this->drawModel = model;
+		this->controlPoint = K_Math::Vector2(controlPointX, controlPointY);
+		SetTexture(texture);
 	}
-	this->controlPoint = Vector2f(controlPointX, controlPointY);
-	SetTexture(texture);
-}
-SpriteObject::~SpriteObject() {
-	if (this->drawModel != nullptr) {
-		delete this->drawModel;
-		this->drawModel = nullptr;
+	SpriteObject::~SpriteObject() {
+		if (this->drawModel != nullptr) {
+			delete this->drawModel;
+			this->drawModel = nullptr;
+		}
 	}
-}
 
 
-bool SpriteObject::SetTexture(Texture* texture) {
-	this->cullentTexture = texture;
-	this->drawModel->SetTexture(texture, 0, 0);
-	return true;
-}
-
-void SpriteObject::Draw2D(CameraClass* camera, ShaderClass* shader, M::Box2D& src, M::Box2D& draw, float rotation) {
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	Vector3f position(draw.x - camera->GetScreenWidth() / 2, -(draw.y - camera->GetScreenHeight() / 2), 0.0f);
-	Vector3f scale(draw.w, draw.h, 1.0f);
-	Vector3f rot(0.0f, 0.0f, M::DegToRad(rotation));
-	SetMatrix(camera, shader, position, rot, scale);
-	if (this->cullentTexture != nullptr) {
-		shader->SetValue("textureSize", Vector2f(this->cullentTexture->GetWidth(), this->cullentTexture->GetHeight()));
+	bool SpriteObject::SetTexture(Texture* texture) {
+		this->cullentTexture = texture;
+		this->drawModel->SetTexture(texture, 0, 0);
+		return true;
 	}
-	shader->SetValue("spriteUV", Vector4f(src.x, src.y, src.w, src.h));
-	this->drawModel->Draw(shader);
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-}
 
-void SpriteObject::Draw3D(CameraClass* camera, ShaderClass* shader, M::Box2D& src, Vector3f& position, Vector3f& rotation, Vector3f& scale) {
-	glDisable(GL_CULL_FACE);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	void SpriteObject::Draw2D(CameraClass* camera, ShaderClass* shader, K_Math::Box2D& src, K_Math::Box2D& draw, float rotation) {
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	scale.x() *= src.w;
-	scale.y() *= src.h;
-
-	SetMatrix(camera, shader, position, rotation, scale);
-	if (this->cullentTexture != nullptr) {
-		shader->SetValue("textureSize", Vector2f(this->cullentTexture->GetWidth(), this->cullentTexture->GetHeight()));
+		K_Math::Vector3 position(draw.x - camera->GetScreenWidth() / 2, -(draw.y - camera->GetScreenHeight() / 2), 0.0f);
+		K_Math::Vector3 scale(draw.w, draw.h, 1.0f);
+		K_Math::Vector3 rot(0.0f, 0.0f, K_Math::DegToRad(rotation));
+		SetMatrix(camera, shader, position, rot, scale, false);
+		if (this->cullentTexture != nullptr) {
+			shader->SetValue("textureSize", K_Math::Vector2(this->cullentTexture->GetWidth(), this->cullentTexture->GetHeight()));
+		}
+		shader->SetValue("spriteUV", K_Math::Vector4(src.x, src.y, src.w, src.h));
+		this->drawModel->Draw(shader);
+		glDisable(GL_BLEND);
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
 	}
-	shader->SetValue("spriteUV", Vector4f(src.x, src.y, src.w, src.h));
-	this->drawModel->Draw(shader);
-	glDisable(GL_BLEND);
-	glEnable(GL_CULL_FACE);
-}
+
+	void SpriteObject::Draw3D(CameraClass* camera, ShaderClass* shader, K_Math::Box2D& src, K_Math::Vector3& position, K_Math::Vector3& rotation, K_Math::Vector3& scale) {
+		glDisable(GL_CULL_FACE);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		scale.x() *= src.w;
+		scale.y() *= src.h;
+
+		SetMatrix(camera, shader, position, rotation, scale, true);
+		if (this->cullentTexture != nullptr) {
+			shader->SetValue("textureSize", K_Math::Vector2(this->cullentTexture->GetWidth(), this->cullentTexture->GetHeight()));
+		}
+		shader->SetValue("spriteUV", K_Math::Vector4(src.x, src.y, src.w, src.h));
+		this->drawModel->Draw(shader);
+		glDisable(GL_BLEND);
+		glEnable(GL_CULL_FACE);
+	}
 
 
-////////
-//protected
-////
+	////////
+	//protected
+	////
 
-void SpriteObject::SetMatrix(CameraClass* camera, ShaderClass* shader, Vector3f& position, Vector3f& rotation, Vector3f& scaling) {
-	//移動
-	Translation<float, 3> trans = Translation<float, 3>(position.x() + this->controlPoint.x(), position.y() - this->controlPoint.y(), position.z());
-	Translation<float, 3> controlTrans = Translation<float, 3>(-this->controlPoint.x(), this->controlPoint.y(), 0.0f);
-	//回転順はYXZ
-	Quaternionf rot;
-	rot = AngleAxisf(0, Vector3f::Zero());
-	rot = rot * AngleAxisf(rotation.y(), Vector3f::UnitY());
-	rot = rot * AngleAxisf(rotation.x(), Vector3f::UnitX());
-	rot = rot * AngleAxisf(rotation.z(), Vector3f::UnitZ());
-	//スケール
-	DiagonalMatrix<float, 3> scale = DiagonalMatrix<float, 3>(Vector3f(scaling.x(), scaling.y(), scaling.z()));
+	void SpriteObject::SetMatrix(CameraClass* camera, ShaderClass* shader, K_Math::Vector3& position, K_Math::Vector3& rotation, K_Math::Vector3& scaling, bool billBoard) {
+		//移動
+		K_Math::Translation trans = K_Math::Translation(position.x() + this->controlPoint.x(), position.y() - this->controlPoint.y(), position.z());
+		K_Math::Translation controlTrans = K_Math::Translation(-this->controlPoint.x(), this->controlPoint.y(), 0.0f);
+		//回転順はYXZ
+		K_Math::Quaternion rot;
+		rot = K_Math::AngleAxis(0, K_Math::Vector3::Zero());
+		rot = rot * K_Math::AngleAxis(rotation.y(), K_Math::Vector3::UnitY());
+		rot = rot * K_Math::AngleAxis(rotation.x(), K_Math::Vector3::UnitX());
+		rot = rot * K_Math::AngleAxis(rotation.z(), K_Math::Vector3::UnitZ());
+		//スケール
+		K_Math::DiagonalMatrix scale = K_Math::DiagonalMatrix(K_Math::Vector3(scaling.x(), scaling.y(), scaling.z()));
 
-	Matrix3f cameraMat = camera->GetCameraMatrix().block(0, 0, 3, 3);
-	
+		K_Math::Matrix3x3 cameraMat;
+		if (billBoard) {
+			cameraMat = camera->GetCameraMatrix().block(0, 0, 3, 3);
+		}
+		else {
+			cameraMat = K_Math::Matrix3x3::Identity();
+		}
 
-	Affine3f world = trans * cameraMat * rot * controlTrans * scale;
+		K_Math::Affine3 world = trans * cameraMat * rot * controlTrans * scale;
 
-	Matrix4f view = camera->GetViewMatrix();
-	Matrix4f projection = camera->GetProjectionMatrix();
+		K_Math::Matrix4x4 view = camera->GetViewMatrix();
+		K_Math::Matrix4x4 projection = camera->GetProjectionMatrix();
 
-	shader->SetMatrix(projection * view * world.matrix());
+		shader->SetMatrix(projection * view * world.matrix());
+	}
+
 }

@@ -120,12 +120,12 @@ bool SystemClass::InitializeOpenGL() {
 	}
 	
 	//OpenGL‚Ì•`‰æİ’è‚ğ‰Šú‰»
+	glClearDepth(1.0f);
+	glClearStencil(0);
+
 	glFrontFace(GL_CCW);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
-
-	glClearDepth(1.0f);
-	glClearStencil(0);
 
 	glEnable(GL_DEPTH_TEST);
 	return true;

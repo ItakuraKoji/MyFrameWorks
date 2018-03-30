@@ -1,14 +1,14 @@
 #include"MyMathFanctions.h"
 
-float M::DegToRad(float deg) {
+float K_Math::DegToRad(float deg) {
 	return deg * (float)M_PI / 180.0f;
 }
-float M::RadToDeg(float rad) {
+float K_Math::RadToDeg(float rad) {
 	return rad * 180.0f / (float)M_PI;
 }
 
-void M::MatrixPerspectiveLH(Eigen::Matrix4f& result, float screenWidth, float screenHeight, float screenNear, float screenFar, float fieldOfView) {
-	Eigen::Matrix4f mat;
+void K_Math::MatrixPerspectiveLH(K_Math::Matrix4x4& result, float screenWidth, float screenHeight, float screenNear, float screenFar, float fieldOfView) {
+	K_Math::Matrix4x4 mat;
 	mat(0) = screenHeight / (screenWidth * tanf(fieldOfView * 0.5f));
 	mat(1) = 0.0f;
 	mat(2) = 0.0f;
@@ -31,11 +31,11 @@ void M::MatrixPerspectiveLH(Eigen::Matrix4f& result, float screenWidth, float sc
 	result = mat;
 }
 
-void M::MatrixPerspectiveRH(Eigen::Matrix4f& result, float screenWidth, float screenHeight, float screenNear, float screenFar, float fieldOfView) {
+void K_Math::MatrixPerspectiveRH(K_Math::Matrix4x4& result, float screenWidth, float screenHeight, float screenNear, float screenFar, float fieldOfView) {
 
 }
-void M::MatrixOrthoLH(Eigen::Matrix4f& result, float screenWidth, float screenHeight, float screenNear, float screenFar) {
-	Eigen::Matrix4f mat;
+void K_Math::MatrixOrthoLH(K_Math::Matrix4x4& result, float screenWidth, float screenHeight, float screenNear, float screenFar) {
+	K_Math::Matrix4x4 mat;
 	mat(0) = 2.0f / screenWidth;
 	mat(1) = 0.0f;
 	mat(2) = 0.0f;
@@ -58,11 +58,11 @@ void M::MatrixOrthoLH(Eigen::Matrix4f& result, float screenWidth, float screenHe
 
 	result = mat;
 }
-void M::MatrixOrthoRH(Eigen::Matrix4f& result, float screenWidth, float screenHeight, float screenNear, float screenFar) {
+void K_Math::MatrixOrthoRH(K_Math::Matrix4x4& result, float screenWidth, float screenHeight, float screenNear, float screenFar) {
 
 }
-void M::MatrixLookAt(Eigen::Matrix4f& result, Eigen::Vector3f& position, Eigen::Vector3f& lookAt, Eigen::Vector3f& up) {
-	Eigen::Vector3f zAxis, xAxis, yAxis;
+void K_Math::MatrixLookAt(K_Math::Matrix4x4& result, K_Math::Vector3& position, K_Math::Vector3& lookAt, K_Math::Vector3& up) {
+	K_Math::Vector3 zAxis, xAxis, yAxis;
 
 	// zAxis = normal(lookAt - position)
 	zAxis.x() = lookAt.x() - position.x();
@@ -90,7 +90,7 @@ void M::MatrixLookAt(Eigen::Matrix4f& result, Eigen::Vector3f& position, Eigen::
 	result3 = ((zAxis.x() * position.x()) + (zAxis.y() * position.y()) + (zAxis.z() * position.z())) * -1.0f;
 
 	// ÉrÉÖÅ[çsóÒÇçÏê¨
-	Eigen::Matrix4f mat;
+	K_Math::Matrix4x4 mat;
 	mat << xAxis.x(), xAxis.y(), xAxis.z(), result1,
 		   yAxis.x(), yAxis.y(), yAxis.z(), result2,
 		   zAxis.x(), zAxis.y(), zAxis.z(), result3,

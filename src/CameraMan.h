@@ -10,14 +10,14 @@ public:
 	void Run(GameParameters* param);
 	void Draw(GameParameters* param);
 
-	void SetParameter(GameObject* terget, CameraClass* camera);
+	void SetParameter(GameObject* terget, K_Graphics::CameraClass* camera);
 	void SetRotation(float degHorizontal, float degVertical);
 	float GetRotationH();
 	float GetRotationV();
 
 private:
 	GameObject* terget;
-	CameraClass* camera;
+	K_Graphics::CameraClass* camera;
 	float distance;
 	float height;
 	float camerarotH, camerarotV;

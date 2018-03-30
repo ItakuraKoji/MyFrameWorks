@@ -4,17 +4,20 @@
 #include<string>
 #include"CameraClass.h"
 
-//カメラに名前を付けて管理
-class CameraList {
-public:
-	CameraList();
-	~CameraList();
-	void Initialize();
+namespace K_Graphics {
 
-	void AddPerspectiveCamera(const std::string& name, Vector3f& position, Vector3f& target, int width, int height, float neer, float far, float fieldOfView);
-	void AddOrthoCamera      (const std::string& name, Vector3f& position, Vector3f& target, int width, int height, float neer, float far);
-	CameraClass* GetCamera(const std::string& name);
+	//カメラに名前を付けて管理
+	class CameraList {
+	public:
+		CameraList();
+		~CameraList();
+		void Initialize();
 
-private:
-	std::unordered_map<std::string, CameraClass*> cameraList;
-};
+		void AddPerspectiveCamera(const std::string& name, K_Math::Vector3& position, K_Math::Vector3& target, int width, int height, float neer, float far, float fieldOfView);
+		void AddOrthoCamera(const std::string& name, K_Math::Vector3& position, K_Math::Vector3& target, int width, int height, float neer, float far);
+		CameraClass* GetCamera(const std::string& name);
+
+	private:
+		std::unordered_map<std::string, CameraClass*> cameraList;
+	};
+}

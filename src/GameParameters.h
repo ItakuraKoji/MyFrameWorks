@@ -29,30 +29,30 @@ public:
 	void UseCamera(const std::string& name);
 
 
-	InputGLFW*    GetInput();
-	BulletPhysics* GetPhysics();
-	TextureList*   GetTextureList();
-	ShaderList*    GetShaderList();
-	LightList*     GetLightList();
-	CameraList*    GetCameraList();
-	SoundClass*    GetAudioList();
-	EffectClass*   GetEffects();
-	FontRenderer*  GetFontRenderer();
+	K_Input::InputGLFW*    GetInput();
+	K_Physics::BulletPhysics* GetPhysics();
+	K_Graphics::TextureList*   GetTextureList();
+	K_Graphics::ShaderList*    GetShaderList();
+	K_Graphics::LightList*     GetLightList();
+	K_Graphics::CameraList*    GetCameraList();
+	K_Audio::SoundClass*    GetAudioList();
+	K_Graphics::EffectClass*   GetEffects();
+	K_Graphics::FontRenderer*  GetFontRenderer();
 
 private:
-	InputGLFW *    input;
-	BulletPhysics* physicsSystem;
-	TextureList*   textureList;
-	ShaderList*    shaderList;
-	LightList*     lightList;
-	CameraList*    cameraList;
-	SoundClass*    audioPlayer;
-	EffectClass*   effectSystem;
-	FontRenderer*  fontRenderer;
+	K_Input::InputGLFW *    input;
+	K_Physics::BulletPhysics* physicsSystem;
+	K_Graphics::TextureList*   textureList;
+	K_Graphics::ShaderList*    shaderList;
+	K_Graphics::LightList*     lightList;
+	K_Graphics::CameraList*    cameraList;
+	K_Audio::SoundClass*    audioPlayer;
+	K_Graphics::EffectClass*   effectSystem;
+	K_Graphics::FontRenderer*  fontRenderer;
 
 public:
-	CameraClass*   currentCamera;
-	ShaderClass*   currentShader;
+	K_Graphics::CameraClass*   currentCamera;
+	K_Graphics::ShaderClass*   currentShader;
 	int            screenWidth;
 	int            screenHeight;
 };

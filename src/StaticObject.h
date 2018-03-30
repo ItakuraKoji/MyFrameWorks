@@ -11,8 +11,8 @@ public:
 	virtual void Finalize();
 	virtual void Run(GameParameters* param);
 	virtual void Draw(GameParameters* param);
-	void SetMapCollision(MapPolygon* map);
+	void SetMapCollision(K_Physics::MapPolygon* map);
 
 private:
-	MapPolygon* mapCollisions;
+	K_Physics::MapPolygon* mapCollisions;
 };

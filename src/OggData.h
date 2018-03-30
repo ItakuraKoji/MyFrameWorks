@@ -4,19 +4,23 @@
 #include<libOggVorbis\vorbis\vorbisfile.h>
 #include<string>
 
-//Oggの読み込みとデータ保持を担当する
-class OggData : public AudioData {
-public:
-	OggData(const char* filePass);
-	~OggData();
+namespace K_Audio {
 
-	void Seek(int offset);
-	int Read(char* buffer, int maxSize);
+	//Oggの読み込みとデータ保持を担当する
+	class OggData : public AudioData {
+	public:
+		OggData(const char* filePass);
+		~OggData();
 
-private:
-	bool LoadFile(const char* filePass);
-	int OggCommentValue(vorbis_comment* comment, const char* key);
+		void Seek(int offset);
+		int Read(char* buffer, int maxSize);
 
-private:
-	OggVorbis_File oggFile;
-};
+	private:
+		bool LoadFile(const char* filePass);
+		int OggCommentValue(vorbis_comment* comment, const char* key);
+
+	private:
+		OggVorbis_File oggFile;
+	};
+
+}

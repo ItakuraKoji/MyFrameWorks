@@ -15,7 +15,7 @@ void StaticObject::Draw(GameParameters* param) {
 	this->GetModel()->Draw(param->currentCamera, param->currentShader, this->position, this->rotation, this->scale);
 }
 
-void StaticObject::SetMapCollision(MapPolygon* map) {
+void StaticObject::SetMapCollision(K_Physics::MapPolygon* map) {
 	this->mapCollisions = map;
 }
 

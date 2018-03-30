@@ -13,14 +13,14 @@ void CameraMan::Finalize() {
 }
 void CameraMan::Run(GameParameters* param) {
 
-	float srRotation = param->GetInput()->GetStickRotation(VPAD_STICK_R);
-	float srPower = param->GetInput()->GetStickPower(VPAD_STICK_R);
+	float srRotation = param->GetInput()->GetStickRotation(K_Input::VPAD_STICK_R);
+	float srPower = param->GetInput()->GetStickPower(K_Input::VPAD_STICK_R);
 
 	this->camerarotH += 1.5f * srPower * cosf(srRotation);
 	this->camerarotV += 1.5f * srPower * sinf(srRotation);
 
 	//ターゲットの位置の変化を取得し、やや遅れるように改変
-	Vector3f move;
+	K_Math::Vector3 move;
 	move.x() = this->terget->GetPosition().x() - this->camera->GetTerget().x();
 	move.y() = this->terget->GetPosition().y() - this->camera->GetTerget().y() + this->height;
 	move.z() = this->terget->GetPosition().z() - this->camera->GetTerget().z();
@@ -29,9 +29,9 @@ void CameraMan::Run(GameParameters* param) {
 
 	//中心点から距離分引く
 	float dis = this->distance + move.norm() * 3.0f;
-	float cx = -dis * sinf(M::DegToRad(camerarotH)) + this->terget->GetPosition().x();
-	float cy = -dis * sinf(M::DegToRad(camerarotV)) + this->terget->GetPosition().y() + this->height;
-	float cz = -dis * cosf(M::DegToRad(camerarotH)) * cosf(M::DegToRad(camerarotV)) + this->terget->GetPosition().z();
+	float cx = -dis * sinf(K_Math::DegToRad(camerarotH)) + this->terget->GetPosition().x();
+	float cy = -dis * sinf(K_Math::DegToRad(camerarotV)) + this->terget->GetPosition().y() + this->height;
+	float cz = -dis * cosf(K_Math::DegToRad(camerarotH)) * cosf(K_Math::DegToRad(camerarotV)) + this->terget->GetPosition().z();
 
 	//位置についても同様
 	move.x() = cx - this->camera->GetPosition().x();
@@ -45,13 +45,13 @@ void CameraMan::Draw(GameParameters* param) {
 
 }
 
-void CameraMan::SetParameter(GameObject* terget, CameraClass* camera) {
+void CameraMan::SetParameter(GameObject* terget, K_Graphics::CameraClass* camera) {
 	this->terget = terget;
 	this->camera = camera;
 
-	float cx = -this->distance * sinf(M::DegToRad(camerarotH)) + this->terget->GetPosition().x();
-	float cy = -this->distance * sinf(M::DegToRad(camerarotV)) + this->terget->GetPosition().y() + this->height;
-	float cz = -this->distance * cosf(M::DegToRad(camerarotH)) * cosf(M::DegToRad(camerarotV)) + this->terget->GetPosition().z();
+	float cx = -this->distance * sinf(K_Math::DegToRad(camerarotH)) + this->terget->GetPosition().x();
+	float cy = -this->distance * sinf(K_Math::DegToRad(camerarotV)) + this->terget->GetPosition().y() + this->height;
+	float cz = -this->distance * cosf(K_Math::DegToRad(camerarotH)) * cosf(K_Math::DegToRad(camerarotV)) + this->terget->GetPosition().z();
 	this->camera->SetPosition(cx, cy, cz);
 	this->camera->SetTarget(this->terget->GetPosition().x(), this->terget->GetPosition().y() + this->height, this->terget->GetPosition().z());
 }
@@ -63,8 +63,8 @@ void CameraMan::SetRotation(float horizontal, float vertical) {
 
 
 float CameraMan::GetRotationH() {
-	return M::DegToRad(this->camerarotH);
+	return K_Math::DegToRad(this->camerarotH);
 }
 float CameraMan::GetRotationV() {
-	return M::DegToRad(this->camerarotV);
+	return K_Math::DegToRad(this->camerarotV);
 }

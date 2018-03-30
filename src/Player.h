@@ -10,13 +10,13 @@ public:
 	virtual void Run(GameParameters* param);
 	virtual void Draw(GameParameters* param);
 
-	void SetCameraMan(CameraClass* camera);
+	void SetCameraMan(K_Graphics::CameraClass* camera);
 
 private:
 
 private:
-	CollisionData* characterCollision;
-	CollisionData* characterFoot;
+	K_Physics::CollisionData* characterCollision;
+	K_Physics::CollisionData* characterFoot;
 
 	float speed;
 	float velocity;
