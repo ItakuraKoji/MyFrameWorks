@@ -29,7 +29,7 @@ class MyApplication{
 public:
 	MyApplication();
 	~MyApplication();
-	bool Initialize(GLFWwindow* window, int width, int height);
+	bool Initialize(GameParameters* param, int width, int height);
 	void Finalize();
 	void Run();
 	void Draw();

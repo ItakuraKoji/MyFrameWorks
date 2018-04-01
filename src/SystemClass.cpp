@@ -10,67 +10,93 @@ void GLFWKeyEvent(GLFWwindow* window, int key, int scanCode, int action, int mod
 ////////
 //public
 ////
-SystemClass::SystemClass() {
-	this->screenWidth = 1920 / 2;
-	this->screenHeight = 1080 / 2;
-	this->isFullScreen = false;
-	this->windowHandle = nullptr;
+SystemClass::SystemClass(int windowWidth, int windowHeight, bool isFullScreen) {
+	if (!Initialize(windowWidth, windowHeight, isFullScreen)) {
+		Finalize();
+		throw("system Initialize Failed");
+	}
 }
 SystemClass::~SystemClass() {
-	if (this->application != nullptr) {
-		delete this->application;
-		this->application = nullptr;
-	}
-
-
-	glfwTerminate();
+	Finalize();
 }
 
-bool SystemClass::Initialize() {
+bool SystemClass::Initialize(int windowWidth, int windowHeight, bool isFullScreen) {
+	Finalize();
+
+	this->screenWidth = windowWidth;
+	this->screenHeight = windowHeight;
+	this->isFullScreen = isFullScreen;
+	this->windowHandle = nullptr;
+	this->parameters = nullptr;
+	this->windowClosed = false;
+	this->fps = 0.0f;
+
 	if (!this->CreateAppricationWindow("OpenGL", this->screenWidth, this->screenHeight, this->isFullScreen)) {
 		return false;
 	}
 	if (!this->InitializeOpenGL()) {
 		return false;
 	}
-	if (!this->InitializeApplication()) {
-		return false;
-	}
 
-	//分解能は1ミリ秒
-	startTime = timeGetTime();
-	framecount = 0;
+	this->startTime = std::chrono::system_clock::now();
+	this->framecount = 0;
 	return true;
 }
+void SystemClass::Finalize() {
+	if (this->parameters != nullptr) {
+		delete this->parameters;
+		this->parameters = nullptr;
+	}
+	glfwTerminate();
+}
 
+void SystemClass::ProcessSystem() {
+	//関数が０を返したときはウィンドウは閉じられていない
+	this->windowClosed = (bool)glfwWindowShouldClose(this->windowHandle);
 
-void SystemClass::Run() {
-	while (!glfwWindowShouldClose(this->windowHandle))
-	{
-		glfwPollEvents();
-		//ウィンドウフォーカス時のみゲームを処理する
-		if (!glfwGetWindowAttrib(this->windowHandle, GLFW_FOCUSED)) {
-			continue;
-		}
+	glfwPollEvents();
+	//関数が０を返したときはウィンドウはフォーカスされていない
+	this->isFocus = (bool)glfwGetWindowAttrib(this->windowHandle, GLFW_FOCUSED);
 
-		application->Run();
-		application->Draw();
-		glfwSwapBuffers(this->windowHandle);
+	if (!this->isFocus) {
+		//FPS計測はフォーカスしているときだけ
+		return;
+	}
 
-		++framecount;
+	//FPS計測
+	std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
 
-		if (framecount == 60) {
-			cullentTime = timeGetTime();
-			double fps = (double)(framecount) / (cullentTime - startTime) * 1000;
-			startTime = timeGetTime();
+	++this->framecount;
+	if (this->framecount == 60) {
+		cullentTime = std::chrono::system_clock::now();
+		this->fps = (float)framecount / std::chrono::duration_cast<std::chrono::milliseconds>(cullentTime - startTime).count() * 1000;
+		this->startTime = std::chrono::system_clock::now();
 
-			std::cout << fps << std::endl;
-			framecount = 0;
-		}
+		std::cout << this->fps << std::endl;
+		this->framecount = 0;
 	}
 }
 
+void SystemClass::SwapBuffer() {
+	glfwSwapBuffers(this->windowHandle);
+}
 
+bool SystemClass::WindowForcus() {
+	return this->isFocus;
+}
+bool SystemClass::WindowClosed() {
+	return this->windowClosed;
+}
+
+int SystemClass::GetWindowWidth() {
+	return this->screenWidth;
+}
+int SystemClass::GetWindowHeight() {
+	return this->screenHeight;
+}
+GameParameters* SystemClass::GetParameters() {
+	return this->parameters;
+}
 
 ////////
 //private
@@ -79,7 +105,6 @@ bool SystemClass::CreateAppricationWindow(const char* windowName, int width, int
 	if (!glfwInit()) {
 		return false;
 	}
-
 	GLFWmonitor *monitor = nullptr;
 	//フルスクリーンの際はプライマリーモニターに出力する
 	if (fullScreen) {
@@ -110,11 +135,12 @@ bool SystemClass::CreateAppricationWindow(const char* windowName, int width, int
 
 	glfwMakeContextCurrent(this->windowHandle);
 	glfwSwapInterval(1);
-	
+
 	return true;
 }
 
 bool SystemClass::InitializeOpenGL() {
+
 	if (glewInit() != GLEW_OK) {
 		return false;
 	}
@@ -128,19 +154,14 @@ bool SystemClass::InitializeOpenGL() {
 	glCullFace(GL_BACK);
 
 	glEnable(GL_DEPTH_TEST);
-	return true;
-}
 
-bool SystemClass::InitializeApplication() {
-	this->application = new MyApplication;
-	if (this->application == nullptr) {
-		return false;
+	//ゲームのためのシステムを初期化
+	try {
+		this->parameters = new GameParameters(this->windowHandle, this->screenWidth, this->screenHeight);
 	}
-	if (!this->application->Initialize(this->windowHandle, this->screenWidth, this->screenHeight)) {
+	catch (...) {
 		return false;
 	}
 	return true;
 }
-
-
 

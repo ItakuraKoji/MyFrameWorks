@@ -17,6 +17,10 @@ void main(void)
 {
 	vec3 suv = (outLightDepth.xyz / outLightDepth.w);
 	suv = (suv + 1.0) * 0.5;
+	if(suv.x > 1.0 || suv.y > 1.0 || suv.x < 0.0 || suv.y < 0.0){
+		resultColor = vec4(1.0, 1.0, 1.0, 1.0);
+		return;
+	}
 
 	float samp = 0.1;
 	float fix = 700.0;
@@ -28,7 +32,7 @@ void main(void)
 	float depth = outLightDepth.z / outLightDepth.w;
 	float visible = 1.0 + addVisible;
 
-	float bias = 0.002;
+	float bias = 0.0015;
 	if(texDepth1 < depth - bias){
 		visible -= 0.1;
 	}

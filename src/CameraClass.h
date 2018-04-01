@@ -23,7 +23,10 @@ namespace K_Graphics {
 		const K_Math::Matrix4x4& GetCameraMatrix();
 		const K_Math::Matrix4x4& GetProjectionMatrix();
 
+		//座標指定
 		void SetPosition(float x, float y, float z);
+		//ターゲットからの方向と距離
+		void SetPosition(float distance, K_Math::Vector3& vector);
 		void SetTarget(float x, float y, float z);
 
 		const K_Math::Vector3& GetAxisX();

@@ -26,10 +26,10 @@ void testPrint() {
 	system("pause");
 }
 
-bool MyApplication::Initialize(GLFWwindow* window, int width, int height) {
+bool MyApplication::Initialize(GameParameters* param, int width, int height) {
 	try {
 		//Parameters;
-		this->param = new GameParameters(window, width, height);
+		this->param = param;
 		this->param->GetFontRenderer()->LoadFont("onryou", "onryou.TTF");
 
 		K_Graphics::ShaderList* shaderList = this->param->GetShaderList();
@@ -52,19 +52,19 @@ bool MyApplication::Initialize(GLFWwindow* window, int width, int height) {
 		shaderList->CreateShaderProgram("simple", "Shader/SimpleShader.vs", "Shader/SimpleShader.ps");
 
 		K_Graphics::CameraList* cameraList = this->param->GetCameraList();
-		cameraList->AddPerspectiveCamera("mainCamera", K_Math::Vector3(0, 0, -1), K_Math::Vector3(0, 0, 0), this->param->screenWidth, this->param->screenHeight, 0.1f, 2000.0f, K_Math::DegToRad(45.0f));
-		cameraList->AddOrthoCamera      ("lightCamera", K_Math::Vector3(0, 50, -50), K_Math::Vector3(0, 0, 0), 230.0f, 230.0f, 10.0f, 500.0f);
-		cameraList->AddOrthoCamera      ("2DCamera", K_Math::Vector3(0, 0, -1), K_Math::Vector3(0, 0, 0), this->param->screenWidth, this->param->screenHeight, 10.0f, 500.0f);
+		cameraList->AddPerspectiveCamera("mainCamera", K_Math::Vector3(0, 0, -1), K_Math::Vector3(0, 0, 0), this->param->windowWidth, this->param->windowHeight, 0.1f, 2000.0f, K_Math::DegToRad(45.0f));
+		cameraList->AddOrthoCamera      ("lightCamera", K_Math::Vector3(0, 50, -50), K_Math::Vector3(0, 0, 0), 100.0f, 100.0f, 100.0f, 1000.0f);
+		cameraList->AddOrthoCamera      ("2DCamera", K_Math::Vector3(0, 0, -1), K_Math::Vector3(0, 0, 0), this->param->windowWidth, this->param->windowHeight, 10.0f, 500.0f);
 
 		this->frameBuffer = new K_Graphics::FrameBufferList(this->param->GetTextureList());
-		this->frameBuffer->CreateFrameBuffer("result", this->param->screenWidth, this->param->screenHeight);
-		this->frameBuffer->CreateFrameBuffer("geometry", this->param->screenWidth, this->param->screenHeight);
-		this->frameBuffer->CreateFrameBuffer("shadowMap", "geometry", this->param->screenWidth, this->param->screenHeight);
-		this->frameBuffer->CreateFrameBuffer("effect", "geometry", this->param->screenWidth, this->param->screenHeight);
+		this->frameBuffer->CreateFrameBuffer("result", this->param->windowWidth, this->param->windowHeight);
+		this->frameBuffer->CreateFrameBuffer("geometry", this->param->windowWidth, this->param->windowHeight);
+		this->frameBuffer->CreateFrameBuffer("shadowMap", "geometry", this->param->windowWidth, this->param->windowHeight);
+		this->frameBuffer->CreateFrameBuffer("effect", "geometry", this->param->windowWidth, this->param->windowHeight);
 		this->frameBuffer->CreateFrameBuffer("lightDepth", 2048, 2048);
 
 		K_Graphics::ModelDataFactory factory;
-		this->square    = new K_Graphics::MeshObject(new K_Graphics::MeshModel(factory.CreateSquareModel(this->param->screenWidth, this->param->screenHeight, this->param->GetTextureList()->GetTexture("frameBuffer"))));
+		this->square    = new K_Graphics::MeshObject(new K_Graphics::MeshModel(factory.CreateSquareModel(this->param->windowWidth, this->param->windowHeight, this->param->GetTextureList()->GetTexture("frameBuffer"))));
 		this->skinModel = new K_Graphics::MeshObject(new K_Graphics::MeshModel(factory.LoadFBXModel("kaminariNewWear.fbx", this->param->GetTextureList())));
 
 		//this->skinModel = new MeshObject(new MeshModel(factory.LoadFBXModel("kaminariChan.fbx", this->param)));
@@ -133,12 +133,6 @@ void MyApplication::Finalize() {
 		delete this->frameBuffer;
 		this->frameBuffer = nullptr;
 	}
-
-	if (this->param != nullptr) {
-		this->param->Finalize();
-		delete this->param;
-		this->param = nullptr;
-	}
 }
 
 void MyApplication::Run() {
@@ -168,6 +162,9 @@ void MyApplication::DrawPass0() {
 	//深度描画
 	param->UseShader("depth");
 	this->param->UseCamera("lightCamera");
+	this->param->currentCamera->SetTarget(this->player->GetPosition().x(), this->player->GetPosition().y(), this->player->GetPosition().z());
+	this->param->currentCamera->SetPosition(300.0f, K_Math::Vector3(0.0f, 1.0f, -1.0f));
+	this->param->currentCamera->Draw();
 
 	param->currentShader->SetFragmentShaderSubroutine("NoneDiffuse");
 	this->player->Draw(this->param);
@@ -193,7 +190,7 @@ void MyApplication::DrawPass0() {
 		param->UseCamera("mainCamera");
 
 		//プレイヤー
-		this->param->currentShader->SetValue("addVisible", 100.0f);
+		this->param->currentShader->SetValue("addVisible", 0.0f);
 		this->player->Draw(this->param);
 		//マップ
 		this->param->currentShader->SetValue("addVisible", 0.0f);
@@ -246,7 +243,7 @@ void MyApplication::DrawPass0() {
 	}
 
 	//レンダリング結果のテクスチャ描画
-	this->frameBuffer->BeginDraw(this->param->screenWidth, this->param->screenHeight, 0.0f, 0.0f, 0.0f);
+	this->frameBuffer->BeginDraw(this->param->windowWidth, this->param->windowHeight, 0.0f, 0.0f, 0.0f);
 	param->UseShader("shadow");
 	this->param->UseCamera("2DCamera");
 	param->currentShader->SetFragmentShaderSubroutine("NoneDiffuse");
@@ -255,8 +252,11 @@ void MyApplication::DrawPass0() {
 	param->currentShader->SetTexture("effect", 3, param->GetTextureList()->GetTexture("effect")->GetTextureID());
 	//this->square->Draw(this->param, Vector3f(0, 0, 10), Vector3f(0, 0, 0), Vector3f(-1, 1, 1));
 
-	testSprite->Draw2D(this->param->currentCamera, this->param->currentShader, K_Math::Box2D(0, 0, this->param->screenWidth, this->param->screenHeight), K_Math::Box2D(0, 0, this->param->screenWidth, this->param->screenHeight), 0.0f);
+	testSprite->Draw2D(this->param->currentCamera, this->param->currentShader, K_Math::Box2D(0, 0, this->param->windowWidth, this->param->windowHeight), K_Math::Box2D(0, 0, this->param->windowWidth, this->param->windowHeight), 0.0f);
 
+	param->UseShader("sprite");
+	testSprite->SetTexture(param->GetTextureList()->GetTexture("lightDepth"));
+	testSprite->Draw2D(this->param->currentCamera, this->param->currentShader, K_Math::Box2D(0, 0, 2048, 2048), K_Math::Box2D(0, 0, 230, 230), 0.0f);
 
 }
 

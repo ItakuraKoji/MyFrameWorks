@@ -12,8 +12,8 @@ GameParameters::~GameParameters() {
 bool GameParameters::Initialize(GLFWwindow* window, int screenWidth, int screenHeight) {
 	Finalize();
 	try {
-		this->screenWidth = screenWidth;
-		this->screenHeight = screenHeight;
+		this->windowWidth = screenWidth;
+		this->windowHeight = screenHeight;
 		this->physicsSystem = new K_Physics::BulletPhysics;
 		this->input = new K_Input::InputGLFW(0, window);
 		this->textureList = new K_Graphics::TextureList;

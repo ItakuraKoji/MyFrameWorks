@@ -35,6 +35,17 @@ namespace K_Graphics {
 		this->position << x, y, z;
 	}
 
+	void CameraClass::SetPosition(float distance, K_Math::Vector3& vector) {
+		if (vector == K_Math::Vector3::Zero()) {
+			//normalizeできないゼロベクトルの場合は位置をターゲットと同じに
+			this->position = this->target;
+			return;
+		}
+
+		//中心からvectorの方向にdistance分放す
+		this->position = this->target + vector.normalized() * distance;
+	}
+
 
 	void CameraClass::SetTarget(float x, float y, float z) {
 		this->target << x, y, z;
